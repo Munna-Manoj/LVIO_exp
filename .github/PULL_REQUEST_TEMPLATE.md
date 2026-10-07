@@ -5,7 +5,7 @@
 ## Definition of Done (docs/process/DEFINITION_OF_DONE.md)
 
 - [ ] Linked to `M*` / `EXP-*`; ROADMAP.md updated in this PR
-- [ ] `ruff`, `pytest`, `check_tree`, `check_experiments`, `check_reports`, `check_chapters`, `sync_course --check` green
+- [ ] `ruff`, `pytest`, `check_tree`, `check_experiments`, `check_reports`, `check_chapters`, `check_links`, `sync_course --check` green
 - [ ] Docs updated with the behaviour; `mkdocs build --strict` passes (if docs changed)
 - [ ] No personal paths, data, or upstream lightning-lm source
 - [ ] Experiment state changes made only by `lvx` (no hand-edited status or `lvx:` blocks)

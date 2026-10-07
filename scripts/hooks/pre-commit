@@ -8,5 +8,5 @@ if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
   echo "  git switch -c <exp/EXP-NNN-slug | infra/topic | docs/topic>" >&2
   exit 1
 fi
-python3 tools/check_chapters.py && python3 tools/check_tree.py || {
+python3 tools/check_chapters.py && python3 tools/check_links.py && python3 tools/check_tree.py || {
   echo "pre-commit: fix the problems above (or remove the file from the commit)" >&2; exit 1; }
