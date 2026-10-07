@@ -1,7 +1,7 @@
 """Machine configuration: logical names resolve per machine, and nothing machine-specific is tracked."""
 import pytest
 
-from lvx import config, data
+from lvx import config
 from tools import check_tree
 
 
@@ -16,12 +16,12 @@ def test_datasets_resolve_under_data_root_and_overrides_win(tmp_path, monkeypatc
 def test_missing_dataset_error_names_the_official_source(tmp_path):
     config.write_local({"data_root": str(tmp_path)})
     with pytest.raises(SystemExit) as e:
-        data.dataset("sad-ulhk")
+        config.dataset("sad-ulhk")
     assert "1drv.ms" in str(e.value) and "lvx init --dataset" in str(e.value)
     (tmp_path / "sad" / "ulhk").mkdir(parents=True)
     for f in ("test2.bag", "test3.bag"):
         (tmp_path / "sad" / "ulhk" / f).touch()
-    assert data.dataset("sad-ulhk") == tmp_path / "sad" / "ulhk"
+    assert config.dataset("sad-ulhk") == tmp_path / "sad" / "ulhk"
 
 
 def test_unconfigured_machine_says_what_to_do():

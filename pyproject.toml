@@ -21,8 +21,7 @@ docs = ["mkdocs-material>=9.5", "mkdocs-glightbox>=0.4", "markdown-callouts>=0.4
 lvx = "lvx.cli:main"
 
 [tool.setuptools]
-packages = ["lvx", "lvio_course"]
-package-dir = {"lvio_course" = "course/lvio_course"}
+packages = ["lvx"]
 
 [tool.ruff]
 line-length = 120

@@ -18,18 +18,17 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List
 
-from . import __version__, config, paths, registry
-from .data import dataset
+from . import __version__, config
 
-CURRICULUM = paths.ROOT / "course" / "curriculum.yaml"
-CHAPTER_DIRS = paths.ROOT / "course" / "chapters"
+CURRICULUM = config.ROOT / "course" / "curriculum.yaml"
+CHAPTER_DIRS = config.ROOT / "course" / "chapters"
 ID_RE = re.compile(r"^([A-GX]|I)\d{2}$")  # I = bridge chapters (not in the SAD book)
 STATUSES = ["planned", "drafted", "done"]
 LOG_TAIL_LINES = 60
 
 
 def curriculum() -> Dict[str, Any]:
-    return registry.load_yaml(CURRICULUM)
+    return config.load_yaml(CURRICULUM)
 
 
 def chapters() -> List[Dict[str, Any]]:
@@ -58,8 +57,8 @@ def validate() -> List[str]:
     ids = [c["id"] for c in cur["chapters"]]
     if len(ids) != len(set(ids)):
         err.append("duplicate chapter ids")
-    datasets = registry.load_yaml(paths.CONFIGS / "datasets.yaml")["datasets"]
-    exp_ids = {p.name[:7] for p in paths.EXPERIMENTS.glob("EXP-*")}
+    datasets = config.load_yaml(config.CONFIGS / "datasets.yaml")["datasets"]
+    exp_ids = {p.name[:7] for p in config.EXPERIMENTS.glob("EXP-*")}
     seen: List[str] = []
     for c in cur["chapters"]:
         where = c["id"]
@@ -121,20 +120,22 @@ def run_lab(lab_id: str, dry_run: bool = False) -> Dict[str, Any]:
     if lab_id not in labs():
         raise SystemExit(f"no lab {lab_id} (see `lvx lab list`)")
     lab = labs()[lab_id]
-    sysdef = registry.systems()["sad"]
+    sysdef = config.systems()["sad"]
     root = sad_root()
     sad_chapter = chapter(lab["chapter"])["sad"]["chapter"]
     data_dirs = sorted({f"ch{sad_chapter}"} | ({"ch3"} if sad_chapter == 4 else set()))
     data_mount = ""
     if lab["dataset"] != "sad-builtin":
-        data_mount = f"-v {dataset(lab['dataset'])}:/data:ro "
+        data_mount = f"-v {config.dataset(lab['dataset'])}:/data:ro "
     base = config.run_root() / "labs" / lab_id
     k = 1
     while (base / f"r{k}").exists():
         k += 1
     out = base / f"r{k}"
     image = config.image("sad")
-    inner = sysdef["run"].format(app=lab["app"], args=lab["args"].format(data="/data"))
+    # The SAD build keeps its libraries in /sad/lib, and the apps need ROS Noetic's environment.
+    inner = (f"source /opt/ros/noetic/setup.bash && export LD_LIBRARY_PATH=/sad/lib:$LD_LIBRARY_PATH && "
+             f"./bin/{lab['app']} {lab['args'].format(data='/data')}")
     cmd = (f"podman run --rm -v {out}/sandbox:/sad -v {root}:/sad_src:ro {data_mount}"
            f"-w /sad {image} bash -c {shlex.quote(inner)}")
     manifest: Dict[str, Any] = {

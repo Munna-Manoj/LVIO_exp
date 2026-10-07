@@ -1,6 +1,6 @@
 # ADR-0007 — The course track
 
-- **Status:** Accepted (2026-10-07)
+- **Status:** Accepted (2026-10-07). Code layout and page sync superseded by [ADR-0010](ADR-0010-self-contained-chapters.md).
 
 ## Context
 The repository is also a learning resource for LiDAR-visual-inertial SLAM. Readers learn best by

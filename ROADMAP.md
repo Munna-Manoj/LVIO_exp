@@ -35,9 +35,9 @@ flowchart LR
 | ID | Task | Status | Done when |
 |---|---|---|---|
 | M0.1 | Repo skeleton, CLAUDE.md, protocol, checkers, CI | ✅ | `check_*` + pytest green |
-| M0.2 | Fork `url-kaist/se3-livom-comfort` → `Munna-Manoj/se3-livom-comfort`, branch `lvio-exp`, add as submodule `systems/se3-lvio` | ⬜ | `git submodule status` shows the pinned commit |
+| M0.2 | Fork `url-kaist/se3-livom-comfort` → `Munna-Manoj/se3-livom-comfort`, branch `lvio-exp`, add as submodule `systems/se3-lvio` | ✅ | `git submodule status` shows the pinned commit |
 | M0.3 | Clone this repo on the reference host, `pip install -e .[eval]`, set `LVX_DATA_ROOT`/`LVX_RUN_ROOT` | ⬜ | `lvx run EXP-000 --dry-run` prints a manifest on the host |
-| M0.4 | Build lightning-lm via `scripts/build_lightning.sh` (pinned 1325fed + our runner with `--timing`) | ⬜ | `bin/run_lio_tum` exists, timing.csv written |
+| M0.4 | Build lightning-lm via `scripts/build_lightning.sh` (pinned 1325fed + our runner with `--timing`) | ✅ | `bin/run_lio_tum` exists, timing.csv written |
 | M0.5 | Fix the mission split: confirm the six COMFORT Validation missions, download 5 more, convert to the offline layout + lightning bags | ⬜ | `configs/missions.yaml` has `dev` (3) and `test` (3) with GT, ADR-0005 updated |
 | M0.6 | EXP-000: baselines + noise floor | ⬜ | EXP-000 concluded `adopt` |
 
@@ -73,7 +73,8 @@ unlocks the experiments it explains. Chapter status lives in `course/curriculum.
 
 | ID | Chapters | SAD | Status | Explains |
 |---|---|---|---|---|
-| C0 | Infrastructure: `lvio_course`, chapter contract, `sync_course.py`, curriculum.yaml, `lvx lab` + `lvx data`, ADR-0007/0008 | – | ✅ | – |
+| C0 | Infrastructure: chapter contract, `sync_course.py`, curriculum.yaml, `lvx lab` + `lvx data`, ADR-0007/0008 | – | ✅ | – |
+| C0.1 | Law 0 (ADR-0010): self-contained chapter folders, `check_chapters.py`, B01 rewritten as the reference, `scene` per chapter. `lvx` flattened: one `config.py` for every lookup, `runner.py` writes each command out, manifests and reports show the exact command | – | ✅ | – |
 | C1 | A01 rotations & poses, A02 Kalman filters, **B01 IMU propagation ✅** (lab verified), 🔗 I01 real IMUs & Allan variance, B02 ESKF-GINS, 🔗 I02 time offsets & extrinsics | ch2–3 | 🟨 | EXP-009, EXP-010, EXP-011 |
 | C2 | B03 preintegration, B04 factor graphs, B05 robust estimation (the GNC chapter) | ch4 + | ⬜ | EXP-001–003, EXP-014, EXP-015 |
 | C3 | C01 point clouds, **C02 nearest-neighbour structures & speed**, C03 fitting, C04–C05 2D SLAM | ch5–6 | ⬜ | EXP-008, EXP-016, EXP-020 |

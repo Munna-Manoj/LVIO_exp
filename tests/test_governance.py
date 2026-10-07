@@ -29,3 +29,17 @@ def test_hand_edited_block_is_detected(tmp_path, monkeypatch):
     fake.write_text(text)
     monkeypatch.setattr(spec.Experiment, "report_path", property(lambda self: fake))
     assert any("hypothesis" in m for m in report.report_drift(e))
+
+
+def test_reproduce_shows_the_exact_recorded_command(tmp_path):
+    import json
+    import shutil
+    src = spec.find("EXP-001").dir
+    shutil.copytree(src, tmp_path / src.name)
+    e = spec.load(tmp_path / src.name)
+    (e.results / "manifests").mkdir(parents=True)
+    man = {"variant": "baseline", "cwd": "systems/se3-lvio", "env": {"GRANDTOUR": "dataset `grandtour`"},
+           "command": 'DATA="$GRANDTOUR" CPUSET=0-3 bash scripts/run_se3lio.sh arc-6 --tag t --lio-only'}
+    (e.results / "manifests" / "baseline__arc-6__r1.json").write_text(json.dumps(man))
+    text = report.render_reproduce(e)
+    assert man["command"] in text and "`$GRANDTOUR` = dataset `grandtour`" in text

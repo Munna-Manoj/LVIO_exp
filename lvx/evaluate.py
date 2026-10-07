@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from . import course, runner
+from . import config, course, runner
 from .spec import Experiment, all_experiments, set_status
 
 RUN_COLUMNS = [
@@ -85,7 +85,7 @@ def evaluate_run(exp: Experiment, key: runner.RunKey) -> Dict[str, Any]:
     row.update(status=man["status"], wall_s=man.get("wall_s"), config_hash=man["config"]["config_hash"],
                repo_commit=man["repo"]["commit"][:10], system_commit=str(man["system_git"]["commit"])[:10],
                host=man["host"])
-    gt = runner.mission_dir(key.mission) / "comfort_offline" / "gt.tum"
+    gt = config.mission_dir(key.mission) / "comfort_offline" / "gt.tum"
     if man["status"] == "ok" and gt.exists():
         row.update(ate(out / "estimate.tum", gt))
         if "ate_rmse_cm" not in row:
@@ -119,7 +119,8 @@ def read_runs(exp: Experiment) -> List[Dict[str, Any]]:
 
 def copy_artifacts(exp: Experiment, keys: List[runner.RunKey]) -> None:
     """Keep repeat 1 of each (variant, mission) in git: manifest + gzipped estimate. Everything else stays
-    in run_root. Tracked manifests drop the command line and are scrubbed of machine paths."""
+    in run_root. Manifests keep the exact command (it holds no machine paths, see runner.py) and are scrubbed
+    as a second line of defence."""
     for key in keys:
         src = runner.run_dir(exp, key)
         man_dir = exp.results / "manifests"
@@ -127,7 +128,6 @@ def copy_artifacts(exp: Experiment, keys: List[runner.RunKey]) -> None:
         if (src / "manifest.json").exists():
             with open(src / "manifest.json") as f:
                 man = json.load(f)
-            man.pop("command", None)                                  # holds machine paths; stays in run_root
             with open(man_dir / f"{key.run_id}.json", "w") as f:
                 f.write(course.scrub(json.dumps(man, indent=2)))
         if key.repeat == 1 and (src / "estimate.tum").exists():

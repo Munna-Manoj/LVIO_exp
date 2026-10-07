@@ -30,8 +30,9 @@ LIGHTNING_OURS = re.compile(
 RESULTS_OK = re.compile(
     r"^experiments/EXP-\d{3}-[a-z0-9-]+/results/(runs\.csv|summary\.json|manifests/[^/]+\.json|traj/[^/]+\.tum\.gz)$")
 COURSE_OK = re.compile(
-    r"^course/(curriculum\.yaml|lvio_course/[\w/]+\.py|chapters/[A-GXI]\d{2}-[a-z0-9-]+/"
-    r"(run\.py|results/(run\.txt|metrics\.json|labs/[a-z0-9-]+/(manifest\.json|log_tail\.txt))))$")
+    r"^course/(curriculum\.yaml|chapters/[A-GXI]\d{2}-[a-z0-9-]+/"
+    r"(README\.md|[a-z0-9_]+\.py|results/([a-z0-9_]+\.(txt|json|png|gif|svg)"
+    r"|labs/[a-z0-9-]+/(manifest\.json|log_tail\.txt))))$")
 TEXT_SUFFIX = {".py", ".md", ".yaml", ".yml", ".toml", ".txt", ".cc", ".h", ".sh", ".json", ".csv", ".cff", ""}
 
 
@@ -72,7 +73,8 @@ def check() -> list:
         if f.startswith("systems/lightning-lm/") and not LIGHTNING_OURS.match(f):
             errors.append(f"{f}: only our own lightning-lm files may be tracked (ADR-0003)")
         if f.startswith("course/") and not COURSE_OK.match(f):
-            errors.append(f"{f}: course/ holds only lvio_course modules and chapter run.py + results (ADR-0007)")
+            errors.append(f"{f}: course/ holds only curriculum.yaml and self-contained chapter folders "
+                          "(README.md, *.py, results/; ADR-0010)")
         if re.match(r"^experiments/EXP-[^/]+/results/", f) and not RESULTS_OK.match(f):
             errors.append(f"{f}: not an lvx-written results file")
         if p.suffix in TEXT_SUFFIX and p.stat().st_size < MAX_BYTES and f != "tools/check_tree.py":

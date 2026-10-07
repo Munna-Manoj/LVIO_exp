@@ -18,5 +18,6 @@ jobs:
       - run: python tools/check_tree.py
       - run: python tools/check_experiments.py
       - run: python tools/check_reports.py
+      - run: python tools/check_chapters.py
       - run: python tools/sync_course.py --check
-      - run: mkdocs build --strict
+      - run: python tools/sync_course.py && mkdocs build --strict

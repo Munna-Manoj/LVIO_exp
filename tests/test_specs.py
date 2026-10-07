@@ -56,8 +56,21 @@ def test_run_plan_includes_paired_baseline():
 def test_se3lvio_command_maps_overrides_to_flags():
     e = spec.find("EXP-001")
     cfg = runner.resolve_config(e, e.spec["variants"][0]["id"])
-    cmd = runner.se3lvio_command(cfg, "arc-6", "EXP-001-x")
+    cmd = runner.se3lvio_command(cfg, "arc-6", "EXP-001-x", cpus="0-3")
     assert "--set residual_gate_sigma=2.0" in cmd and "--lio-only" in cmd and "arc-6" in cmd
+
+
+def test_commands_are_publishable_and_self_explaining():
+    """Machine locations are $VARIABLES set at run time, so the recorded command is the one that ran."""
+    e = spec.find("EXP-001")
+    cmds = [runner.se3lvio_command(runner.resolve_config(e, "baseline"), "arc-6", "t", cpus="0-3"),
+            runner.lightning_command("arc-6", cpus="0-3")]
+    for cmd in cmds:
+        assert "/home/" not in cmd and "/hdd/" not in cmd
+        for var in ("OUT", "GRANDTOUR", "MISSION", "IMAGE", "LIGHTNING_WS", "BAG"):
+            if f"${var}" in cmd:
+                assert var in runner.ENV_MEANING
+    assert '"$OUT/estimate.tum"' in cmds[1] and "--timing /out/timing.csv" in cmds[1]
 
 
 def test_baseline_swap_variant_resolves_other_system():

@@ -5,7 +5,7 @@ Get a working `lvx` on a laptop (docs, specs, reports) and on the compute host (
 ## 1. Clone with the SE(3)-LVIO submodule
 
 ```bash
-git clone --recurse-submodules git@github.com:Munna-Manoj/LVIO_exp.git
+git clone --recurse-submodules https://github.com/Munna-Manoj/LVIO_exp.git
 cd LVIO_exp
 git submodule status        # systems/se3-lvio at the commit pinned in systems/systems.yaml
 ```
@@ -46,8 +46,8 @@ lvx data check                                        # ✅ ready / ⬜ missing,
 lvx course status                                     # per chapter: real-data step and C++ labs runnable?
 ```
 
-Chapters reach data only through `lvx.data.dataset("<name>")`, so once `lvx data check` shows ✅ the matching
-chapters just run.
+Once `lvx data check` shows ✅, pass the folder to a chapter's real-data step:
+`python main.py --data "$(lvx config get dataset <name>)"`.
 
 ## 5. Build the systems (compute host only)
 
@@ -61,7 +61,7 @@ bash scripts/build_lightning.sh
 ```
 
 > [!TIP]
-> The **Build it** track of the course needs none of this: `python course/chapters/B01-imu-propagation/run.py`
+> The **Build it** track of the course needs none of this: `cd course/chapters/B01-imu-propagation && python main.py`
 > works right after `pip install -e .`.
 
 ## 6. Check everything

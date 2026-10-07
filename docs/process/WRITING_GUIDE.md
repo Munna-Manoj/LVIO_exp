@@ -85,13 +85,17 @@ $$\mathrm{Exp}\big([\rho;\phi]\big) = \begin{bmatrix} \mathrm{Exp}(\phi) & J_l(\
 
 - **The title says what and for whom.** Prerequisites go once, at the top.
 - **Fixed sections, in order:** What you will build, Intuition, The math, Build it, See it, Break it,
-  In the real systems, Experiment hooks, Try it, Next. [B01](../learn/B01-imu-propagation.md) is the
+  In the real systems, Experiment hooks, Try it, Next. [B01](../../course/chapters/B01-imu-propagation/README.md) is the
   reference chapter; match its depth and tone.
 - **Small steps,** each ending in something the reader can check (a printed number, a plot).
 - **Intuition first.** One plain-language paragraph or a `> [!TIP]` before the first symbol.
 - **"Break it"** shows a failure with a number. Readers learn more from a broken filter than a working one.
 - **"Try it":** at least two predict-then-run exercises, answers in `<details>`.
-- **Code, output and prose numbers are synced** from the chapter (CLAUDE.md §11), never typed in.
+- **The chapter folder is the whole lesson** (law 0). Nothing the reader needs lives anywhere else.
+- **Code mirrors the maths:** tag equations `\tag{n}`, cite them in code as `(Eq. n)`, and use the symbols as names.
+- **Show it.** Choose synthetic data a person recognises at a glance (the chapter's `scene`), put the
+  money plot at the top, and prefer 3D for 3D ideas. Don't force a figure where a number says it all.
+- **Output is pasted verbatim** from `results/output.txt`, and result numbers in prose are taken from it (CLAUDE.md §11).
 
 ## Checklist
 

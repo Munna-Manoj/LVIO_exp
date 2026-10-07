@@ -10,7 +10,7 @@ from typing import List, Optional
 
 import yaml
 
-from . import paths, report, spec
+from . import config, report, spec
 
 
 def cmd_exp_new(a: argparse.Namespace) -> None:
@@ -19,9 +19,9 @@ def cmd_exp_new(a: argparse.Namespace) -> None:
     if a.phase not in spec.PHASES:
         raise SystemExit(f"phase must be one of {sorted(spec.PHASES)}")
     exp_id = spec.next_id()
-    d = paths.EXPERIMENTS / f"{exp_id}-{a.slug}"
+    d = config.EXPERIMENTS / f"{exp_id}-{a.slug}"
     d.mkdir()
-    with open(paths.TEMPLATE / "spec.yaml") as f:
+    with open(config.TEMPLATE / "spec.yaml") as f:
         data = yaml.safe_load(f)
     data.update(id=exp_id, slug=a.slug, phase=a.phase, created=_dt.date.today().isoformat(), status="planned")
     if a.supersedes:
@@ -32,7 +32,7 @@ def cmd_exp_new(a: argparse.Namespace) -> None:
     e.save()
     report.write_report(e)
     report.write_index()
-    print(f"created {paths.rel(d)}/spec.yaml and {paths.rel(e.report_path)}; fill every TODO, then ask for approval")
+    print(f"created {config.rel(d)}/spec.yaml and {config.rel(e.report_path)}; fill every TODO, then ask for approval")
 
 
 def cmd_exp_freeze(a: argparse.Namespace) -> None:
@@ -96,37 +96,36 @@ def cmd_figures(a: argparse.Namespace) -> None:
     from .figures import make
 
     for p in make(spec.find(a.exp)):
-        print(paths.rel(p))
+        print(config.rel(p))
 
 
 def cmd_report(a: argparse.Namespace) -> None:
     if a.exp:
-        print(paths.rel(report.write_report(spec.find(a.exp))))
+        print(config.rel(report.write_report(spec.find(a.exp))))
     if a.index or not a.exp:
         report.write_index()
-        print(paths.rel(paths.REGISTRY))
+        print(config.rel(config.REGISTRY))
 
 
 def cmd_sync(a: argparse.Namespace) -> None:
     """Pull an experiment's (or chapter's) small, tracked results from the host that plays a profile."""
-    from . import config
 
     h = config.host(a.host)
     if not shutil.which("rsync"):
         raise SystemExit("rsync not found")
     if a.target.startswith("EXP-"):
         e = spec.find(a.target)
-        rels = [paths.rel(e.dir) + "/", paths.rel(e.figures_dir) + "/", paths.rel(e.report_path)]
+        rels = [config.rel(e.dir) + "/", config.rel(e.figures_dir) + "/", config.rel(e.report_path)]
     else:
         from . import course
         rels = [f"course/chapters/{course.chapter_name(course.chapter(a.target))}/results/"]
     for rel in rels:
-        subprocess.run(["rsync", "-a", "--mkpath", f"{h['ssh']}:{h['repo']}/{rel}", str(paths.ROOT / rel)], check=False)
+        src = f"{h['ssh']}:{h['repo']}/{rel}"
+        subprocess.run(["rsync", "-a", "--mkpath", src, str(config.ROOT / rel)], check=False)
         print(f"synced {rel}")
 
 
 def cmd_init(a: argparse.Namespace) -> None:
-    from . import config
 
     values = {"data_root": a.data_root, "run_root": a.run_root}
     cfg = config.load()
@@ -151,7 +150,6 @@ def cmd_init(a: argparse.Namespace) -> None:
 
 
 def cmd_config(a: argparse.Namespace) -> None:
-    from . import config
 
     if a.action == "show":
         f = config.local_file()
@@ -164,9 +162,8 @@ def cmd_config(a: argparse.Namespace) -> None:
 
 
 def cmd_data_check(a: argparse.Namespace) -> None:
-    from . import data
 
-    for r in data.status():
+    for r in config.data_status():
         mark = "✅" if r["state"] == "ready" else "⬜"
         print(f"{mark} {r['name']:14s} {str(r['state'])[:40]:40s} used by {', '.join(r['used_by']) or '–'}")
     print("\nMissing data? docs/how-to/get-the-data.md has the official links; "
@@ -185,12 +182,13 @@ def cmd_lab_run(a: argparse.Namespace) -> None:
 
     m = course.run_lab(a.lab, dry_run=a.dry_run)
     if not a.dry_run:
-        print(f"{a.lab} r{m['repeat']}: {m['status']} in {m['wall_s']} s -> {paths.rel(course.lab_results_dir(a.lab))}")
+        where = config.rel(course.lab_results_dir(a.lab))
+        print(f"{a.lab} r{m['repeat']}: {m['status']} in {m['wall_s']} s -> {where}")
 
 
 def cmd_course_status(a: argparse.Namespace) -> None:
     """Which chapters can run on this machine: Build it (always), On real data, C++ labs."""
-    from . import config, course
+    from . import course
 
     ready = {}
     for name in config.dataset_registry():

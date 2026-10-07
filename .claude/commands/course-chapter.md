@@ -1,39 +1,43 @@
 ---
-description: Draft or update one course chapter following CLAUDE.md §11
+description: Draft or update one course chapter following CLAUDE.md law 0 and §11
 argument-hint: <chapter ID, e.g. C02> [focus]
 ---
 Work on course chapter $ARGUMENTS.
 
 1. **Read the plan:**
-   - `course/curriculum.yaml`: the chapter row (part, SAD chapter + apps, labs, depends_on, experiments).
+   - `course/curriculum.yaml`: the chapter row (part, SAD chapter + apps, labs, depends_on, experiments, `scene`).
    - The SAD book chapter (English PDF) and its `src/ch<N>` code, to know what the C++ lab shows. Never copy the book.
-   - CLAUDE.md §11.
-   - `docs/learn/B01-imu-propagation.md` + `course/chapters/B01-imu-propagation/run.py`: the reference chapter.
-   - Confirm the prerequisites exist; if not, stop and say which one is missing.
+   - CLAUDE.md law 0 and §11.
+   - `course/chapters/B01-imu-propagation/`, the reference chapter: README.md, then the .py files.
 2. **Propose an outline to the user first:**
+   - the synthetic scene and the money plot (from `scene:`; suggest a better-known example if there is one);
    - the intuition;
-   - the equations;
-   - the 3–5 build steps;
-   - the figures;
+   - the numbered equations;
+   - the files, one per idea, and which helpers get copied from which earlier chapter;
    - the "break it" failure;
    - the claims the test will assert.
 
    Wait for approval.
-3. **Implement:**
-   - reusable code in `course/lvio_course/` (extend, never duplicate);
-   - `course/chapters/<ID>-<slug>/run.py` with `# [snippet:…]` regions, writing `results/run.txt` (stdout) and `results/metrics.json`;
-   - figures with `lvx.plotstyle` into `docs/assets/learn/<ID>/`.
-4. **Write the page** `docs/learn/<ID>-<slug>.md` with the 10 sections. Use snippet/output/metric
-   markers, never typed-in code or numbers.
-5. **Write the test:** `tests/course/test_<ID>.py` asserts every claim the page makes.
-6. **Sync and check:**
-   - `python course/chapters/<ID>-<slug>/run.py > course/chapters/<ID>-<slug>/results/run.txt`
-   - `python tools/sync_course.py`
-   - then every check in CLAUDE.md §8.
-7. **If it is a 🔗 bridge chapter (I..):** write the required "On real data" step in run.py (or a
-   `real.py` region). It reads the listed `datasets` via `LVX_DATA_ROOT` (`rosbags` for SAD bags,
-   `comfort_offline` for GrandTour). Commit its outputs, and name dataset + sequence + commit on the page.
-   **If the chapter has labs:** run each with `lvx lab run <id>` on the host, `lvx sync`-pull the records,
-   set the lab `status: verified`, and write the "Run it in C++" section around the generated lab table.
-8. **Update the bookkeeping:** the curriculum status, the ROADMAP C-milestone row, and the mkdocs nav.
-   Look at every figure before calling it done.
+3. **Implement in the chapter folder only:**
+   - `<idea>.py` files plus `main.py`;
+   - imports only stdlib, numpy, scipy, matplotlib (rosbags for real data) and the folder's own files;
+   - every equation line ends with `# (Eq. n)`;
+   - plain functions and arrays, symbol names, explicit loops;
+   - `main.py` prints the results, writes `results/output.txt`, `results/metrics.json` and the figures.
+4. **Write `README.md` by hand,** with the sections in order. Put the money plot at the top, tag the
+   equations with `\tag{n}`, paste `results/output.txt` verbatim in a ```text block, and take every
+   result number from that output.
+5. **Write the test:** `tests/course/test_<ID>.py` asserts every claim the README makes, from `metrics.json`.
+6. **Check:**
+   - `cd course/chapters/<ID>-<slug> && python main.py` (≤ ~30 s);
+   - look at every figure;
+   - do the read-aloud test (DoD);
+   - run every check in CLAUDE.md §8, including `python tools/check_chapters.py`.
+7. **If it is a 🔗 bridge chapter (I..):** write the "On real data" step. It reads the listed `datasets`
+   from a directory passed on the command line (`python main.py --data <dir>`), with `rosbags` for SAD
+   bags or the `comfort_offline` files for GrandTour. Commit its outputs, and name dataset, sequence and
+   commit in the README.
+   **If the chapter has labs:** the README shows the plain SAD command. Record each with
+   `lvx lab run <id>` on the host, pull the records, and set the lab to `status: verified`.
+8. **Update the bookkeeping:** the curriculum status, the ROADMAP C-milestone row, and the mkdocs nav
+   (`learn/<ID>-<slug>/index.md`).

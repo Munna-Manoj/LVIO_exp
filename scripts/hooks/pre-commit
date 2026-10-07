@@ -1,0 +1,12 @@
+#!/bin/bash
+# Tracked git hook (activated by scripts/install_hooks.sh: git config core.hooksPath scripts/hooks).
+# 1. Never commit on main: work happens on a branch and reaches main only through a PR (CLAUDE.md §7).
+# 2. Course chapters stay self-contained (law 0) and nothing machine-specific is committed (§12).
+branch=$(git symbolic-ref --short -q HEAD)
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  echo "pre-commit: refusing to commit on '$branch'. Create a branch first:" >&2
+  echo "  git switch -c <exp/EXP-NNN-slug | infra/topic | docs/topic>" >&2
+  exit 1
+fi
+python3 tools/check_chapters.py && python3 tools/check_tree.py || {
+  echo "pre-commit: fix the problems above (or remove the file from the commit)" >&2; exit 1; }

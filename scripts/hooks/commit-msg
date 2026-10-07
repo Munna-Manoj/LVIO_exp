@@ -1,0 +1,14 @@
+#!/bin/bash
+# Tracked git hook: Conventional Commits subject, and no machine-specific text in the message (CLAUDE.md §7, §12).
+python3 - "$1" <<'PY'
+import re, sys
+sys.path.insert(0, ".")
+from lvx import config
+msg = open(sys.argv[1]).read()
+subject = next((l for l in msg.splitlines() if l.strip() and not l.startswith("#")), "")
+if not re.match(r"^(feat|fix|docs|chore|refactor|test|perf|ci|build)(\([\w./-]+\))?!?: \S", subject):
+    sys.exit(f"commit-msg: subject must be a Conventional Commit, e.g. 'feat(EXP-003): ...'\n  got: {subject!r}")
+bad = [t for t in config.private_tokens() if re.search(re.escape(t), msg, re.I)]
+if bad or re.search(r"/(home|hdd|Users|mnt|media|srv)/\w", msg):
+    sys.exit(f"commit-msg: message contains machine-specific text {bad or '(an absolute path)'}")
+PY
