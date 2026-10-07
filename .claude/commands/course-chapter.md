@@ -25,7 +25,7 @@ Work on course chapter $ARGUMENTS.
    - plain functions and arrays, symbol names, explicit loops;
    - `main.py` prints the results, writes `results/output.txt`, `results/metrics.json` and the figures.
 4. **Write `README.md` by hand,** with the sections in order. Put the money plot at the top, tag the
-   equations with `\tag{n}`, paste `results/output.txt` verbatim in a ```text block, and take every
+   equations with `\qquad (n)` in ` ```math ` fences (inline maths `` $`…`$ ``), paste `results/output.txt` verbatim in a ```text block, and take every
    result number from that output.
 5. **Write the test:** `tests/course/test_<ID>.py` asserts every claim the README makes, from `metrics.json`.
 6. **Check:**

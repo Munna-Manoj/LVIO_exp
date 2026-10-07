@@ -50,7 +50,7 @@ def problems(command, repo):
             found.append("force pushes are not allowed")
         if verb == "push" and any(re.fullmatch(r"(\S*:)?(refs/heads/)?(main|master)", w) for w in words[2:]):
             found.append("never push to main/master: push the branch and open a PR")
-        if verb == "config" and "core.hooksPath" in part and HOOKS not in part:
+        if "core.hooksPath" in part and HOOKS not in part and (verb == "config" or "-c" in words):
             found.append(f"core.hooksPath must stay '{HOOKS}' (run scripts/install_hooks.sh)")
         if verb == "commit":
             if git(repo, "config", "core.hooksPath") != HOOKS:

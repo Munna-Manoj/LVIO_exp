@@ -14,7 +14,8 @@ def guard(command):
 
 
 def test_guard_blocks_bypasses():
-    for cmd in ("git commit --no-verify -m 'docs: x'", "git commit -n -m 'docs: x'", "git push origin main",
+    for cmd in ("git -c core.hooksPath=/dev/null commit -m 'docs: x'",
+                "git commit --no-verify -m 'docs: x'", "git commit -n -m 'docs: x'", "git push origin main",
                 "git push origin HEAD:main", "git push --force origin infra/x", "git config core.hooksPath /tmp"):
         assert guard(cmd) == 2, cmd
 

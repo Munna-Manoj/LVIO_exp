@@ -11,13 +11,17 @@ In FAST-LIO-style filters the state is one vector (rotation, position, velocity,
 with one full covariance matrix:
 - **The off-diagonal blocks link rotation and position.** The IMU model fills them:
 
-$$v_{k+1} = v_k + (R_k\,a_k + g)\,\Delta t$$
+```math
+v_{k+1} = v_k + (R_k\,a_k + g)\,\Delta t
+```
 
-$$p_{k+1} = p_k + v_k\,\Delta t$$
+```math
+p_{k+1} = p_k + v_k\,\Delta t
+```
 
-> $R_k$ is the body-to-world rotation, $a_k$ the bias-corrected acceleration (m/s²), $g$ gravity, $v_k$
-> and $p_k$ the world-frame velocity and position, $\Delta t$ the IMU period (s). A rotation error tilts
-> $R_k a_k$, which becomes velocity error, then position error.
+> $`R_k`$ is the body-to-world rotation, $`a_k`$ the bias-corrected acceleration (m/s²), $`g`$ gravity, $`v_k`$
+> and $`p_k`$ the world-frame velocity and position, $`\Delta t`$ the IMU period (s). A rotation error tilts
+> $`R_k a_k`$, which becomes velocity error, then position error.
 
 - **One residual corrects everything.** The Kalman gain uses those blocks, so a single point-to-plane
   residual corrects rotation and translation together.
@@ -27,14 +31,18 @@ $$p_{k+1} = p_k + v_k\,\Delta t$$
 
 ## What SE(3) actually changes: the retraction
 
-The filter computes a small correction $\delta = [\rho;\ \phi]$ and must apply it to the pose. The two
+The filter computes a small correction $`\delta = [\rho;\ \phi]`$ and must apply it to the pose. The two
 choices differ only in how translation is applied:
 
-$$\text{SO(3)×R³:}\quad R \leftarrow R\,\mathrm{Exp}(\phi), \qquad p \leftarrow p + \rho$$
+```math
+\text{SO(3)×R³:}\quad R \leftarrow R\,\mathrm{Exp}(\phi), \qquad p \leftarrow p + \rho
+```
 
-$$\text{SE(3):}\quad R \leftarrow R\,\mathrm{Exp}(\phi), \qquad p \leftarrow p + R\,J_l(\phi)\,\rho$$
+```math
+\text{SE(3):}\quad R \leftarrow R\,\mathrm{Exp}(\phi), \qquad p \leftarrow p + R\,J_l(\phi)\,\rho
+```
 
-> $\phi$ is the rotation part of the correction (rad), $\rho$ the translation part (m), and $J_l(\phi)$
+> $`\phi`$ is the rotation part of the correction (rad), $`\rho`$ the translation part (m), and $`J_l(\phi)`$
 > the left Jacobian of SO(3). On SE(3) the translation follows a screw motion that turns while it moves.
 
 ![Two retractions of the same large correction](../assets/explain/retraction_paths.png)
@@ -46,9 +54,11 @@ rotation; the SO(3)×R³ path is a straight line. Same end orientation, differen
 
 To first order the two end positions differ by
 
-$$\Delta p \approx \tfrac{1}{2}\,\phi \times \rho$$
+```math
+\Delta p \approx \tfrac{1}{2}\,\phi \times \rho
+```
 
-> For a typical iterated-filter correction, $|\phi| \approx 10^{-3}$ rad and $|\rho| \approx 1$ cm, so
+> For a typical iterated-filter correction, $`|\phi| \approx 10^{-3}`$ rad and $`|\rho| \approx 1`$ cm, so
 > $|\Delta p| \approx 5\,\mu$m.
 
 ![Gap between the retractions](../assets/explain/retraction_gap.png)
@@ -63,7 +73,7 @@ same way. The retraction only applies the small residual correction.
 
 | Situation | Why SE(3) may help |
 |---|---|
-| Start-up with a poor heading | Large $\phi$: the first-order gap above grows |
+| Start-up with a poor heading | Large $`\phi`$: the first-order gap above grows |
 | Long LiDAR-degenerate stretch | Rotation uncertainty grows; an SE(3)-Gaussian can represent the curved ("banana") position uncertainty |
 | Consistency | A group-based error is less tied to the current estimate; full theory needs SE₂(3) (invariant EKF), which adds velocity |
 

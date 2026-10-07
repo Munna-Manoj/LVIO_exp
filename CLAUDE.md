@@ -244,7 +244,12 @@ Read [`docs/process/WRITING_GUIDE.md`](docs/process/WRITING_GUIDE.md). In short:
 - **Anything spatial gets a figure** (frames, planes, residuals, manifolds, trajectories).
 - **Markdown must render on GitHub *and* MkDocs.**
   - Callouts: GitHub alert syntax `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`.
-  - Diagrams: Mermaid. Maths: `$…$` / `$$…$$`.
+  - Diagrams: Mermaid.
+  - **Maths, the only forms that render on GitHub and the site:**
+    - display: a ` ```math ` fence, numbered with `\qquad (n)` at the end;
+    - inline: `` $`…`$ ``.
+    - Never use `$$…$$` (GitHub turns `\,` into commas) or `\tag{}` (GitHub stacks every symbol on its own
+      line). `tools/check_math.py` enforces this.
   - No MkDocs-only syntax (`///`, `!!!`, `{* *}`) in `docs/experiments/` or in the README.
   - **Links are written for GitHub:** relative to the file's place in the repo, pointing at a tracked
     file (a chapter is `course/chapters/<ID>-<slug>/README.md`, never the site-only `docs/learn/<ID>-<slug>/`).
@@ -300,6 +305,7 @@ python tools/check_experiments.py
 python tools/check_reports.py
 python tools/check_chapters.py
 python tools/check_links.py
+python tools/check_math.py
 python tools/sync_course.py --check
 python tools/sync_course.py && mkdocs build --strict        # when docs or course changed
 ```
@@ -354,8 +360,8 @@ Plus `tests/course/test_<ID>.py`, outside the folder so learners never have to r
   Integration chapters (D04, E02, G02) may hold several idea files, each copied visibly from the chapter
   that taught it, so the reader can diff them against the original.
 - **Code mirrors the maths.**
-  - Every equation in the README carries `\tag{n}`. The code line(s) implementing it end with
-    `# (Eq. n)`, and both directions are checked.
+  - Every numbered equation in the README ends with `\qquad (n)` inside its ` ```math ` fence. The code
+    line(s) implementing it end with `# (Eq. n)`, and both directions are checked.
   - Variable names are the symbols (`R`, `v`, `p`, `b_g`, `dt`, `P`, `F`, `G`, `Q`).
   - Write the loop the equation describes. Vectorise only when the loop would take minutes, and then
     say in a comment what the vectorised line computes.

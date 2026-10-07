@@ -6,7 +6,8 @@ For every chapter folder course/chapters/<ID>-<slug>/ with a README.md:
   self-contained   imports only the standard library, ALLOWED third-party packages and files of the same
                    folder; no sys.path edits, no relative/package imports, no lvx, no other chapter
   plain code       no class inheritance, no decorators except @dataclass, files <= MAX_LINES lines
-  maths <-> code   every \\tag{n} in README.md is cited as "(Eq. n)" in the code, and every cited n exists
+  maths <-> code   every equation numbered "\\qquad (n)" in README.md is cited as "(Eq. n)" in the code,
+                   and every cited n exists
   honest numbers   results/output.txt exists and README.md quotes it verbatim in a ```text block;
                    every image README.md shows exists
   page shape       title line, the fixed sections in order, a test in tests/course/, an entry in mkdocs nav
@@ -27,7 +28,7 @@ MAX_LINES = 300
 SECTIONS = ["## What you will build", "## Intuition", "## The math", "## Build it", "## See it", "## Break it",
             "## Run it in C++", "## On real data", "## In the real systems", "## Experiment hooks", "## Try it",
             "## Next"]
-TAG = re.compile(r"\\tag\{(\d+)\}")
+TAG = re.compile(r"\\qquad \((\d+)\)\s*$", re.M)   # end of a line inside a ```math fence
 EQ_REF = re.compile(r"\(Eq\. (\d+)\)")
 IMAGE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 STDLIB = set(getattr(sys, "stdlib_module_names", ())) or {  # Python < 3.10: the modules chapters need
@@ -79,9 +80,9 @@ def check_chapter(d: Path, entry: dict, nav: str) -> list:
 
     tags, refs = set(TAG.findall(readme)), set(EQ_REF.findall(code))
     for n in sorted(tags - refs, key=int):
-        errs.append(f"{rel}: README Eq. {n} (\\tag{{{n}}}) is never cited as '(Eq. {n})' in the code")
+        errs.append(f"{rel}: README Eq. {n} (`\\qquad ({n})`) is never cited as '(Eq. {n})' in the code")
     for n in sorted(refs - tags, key=int):
-        errs.append(f"{rel}: code cites (Eq. {n}) but README.md has no \\tag{{{n}}}")
+        errs.append(f"{rel}: code cites (Eq. {n}) but README.md has no equation ending `\\qquad ({n})`")
 
     out = d / "results" / "output.txt"
     if not out.exists():

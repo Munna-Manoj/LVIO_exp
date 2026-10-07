@@ -39,51 +39,67 @@ acceleration, forever. This is why gyro quality decides IMU drift more than acce
 
 ## The math
 
-The integrator steps the state from sample $k$ to $k+1$. $\Delta t$ is the IMU period (5 ms here).
+The integrator steps the state from sample $`k`$ to $`k+1`$. $`\Delta t`$ is the IMU period (5 ms here).
 
-$$R_{k+1} = R_k\,\mathrm{Exp}(\omega_k\,\Delta t) \tag{1}$$
+```math
+R_{k+1} = R_k\,\mathrm{Exp}(\omega_k\,\Delta t) \qquad (1)
+```
 
-> $R_k$ is the body-to-world rotation, $\omega_k$ the measured angular rate (rad/s, body frame).
-> $\mathrm{Exp}$ turns a rotation vector into a rotation matrix (Rodrigues' formula, `so3_exp`).
+> $`R_k`$ is the body-to-world rotation, $`\omega_k`$ the measured angular rate (rad/s, body frame).
+> $`\mathrm{Exp}`$ turns a rotation vector into a rotation matrix (Rodrigues' formula, `so3_exp`).
 
-$$a_k = R_k\,f_k + g \tag{2}$$
+```math
+a_k = R_k\,f_k + g \qquad (2)
+```
 
-> $f_k$ is the accelerometer's specific force (m/s², body frame); $g = (0, 0, -9.81)$ is gravity in the
-> world frame. This is the gravity-removal step. It uses the *estimated* $R_k$, so a tilt error becomes
+> $`f_k`$ is the accelerometer's specific force (m/s², body frame); $`g = (0, 0, -9.81)`$ is gravity in the
+> world frame. This is the gravity-removal step. It uses the *estimated* $`R_k`$, so a tilt error becomes
 > an acceleration error.
 
-$$v_{k+1} = v_k + a_k\,\Delta t \tag{3}$$
+```math
+v_{k+1} = v_k + a_k\,\Delta t \qquad (3)
+```
 
-$$p_{k+1} = p_k + v_k\,\Delta t + \tfrac12 a_k\,\Delta t^2 \tag{4}$$
+```math
+p_{k+1} = p_k + v_k\,\Delta t + \tfrac12 a_k\,\Delta t^2 \qquad (4)
+```
 
-To predict the error without simulating it, propagate the covariance $P$ of the 9-dim error
-$[\delta\theta,\ \delta v,\ \delta p]$:
+To predict the error without simulating it, propagate the covariance $`P`$ of the 9-dim error
+$`[\delta\theta,\ \delta v,\ \delta p]`$:
 
-$$P_{k+1} = F_k\,P_k\,F_k^\top + G_k\,Q\,G_k^\top \tag{5}$$
+```math
+P_{k+1} = F_k\,P_k\,F_k^\top + G_k\,Q\,G_k^\top \qquad (5)
+```
 
-> $F_k$ says how an error at step $k$ becomes one at $k+1$. Its block $-R_k\,[f_k]_\times\,\Delta t$ is the
-> gravity leak: a tilt error $\delta\theta$ produces a velocity error. $G_k$ says how one sample's noise
-> enters the state. $Q$ holds the per-sample noise variances (Eq. 8).
+> $`F_k`$ says how an error at step $`k`$ becomes one at $`k+1`$. Its block $`-R_k\,[f_k]_\times\,\Delta t`$ is the
+> gravity leak: a tilt error $`\delta\theta`$ produces a velocity error. $`G_k`$ says how one sample's noise
+> enters the state. $`Q`$ holds the per-sample noise variances (Eq. 8).
 
 The simulator runs the same physics backwards. From the true motion it computes what a perfect IMU would
 read, then adds the sensor's errors:
 
-$$\omega_k = \mathrm{Log}(R_k^\top R_{k+1}) / \Delta t \tag{6}$$
+```math
+\omega_k = \mathrm{Log}(R_k^\top R_{k+1}) / \Delta t \qquad (6)
+```
 
-$$f_k = R_k^\top (a_k - g) \tag{7}$$
+```math
+f_k = R_k^\top (a_k - g) \qquad (7)
+```
 
-$$\sigma_{\text{per sample}} = \sigma_{\text{density}} / \sqrt{\Delta t} \tag{8}$$
+```math
+\sigma_{\text{per sample}} = \sigma_{\text{density}} / \sqrt{\Delta t} \qquad (8)
+```
 
-> Eq. 8 is why IMU data sheets quote noise *densities* (per $\sqrt{\text{Hz}}$): the faster you sample,
+> Eq. 8 is why IMU data sheets quote noise *densities* (per $`\sqrt{\text{Hz}}`$): the faster you sample,
 > the noisier each sample, and the result is the same accumulated error.
 
 How fast each error source grows follows from how many times it is integrated:
 
 | Error source | Integrated | Position error grows like |
 |---|---|---|
-| Accelerometer white noise | velocity random walk, then once more | $t^{1.5}$ |
-| Gyro white noise | angle random walk → gravity leak → twice more | $t^{2.5}$ |
-| Constant accelerometer bias | twice | $t^{2}$ |
+| Accelerometer white noise | velocity random walk, then once more | $`t^{1.5}`$ |
+| Gyro white noise | angle random walk → gravity leak → twice more | $`t^{2.5}`$ |
+| Constant accelerometer bias | twice | $`t^{2}`$ |
 
 ## Build it
 
@@ -94,7 +110,7 @@ Open the files in this order; each block is commented with the equation it imple
 2. **`imu_readings` and `add_imu_errors`.** Eq. 6–7 give a perfect IMU; then white noise (Eq. 8) and
    a constant bias are added. Keeping the two apart lets `main.py` reuse the perfect readings.
 3. **[`propagate.py`](propagate.py), `propagate`.** The four lines inside the loop are Eq. 1–4.
-4. **`propagate_covariance`.** Eq. 5, with $F_k$ and $G_k$ written block by block.
+4. **`propagate_covariance`.** Eq. 5, with $`F_k`$ and $`G_k`$ written block by block.
 5. **[`main.py`](main.py).** It integrates the perfect readings first. Every noisy run is then measured
    against that perfect-IMU path, so the table shows what the *sensor* costs, separate from the
    integrator's own step error.
@@ -118,7 +134,7 @@ at 20 s: Monte Carlo 1.3126 m, covariance predicts 1.3404 m (ratio 0.98)
 ![Drift vs time, log-log](results/drift_vs_time.png)
 
 *On log-log axes a power law is a straight line, so read the slopes, not the heights. Accelerometer
-noise follows $t^{1.5}$. Gyro noise starts far lower but follows $t^{2.5}$, overtakes the accelerometer
+noise follows $`t^{1.5}`$. Gyro noise starts far lower but follows $`t^{2.5}`$, overtakes the accelerometer
 after 2.4 s, and by 20 s it is nearly the whole white-noise error. The dashed covariance
 prediction sits on the Monte Carlo curve.*
 
@@ -180,7 +196,7 @@ copied: lightning-lm has no licence.)
    <details><summary>Answer</summary>A little more than half. Gyro noise dominates and scales linearly
    with the density, but the accelerometer's 0.1573 m is now a visible share of what is left.</details>
 2. Call `figure_eight(rate=100.0)`. Which line of the output changes most, and why?
-   <details><summary>Answer</summary>The perfect-IMU step error: Euler's error grows with $\Delta t$.
+   <details><summary>Answer</summary>The perfect-IMU step error: Euler's error grows with $`\Delta t`$.
    The noise rows barely move, because a noise <em>density</em> is independent of the sampling rate
    (Eq. 8).</details>
 
