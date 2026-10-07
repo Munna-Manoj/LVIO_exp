@@ -54,7 +54,7 @@ Generated from [`course/curriculum.yaml`](https://github.com/Munna-Manoj/LVIO_ex
 
 | # | Chapter | Synthetic scene | Real data | Experiments | Status |
 |---|---|---|---|---|---|
-| B01 | [IMU propagation: why IMU-only odometry drifts, and how fast](B01-imu-propagation/index.md) | a 3D figure-eight: IMU-only runs fanning out | – | [EXP-010](../experiments/EXP-010-state-17-vs-12.md), [EXP-011](../experiments/EXP-011-online-time-offset-lever-arm.md) | ✅ |
+| B01 | [IMU propagation: why IMU-only odometry drifts, and how fast](../../course/chapters/B01-imu-propagation/README.md) | a 3D figure-eight: IMU-only runs fanning out | – | [EXP-010](../experiments/EXP-010-state-17-vs-12.md), [EXP-011](../experiments/EXP-011-online-time-offset-lever-arm.md) | ✅ |
 | I01 | 🔗 Real IMUs: noise densities, bias instability and Allan variance (vehicle IMU vs STIM320) | a still IMU for hours: Allan-deviation slopes −½, 0, +½ | ulhk, grandtour | [EXP-010](../experiments/EXP-010-state-17-vs-12.md) | ⬜ |
 | B02 | ESKF with GNSS: the first fusion filter | a car on a stadium track, 1 Hz GNSS, a 30 s outage: error sawtooth | – | [EXP-010](../experiments/EXP-010-state-17-vs-12.md) | ⬜ |
 | I02 | 🔗 Time offsets, lever arms and extrinsics: estimate them, or pay in centimetres | the stadium track with a 50 ms time offset and a 1 m lever arm | builtin, grandtour | [EXP-011](../experiments/EXP-011-online-time-offset-lever-arm.md), [EXP-018](../experiments/EXP-018-stress-suite.md) | ⬜ |

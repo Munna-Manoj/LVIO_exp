@@ -4,6 +4,10 @@ site_url: https://munna-manoj.github.io/LVIO_exp/
 repo_url: https://github.com/Munna-Manoj/LVIO_exp
 repo_name: Munna-Manoj/LVIO_exp
 docs_dir: docs
+
+# GitHub links in Markdown -> site links at build time (authors always write the GitHub form).
+hooks:
+  - tools/mkdocs_links.py
 edit_uri: edit/main/docs/
 
 # process/ is contributor-facing (protocol, ADRs, writing guide); it is read on GitHub, not published.

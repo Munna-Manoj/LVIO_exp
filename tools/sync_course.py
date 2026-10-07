@@ -5,7 +5,7 @@ A chapter's lesson is its own `course/chapters/<ID>-<slug>/README.md`, written b
 as it is. This tool never edits a chapter. It only:
 
   1. copies each started chapter's README.md + results/ figures to docs/learn/<ID>-<slug>/ (git-ignored),
-     rewriting links so they also work on the site: other repo files -> GitHub URLs, docs/ -> site pages;
+     unchanged; the site build turns its GitHub links into site links (tools/mkdocs_links.py);
   2. fills the generated tables  <!-- course:begin curriculum -->  in docs/learn/README.md and
      <!-- course:begin datasets -->  in docs/how-to/get-the-data.md, from the YAML that owns them.
 
@@ -26,9 +26,7 @@ from lvx import config, course  # noqa: E402
 
 CHAPTERS = ROOT / "course" / "chapters"
 SITE_LEARN = ROOT / "docs" / "learn"
-REPO_URL = "https://github.com/Munna-Manoj/LVIO_exp/blob/main"
 BLOCK = re.compile(r"<!-- course:begin (?P<name>\w+) -->\n(?P<body>.*?)<!-- course:end (?P=name) -->", re.S)
-LINK = re.compile(r"(\]\()(?P<target>[^)#\s]+)(?P<rest>[^)]*\))")
 STATUS_ICON = {"planned": "⬜", "drafted": "🟨", "done": "✅"}
 
 
@@ -39,29 +37,7 @@ def started():
             yield c
 
 
-def _inside(path: Path, folder: Path) -> bool:
-    try:
-        path.relative_to(folder)
-        return True
-    except ValueError:
-        return False
-
-
 # --- 1. publish chapters --------------------------------------------------------------------------
-
-def site_link(target: str, chapter: Path) -> str:
-    """A link written for GitHub (relative to the chapter folder) -> the same link on the site."""
-    if "://" in target or target.startswith("mailto:"):
-        return target
-    path = (chapter / target).resolve()
-    if _inside(path, chapter / "results"):
-        return target                                       # figures are copied next to the page
-    if _inside(path, ROOT / "docs"):
-        return "../../" + path.relative_to(ROOT / "docs").as_posix()
-    if _inside(path, CHAPTERS) and path.name == "README.md":
-        return f"../{path.parent.name}/index.md"
-    return f"{REPO_URL}/{path.relative_to(ROOT).as_posix()}"
-
 
 def publish() -> int:
     for d in SITE_LEARN.iterdir():
@@ -72,9 +48,7 @@ def publish() -> int:
         chapter = CHAPTERS / course.chapter_name(c)
         dst = SITE_LEARN / chapter.name
         (dst / "results").mkdir(parents=True)
-        text = (chapter / "README.md").read_text()
-        text = LINK.sub(lambda m, here=chapter: m.group(1) + site_link(m["target"], here) + m["rest"], text)
-        (dst / "index.md").write_text(text)
+        shutil.copy(chapter / "README.md", dst / "index.md")
         for f in (chapter / "results").iterdir():
             if f.suffix in (".png", ".gif", ".svg", ".txt"):
                 shutil.copy(f, dst / "results" / f.name)
@@ -97,7 +71,7 @@ def render_curriculum() -> str:
                 continue
             title = c["title"]
             if c["id"] in have:
-                title = f"[{title}]({course.chapter_name(c)}/index.md)"
+                title = f"[{title}](../../course/chapters/{course.chapter_name(c)}/README.md)"   # opens on GitHub
             if c.get("kind") == "bridge":
                 title = f"🔗 {title}"
             scene = c.get("scene") or "–"

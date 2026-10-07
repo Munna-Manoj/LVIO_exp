@@ -246,6 +246,9 @@ Read [`docs/process/WRITING_GUIDE.md`](docs/process/WRITING_GUIDE.md). In short:
   - Callouts: GitHub alert syntax `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`.
   - Diagrams: Mermaid. Maths: `$…$` / `$$…$$`.
   - No MkDocs-only syntax (`///`, `!!!`, `{* *}`) in `docs/experiments/` or in the README.
+  - **Links are written for GitHub:** relative to the file's place in the repo, pointing at a tracked
+    file (a chapter is `course/chapters/<ID>-<slug>/README.md`, never the site-only `docs/learn/<ID>-<slug>/`).
+    `tools/check_links.py` rejects anything else, and `tools/mkdocs_links.py` rewrites the links for the site.
 - **Tutorials** (`docs/learn/`) end with "Try it": a one-line change to predict, and then run.
 
 ---
@@ -296,6 +299,7 @@ python tools/check_tree.py
 python tools/check_experiments.py
 python tools/check_reports.py
 python tools/check_chapters.py
+python tools/check_links.py
 python tools/sync_course.py --check
 python tools/sync_course.py && mkdocs build --strict        # when docs or course changed
 ```
