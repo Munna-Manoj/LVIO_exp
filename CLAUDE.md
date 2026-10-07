@@ -268,7 +268,17 @@ Read [`docs/process/WRITING_GUIDE.md`](docs/process/WRITING_GUIDE.md). In short:
   - One experiment per commit when it touches results.
 - **Branches:**
   - `exp/EXP-NNN-<slug>` for experiment work, `infra/<topic>` for tooling, `docs/<topic>` for docs.
-  - Never commit straight to `main`; merge via a PR whose template is the Definition of Done.
+  - `main` changes only by merging a PR whose template is the Definition of Done.
+- **These git rules are enforced by tracked hooks, not by memory.** Run `bash scripts/install_hooks.sh`
+  once per clone; it sets `core.hooksPath` to `scripts/hooks/`.
+  - `pre-commit` refuses commits on `main`/`master`, then runs `check_chapters.py` and `check_tree.py`.
+  - `commit-msg` refuses a non-Conventional subject or machine-specific text.
+  - `pre-push` refuses pushes to `main`/`master`.
+  - For Claude Code, `.claude/settings.json` runs `scripts/hooks/claude_guard.py` before every Bash call.
+    It blocks `--no-verify`, force pushes, pushes naming main, changes to `core.hooksPath`, and commits
+    while the hooks are inactive.
+  - **When a hook blocks you, fix the cause.** Never route around it: no `--no-verify`, no other
+    `core.hooksPath`, no committing from another clone. Report the block plainly; don't apologise for it.
 
 ---
 

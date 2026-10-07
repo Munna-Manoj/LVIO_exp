@@ -1,0 +1,10 @@
+#!/bin/bash
+# Tracked git hook: main changes only through a merged PR on GitHub, never by a direct push (CLAUDE.md §7).
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master)
+      echo "pre-push: refusing to push to ${remote_ref#refs/heads/}. Push your branch and open a PR." >&2
+      exit 1 ;;
+  esac
+done
+exit 0
