@@ -33,3 +33,18 @@ def test_chapter_page_links():
 def test_urls_and_anchors_are_untouched():
     md = "[a](https://example.org) [b](#intuition)"
     assert mkdocs_links.rewrite(md, "learn/README.md") == md
+
+
+def test_github_inline_maths_becomes_mathjax_inline():
+    md = r"error $`-R_k\,[f_k]_\times\,\Delta t`$ here"
+    out = mkdocs_links.on_page_markdown(md, type("P", (), {"file": type("F", (), {"src_uri": "explain/x.md"})})(),
+                                        None, None)
+    assert out == r"error $-R_k\,[f_k]_\times\,\Delta t$ here"
+
+
+def test_check_math_rejects_the_forms_github_breaks():
+    import check_math
+    bad = "$$a\\,b$$\n\n```math\nx \\tag{1}\n```\n\ninline $a_1\\,b$\n"
+    assert [n for n, _ in check_math.problems(bad)] == [1, 4, 7]
+    good = "```math\nx = 1 \\qquad (1)\n```\n\ninline $`a_1\\,b`$ and code `$x_1$`\n"
+    assert list(check_math.problems(good)) == []

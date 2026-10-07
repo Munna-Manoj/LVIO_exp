@@ -64,6 +64,9 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+        - name: math           # ```math fences: the display-maths form GitHub renders (tools/check_math.py)
+          class: arithmatex
+          format: !!python/object/apply:pymdownx.arithmatex.arithmatex_fenced_format {kwds: {mode: generic}}
   - pymdownx.highlight
   - pymdownx.inlinehilite
   - attr_list

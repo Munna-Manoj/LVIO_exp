@@ -37,7 +37,7 @@ Pages are read on GitHub (portfolio visitors) and on the MkDocs site. Use only s
 |---|---|---|
 | Callout | `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]` | `!!! note`, `/// note` |
 | Diagram | ```` ```mermaid ```` | ASCII art, screenshots of diagrams |
-| Maths | `$x$` inline, `$$…$$` display | images of equations |
+| Maths | `` $`x`$ `` inline, a ` ```math ` fence for display, numbered `\qquad (n)` | `$$…$$`, `\tag{}`, images of equations |
 | Image | `![alt](relative/path.png)` + a caption line in italics | HTML `<img>` without alt |
 | Collapsible | `<details><summary>…</summary>…</details>` | `??? note` |
 
@@ -66,12 +66,17 @@ Use one or two per page at most.
 - **Name each new symbol** in prose right after the block, with its unit.
 - **Before the formal statement**, give the intuition in one or two sentences, e.g. in a `> [!TIP]`.
 
-```
-$$\mathrm{Exp}\big([\rho;\phi]\big) = \begin{bmatrix} \mathrm{Exp}(\phi) & J_l(\phi)\,\rho \\ 0 & 1 \end{bmatrix}$$
+- **Use only the maths forms GitHub renders** (`tools/check_math.py`): a ` ```math ` fence for display,
+  numbered `\qquad (n)`, and `` $`…`$ `` inline. Never `$$…$$` or `\tag{}`.
+
+````markdown
+```math
+\mathrm{Exp}\big([\rho;\phi]\big) = \begin{bmatrix} \mathrm{Exp}(\phi) & J_l(\phi)\,\rho \\ 0 & 1 \end{bmatrix} \qquad (1)
 ```
 
-> $\phi$ is the rotation part of the correction (rad), $\rho$ the translation part (m), and $J_l$ the left
+> $`\phi`$ is the rotation part of the correction (rad), $`\rho`$ the translation part (m), and $`J_l`$ the left
 > Jacobian of SO(3), which couples them.
+````
 
 ## 6. Experiment reports
 
@@ -92,7 +97,7 @@ $$\mathrm{Exp}\big([\rho;\phi]\big) = \begin{bmatrix} \mathrm{Exp}(\phi) & J_l(\
 - **"Break it"** shows a failure with a number. Readers learn more from a broken filter than a working one.
 - **"Try it":** at least two predict-then-run exercises, answers in `<details>`.
 - **The chapter folder is the whole lesson** (law 0). Nothing the reader needs lives anywhere else.
-- **Code mirrors the maths:** tag equations `\tag{n}`, cite them in code as `(Eq. n)`, and use the symbols as names.
+- **Code mirrors the maths:** number equations `\qquad (n)` inside a ` ```math ` fence, cite them in code as `(Eq. n)`, and use the symbols as names.
 - **Show it.** Choose synthetic data a person recognises at a glance (the chapter's `scene`), put the
   money plot at the top, and prefer 3D for 3D ideas. Don't force a figure where a number says it all.
 - **Output is pasted verbatim** from `results/output.txt`, and result numbers in prose are taken from it (CLAUDE.md §11).

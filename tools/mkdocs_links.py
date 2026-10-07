@@ -1,6 +1,9 @@
-"""MkDocs hook (mkdocs.yml `hooks:`): turn the GitHub links authors write into links that work on the site.
+"""MkDocs hook (mkdocs.yml `hooks:`): make Markdown written for GitHub work on the site.
 
-Authors write every link relative to the Markdown file's place in the repository, so it opens on GitHub
+Inline maths: GitHub's $`...`$ becomes MathJax's $...$ (display maths needs nothing: ```math fences are
+mapped to MathJax in mkdocs.yml).
+
+Links: authors write every link relative to the Markdown file's place in the repository, so it opens on GitHub
 (tools/check_links.py enforces that). At build time each link is resolved the same way and sent to:
 
   course/chapters/<ID>/README.md or the folder    -> the published chapter page   learn/<ID>/index.md
@@ -66,5 +69,9 @@ def rewrite(markdown: str, page_uri: str) -> str:
     return LINK.sub(fix, markdown)
 
 
+GITHUB_INLINE_MATH = re.compile(r"\$`([^`\n]+)`\$")
+
+
 def on_page_markdown(markdown, page, config, files):  # noqa: ARG001 (MkDocs hook signature)
+    markdown = GITHUB_INLINE_MATH.sub(r"$\1$", markdown)
     return rewrite(markdown, page.file.src_uri)

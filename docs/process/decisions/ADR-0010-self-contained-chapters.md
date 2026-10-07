@@ -26,7 +26,7 @@ A learner who is lost in the plumbing leaves for another source.
   its own files.
 - **Copy, don't import.** Shared helpers are duplicated, with a comment naming the chapter they come
   from. A few duplicated lines are the price of independence, and we pay it.
-- **The code mirrors the maths:** the README tags equations with `\tag{n}` and the code cites them as
+- **The code mirrors the maths:** the README numbers equations with `\qquad (n)` in a ` ```math ` fence (the form GitHub renders) and the code cites them as
   `(Eq. n)`. Both directions are checked.
 - **Hand-written READMEs, no markers.** The one generated link between code and page is replaced by a
   check: `results/output.txt` must appear verbatim in the README, and the chapter test asserts every
