@@ -1,0 +1,6 @@
+# lightning-lm LIO frontend, upstream RoboSense config + GrandTour sensor overrides only.
+system: lightning-lm
+title: "lightning-lm · LIO stock"
+overrides_file: systems/lightning-lm/overrides/arc6_stock.yaml
+overrides: {}
+reference_result: "ARC-6 ATE 1.64 cm (pre-repo run 2026-10-07; re-measured in EXP-000)"

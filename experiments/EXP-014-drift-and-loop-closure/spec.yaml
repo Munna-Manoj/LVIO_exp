@@ -1,0 +1,38 @@
+id: EXP-014
+slug: drift-and-loop-closure
+title: Is there drift worth closing loops for?
+phase: P5
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: How much does SE(3)-LVIO drift without the backend, and does a loop-closure factor in the backend
+  reduce it?
+hypothesis: On short indoor missions drift is mm-level and the plane BA already closes small loops; loop
+  closure helps only on long missions with revisits.
+prediction: Within noise on ARC-6; better only on long missions with revisits (to be identified in M0).
+falsified_if: better beyond noise on missions without revisits (would mean the factor is doing something
+  else).
+baseline: se3lvio_S9c
+variants:
+- id: loop_closure
+  change: distance-based loop candidates + point-to-plane check → BetweenFactor in iSAM2
+  overrides:
+    backend.loop_closure: 1
+code_change: new backend flag loop_closure (default 0), reimplemented (lightning-lm has no licence)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

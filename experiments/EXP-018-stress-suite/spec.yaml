@@ -1,0 +1,35 @@
+id: EXP-018
+slug: stress-suite
+title: Which design choices matter when the data gets worse?
+phase: P6
+status: planned
+created: '2026-10-07'
+system: both
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Under controlled degradation (drop Livox, drop 10-30 % of scans, 4× point thinning, ±5 ms IMU
+  time shift), how do both systems degrade?
+hypothesis: SE(3)-LVIO is tuned for clean data and degrades faster under scan drops; lightning-lm's guards
+  make it degrade gracefully.
+prediction: lightning-lm degrades less in relative terms under scan drops; SE(3)-LVIO remains more accurate
+  in absolute terms.
+falsified_if: SE(3)-LVIO degrades less in relative terms under every profile.
+baseline: se3lvio_S8
+variants:
+- id: ll_indoor
+  change: swap baseline config to lightning-lm indoor
+  baseline: lightning_indoor
+code_change: stress profiles implemented in lvx (data-side, no system change)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: suite-v1
+decision_rule: 'report only: verdict inconclusive with a degradation table; feeds the choice of P2 guards.'
+learn_links: []

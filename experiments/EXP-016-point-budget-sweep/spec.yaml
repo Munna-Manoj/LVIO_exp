@@ -1,0 +1,48 @@
+id: EXP-016
+slug: point-budget-sweep
+title: How much accuracy does each millisecond buy?
+phase: P7
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: How do ATE and ms/scan change as the adaptive downsampling target moves from 500 to 4000 inliers?
+hypothesis: Accuracy saturates once planes are well covered; time grows roughly linearly with inliers.
+prediction: ATE flat from 1000 to 4000, worse at 500; ms_p95 roughly linear.
+falsified_if: ATE keeps improving beyond 2000 (the default is under-sampled).
+baseline: se3lvio_S8
+variants:
+- id: n500
+  change: downsample target 500 inliers (baseline 2000)
+  overrides:
+    lio.downsample_target_inliers: 500
+- id: n1000
+  change: downsample target 1000 inliers (baseline 2000)
+  overrides:
+    lio.downsample_target_inliers: 1000
+- id: n3000
+  change: downsample target 3000 inliers (baseline 2000)
+  overrides:
+    lio.downsample_target_inliers: 3000
+- id: n4000
+  change: downsample target 4000 inliers (baseline 2000)
+  overrides:
+    lio.downsample_target_inliers: 4000
+code_change: none (existing field downsample_target_inliers)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ms_mean
+  - ms_p95
+  - rss_mb
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

@@ -1,0 +1,36 @@
+id: EXP-013
+slug: affine-brightness
+title: Does affine brightness compensation help the photometric update?
+phase: P5
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-004
+supersedes: null
+host: reference
+question: Does estimating a per-frame affine brightness (a, b) improve S9b under lighting change?
+hypothesis: Brightness constancy is violated under smoke and changing light; FAST-LIVO2 estimates exposure
+  for this reason.
+prediction: Better than S9b on missions with lighting change, within noise elsewhere.
+falsified_if: within noise on every mission.
+baseline: se3lvio_S9b
+variants:
+- id: affine_ab
+  change: per-frame affine brightness (a, b) in the photometric residual
+  overrides:
+    lio.visual.affine_brightness: true
+code_change: new flag visual.affine_brightness (default false)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

@@ -1,0 +1,16 @@
+# Data-side degradation profiles (P6). Applied by lvx to the input before a system sees it, identically for both
+# systems, so a stress result never depends on a system flag. Status: planned (implemented in milestone M3).
+profiles:
+  suite-v1:
+    description: one run per member; the report shows degradation relative to the clean run
+    members:
+      drop-livox:   {lidar: hesai_only}
+      scan-drop-10: {drop_scans_fraction: 0.10, seed: 0}
+      scan-drop-30: {drop_scans_fraction: 0.30, seed: 0}
+      thin-4x:      {keep_every_nth_point: 4}
+      imu-shift-5ms: {imu_time_shift_s: 0.005}
+  false-loops-3:
+    description: inject 3 loop-closure factors between non-overlapping keyframes (backend only)
+    members:
+      false-loops-1: {false_loops: 1, seed: 0}
+      false-loops-3: {false_loops: 3, seed: 0}

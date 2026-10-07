@@ -1,0 +1,37 @@
+id: EXP-011
+slug: online-time-offset-lever-arm
+title: Can online estimation replace hand-fitted calibration?
+phase: P4
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Does estimating the IMU time offset online match the hand-fitted per-mission imu_dt?
+hypothesis: The time offset is observable from rotation; online estimation removes a manual fitting step
+  without losing accuracy.
+prediction: Within noise of the hand-fitted imu_dt; converged offset within 1 ms of the fitted value.
+falsified_if: worse beyond noise, or the estimate does not converge within 30 s.
+baseline: se3lvio_S8
+variants:
+- id: td_online
+  change: estimate IMU time offset in the state, start at 0
+  overrides:
+    lio.estimate_time_offset: true
+code_change: new flag estimate_time_offset (default false); lever-arm estimation is a later experiment
+  if this works
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

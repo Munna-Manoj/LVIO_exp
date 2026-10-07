@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lvx"
+version = "0.1.0"
+description = "Experiment-as-code harness for the LVIO_exp ablation study"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+dependencies = ["pyyaml>=6", "numpy>=1.22", "matplotlib>=3.5"]
+
+[project.optional-dependencies]
+eval = ["evo==1.36.5"]                        # the COMFORT scorer's version (ADR-0002)
+data = ["rosbags>=0.9"]                       # read SAD ROS1 bags in "On real data" steps, no ROS needed
+dev = ["pytest>=7", "ruff>=0.4"]
+docs = ["mkdocs-material>=9.5", "mkdocs-glightbox>=0.4", "markdown-callouts>=0.4"]
+
+[project.scripts]
+lvx = "lvx.cli:main"
+
+[tool.setuptools]
+packages = ["lvx", "lvio_course"]
+package-dir = {"lvio_course" = "course/lvio_course"}
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["UP006", "UP007", "UP035", "UP045"]   # Optional/List kept for Python 3.8
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

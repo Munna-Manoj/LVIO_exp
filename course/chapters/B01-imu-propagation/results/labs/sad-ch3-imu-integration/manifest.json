@@ -1,0 +1,17 @@
+{
+  "lvx_version": "0.1.0",
+  "lab": "sad-ch3-imu-integration",
+  "chapter": "B01",
+  "app": "run_imu_integration",
+  "args": "--with_ui=false",
+  "dataset": "sad-builtin",
+  "repeat": 3,
+  "sad_commit": "27f8e94798296650f6dcf72d198719e60a92fb04",
+  "pinned_commit": "27f8e94798296650f6dcf72d198719e60a92fb04",
+  "image_id": "413fe4b9e02d104d69f",
+  "started": "2026-10-07T16:24:45",
+  "ended": "2026-10-07T16:24:50",
+  "wall_s": 4.9,
+  "exit_code": 0,
+  "status": "ok"
+}

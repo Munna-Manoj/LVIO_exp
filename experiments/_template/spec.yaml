@@ -1,0 +1,30 @@
+# Experiment spec. Fields listed in lvx.spec.FROZEN are pre-registered by `lvx exp freeze` and may not change after.
+# Fill every TODO; `lvx exp freeze` refuses while any TODO remains in a frozen field.
+id: EXP-NNN                  # set by `lvx exp new`
+slug: kebab-case-name        # set by `lvx exp new`
+title: "TODO the question as a title, e.g. How wide should the point-to-plane gate be?"
+phase: P1                    # P0..P7, PX (see lvx/spec.py PHASES)
+status: planned              # changed only by lvx
+created: 1970-01-01
+system: se3-lvio             # se3-lvio | lightning-lm | both
+depends_on: [EXP-000]        # experiments that must be concluded first
+supersedes: null
+host: reference              # configs/hosts/<profile>.yaml (hardware); reach it via lvx.local.yaml
+question: TODO one question, answerable by the primary metric.
+hypothesis: TODO what you believe and the mechanism (why).
+prediction: TODO the measurable outcome if the hypothesis holds (direction and rough size).
+falsified_if: TODO the outcome that would prove the hypothesis wrong.
+baseline: se3lvio_S8         # configs/baselines/<name>.yaml; always re-run inside the experiment
+variants:                    # exactly ONE change each: one override, one mode, or one baseline swap
+  - id: example_variant
+    change: TODO one line, e.g. "χ² gate 2.0σ (baseline 3.0σ)"
+    overrides: {lio.example_flag: 1}
+code_change: TODO none, or the flag(s) added in the se3-lvio fork and their defaults
+missions: {set: dev}         # {set: dev|test|smoke} or {list: [arc-6, ...]}
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary: [ate_max_cm, ms_p95]
+stress: null                 # degradation profile name (P6) or null
+decision_rule: TODO e.g. adopt if mean ATE over dev improves beyond 2σ noise on >= 2/3 missions and ms_p95 grows < 10 %.
+learn_links: []              # docs/explain or docs/learn pages this experiment teaches

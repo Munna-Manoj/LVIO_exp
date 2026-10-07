@@ -1,0 +1,37 @@
+id: EXP-008
+slug: keyframe-map-insertion
+title: Should the map be updated every scan or only at keyframes?
+phase: P3
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Does lightning-lm-style keyframe-only map insertion (1 m / 10°) change ATE and runtime for SE(3)-LVIO?
+hypothesis: Per-scan insertion gives a denser reference but also inserts transient objects and costs time;
+  keyframe insertion trades density for speed.
+prediction: Slightly worse ATE (sparser planes), lower ms_p95.
+falsified_if: better ATE beyond noise (would mean per-scan insertion pollutes the map).
+baseline: se3lvio_S8
+variants:
+- id: kf_insert
+  change: insert scans into the voxel map only at keyframes (1 m / 10°)
+  overrides:
+    lio.map_insert_policy: keyframe
+code_change: new flag map_insert_policy {scan,keyframe} (default scan)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+  - rss_mb
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

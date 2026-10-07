@@ -1,0 +1,51 @@
+id: EXP-001
+slug: chi2-gate-sweep
+title: How wide should the point-to-plane residual gate be?
+phase: P1
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Is the hard 3σ point-to-plane gate the right width, or does a tighter/looser gate change ATE?
+hypothesis: The IMU prior is good enough that 3σ already separates inliers; tighter gates lose good constraints,
+  looser gates admit smoke and clutter.
+prediction: 2.5σ-4σ within noise of 3σ; 2σ worse (fewer inliers), 5σ slightly worse on smoky ARC-6.
+falsified_if: a gate other than 3σ improves ATE beyond 2σ noise on most missions.
+baseline: se3lvio_S8
+variants:
+- id: gate_2p0
+  change: residual gate 2.0σ (baseline 3.0σ)
+  overrides:
+    lio.residual_gate_sigma: 2.0
+- id: gate_2p5
+  change: residual gate 2.5σ (baseline 3.0σ)
+  overrides:
+    lio.residual_gate_sigma: 2.5
+- id: gate_4p0
+  change: residual gate 4.0σ (baseline 3.0σ)
+  overrides:
+    lio.residual_gate_sigma: 4.0
+- id: gate_5p0
+  change: residual gate 5.0σ (baseline 3.0σ)
+  overrides:
+    lio.residual_gate_sigma: 5.0
+code_change: new flag residual_gate_sigma (default 3.0, previously hard-coded in core/state_update.cpp
+  BuildResidualListOMP)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - inliers_mean
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links:
+- docs/explain/outliers-in-an-iekf.md

@@ -1,0 +1,6 @@
+# lightning-lm LIO frontend with 0.2 m grids (indoor scale).
+system: lightning-lm
+title: "lightning-lm · LIO indoor grid"
+overrides_file: systems/lightning-lm/overrides/arc6_indoor.yaml
+overrides: {}
+reference_result: "ARC-6 ATE 1.41 cm (pre-repo run 2026-10-07; re-measured in EXP-000)"

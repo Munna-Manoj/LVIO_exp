@@ -1,0 +1,6 @@
+# SE(3)-LVIO, Hesai + IMU only. The LIO reference for every P1-P4 ablation.
+system: se3-lvio
+title: "SE(3)-LVIO · LIO (Hesai + IMU)"
+modes: [lio_only]
+overrides: {}
+reference_result: "ARC-6 ATE 0.81 cm (pre-repo run 2026-10-06; re-measured in EXP-000)"

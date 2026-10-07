@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11", cache: pip}
+      - run: pip install -e ".[dev,docs]"
+      - run: ruff check lvx tools tests
+      - run: pytest -q
+      - run: python tools/check_tree.py
+      - run: python tools/check_experiments.py
+      - run: python tools/check_reports.py
+      - run: python tools/sync_course.py --check
+      - run: mkdocs build --strict

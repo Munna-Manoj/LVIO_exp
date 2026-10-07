@@ -1,0 +1,36 @@
+id: EXP-012
+slug: image-quality-gate
+title: Does skipping bad frames make the camera pay for itself?
+phase: P5
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-004
+supersedes: null
+host: reference
+question: Does skipping the photometric update on dark or low-texture frames improve the S9b configuration?
+hypothesis: Bad frames give biased photometric constraints; skipping them keeps good-frame information
+  and saves time.
+prediction: S9b with the gate ≤ S9a ATE, lower ms_p95 than S9b.
+falsified_if: no change beyond noise and no time saving.
+baseline: se3lvio_S9b
+variants:
+- id: img_gate
+  change: skip the update if mean intensity < 25 or gradient energy below the 10th percentile
+  overrides:
+    lio.visual.quality_gate: true
+code_change: new flag visual.quality_gate (default false)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

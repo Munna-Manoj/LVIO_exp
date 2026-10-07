@@ -1,0 +1,21 @@
+# Template for lvx.local.yaml: the ONE machine-specific file. Copy it, or create it with `lvx init`:
+#   lvx init --data-root ~/datasets/lvx --run-root ~/lvx_runs
+# lvx.local.yaml is git-ignored. Tracked files only ever name datasets, systems and host profiles.
+
+data_root: ~/datasets/lvx        # datasets live at <data_root>/<dir> (dir per dataset: configs/datasets.yaml)
+run_root: ~/lvx_runs             # append-only run outputs, built systems, derived data
+
+datasets:                        # optional: a dataset somewhere else (absolute, or relative to data_root)
+  # sad-nclt: /path/to/bigdisk/NCLT
+  # grandtour: ~/grandtour/missions
+
+systems:                         # optional: where a system is built and its local container tag
+  # sad: {root: ~/src/slam_in_autonomous_driving, image: sad:v1}
+  # se3-lvio: {image: my-se3lvio:latest}
+  # lightning-lm: {root: ~/lvx_runs/systems/lightning-lm, image: lightning:humble}
+
+hosts:                           # optional: how to reach the machine that plays a host profile
+  # reference: {ssh: my-server, repo: ~/LVIO_exp}
+
+private_tokens: []               # words that must never be committed (your user/host names); checked by
+                                 # tools/check_tree.py and the commit-msg hook (scripts/install_hooks.sh)

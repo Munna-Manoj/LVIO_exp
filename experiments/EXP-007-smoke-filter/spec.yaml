@@ -1,0 +1,36 @@
+id: EXP-007
+slug: smoke-filter
+title: Does dropping weak, close returns remove smoke without hurting accuracy?
+phase: P3
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Does removing points with intensity < 3 within 3 m before matching reduce smoke-induced error?
+hypothesis: ARC-6 smoke points are low-intensity (median 2 vs 11), short-range (1.5 m) and transient;
+  they enter the map as fake planes.
+prediction: Better on ARC-6 near the start, within noise elsewhere.
+falsified_if: worse beyond noise on missions without smoke (real dark surfaces removed).
+baseline: se3lvio_S8
+variants:
+- id: smoke_i3_r3
+  change: drop intensity < 3 within 3 m
+  overrides:
+    lio.smoke_filter: 3,3.0
+code_change: new flag smoke_filter "<min_intensity>,<max_range>" (default empty = off)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

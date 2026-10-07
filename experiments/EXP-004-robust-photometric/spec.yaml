@@ -1,0 +1,37 @@
+id: EXP-004
+slug: robust-photometric
+title: Does a robust kernel on photometric residuals make the camera useful?
+phase: P5
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Does Huber weighting of photometric patch residuals (instead of the hard outlier_threshold)
+  let the camera improve ATE?
+hypothesis: The camera currently adds nothing (0.89 → 0.90 cm on ARC-6) because dark and smoky patches
+  pass the hard gate and add biased constraints.
+prediction: S9b with Huber photometric weights reaches or beats S9a (camera off).
+falsified_if: Huber leaves the S9b-vs-S9a gap unchanged.
+baseline: se3lvio_S9b
+variants:
+- id: photo_huber
+  change: Huber on photometric residuals
+  overrides:
+    lio.visual.robust_kernel: huber
+code_change: new flag visual.robust_kernel {none,huber} (default none)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

@@ -1,0 +1,45 @@
+id: EXP-020
+slug: map-structure-speed
+title: Does the map data structure set the speed of SE(3)-LVIO?
+phase: P3
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+- EXP-016
+supersedes: null
+host: reference
+question: If SE(3)-LVIO's probabilistic VoxelMap is replaced by an iVox-style hashed voxel map with on-the-fly
+  5-NN plane fitting (as in Faster-LIO / lightning-lm), how do ms/scan and ATE change?
+hypothesis: VoxelMap pays for plane covariance (eigen-decomposition and covariance updates per voxel)
+  but gives better residual weights; iVox makes insertion and lookup cheaper (O(1) hashing, no plane refits)
+  but its constant-weight planes are noisier. Speed and accuracy should trade against each other.
+prediction: 'iVox variant: ms_p95 lower by 20-40 %, ATE worse beyond noise on most dev missions (weights
+  matter more than lookup cost at 2000 inliers).'
+falsified_if: the iVox variant is not faster beyond timing noise, or is both faster and at least as accurate
+  (map structure would then be a free speedup).
+baseline: se3lvio_S8
+variants:
+- id: ivox
+  change: map backend iVox (hashed voxels, 5-NN plane fit, covariance from the fit residual) instead of
+    VoxelMap
+  overrides:
+    lio.map_backend: ivox
+code_change: new flag map_backend {voxelmap,ivox} (default voxelmap); iVox reimplemented from the Faster-LIO
+  paper, not copied from lightning-lm (no licence)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ms_p95
+  secondary:
+  - ms_mean
+  - rss_mb
+  - ate_rmse_cm
+  - ate_max_cm
+stress: null
+decision_rule: 'report a trade-off: adopt only if ms_p95 drops by more than 10 % AND ATE is within 2σ
+  noise on every dev mission; reject if ATE is worse beyond 2σ on any mission; otherwise inconclusive
+  with the measured speed/accuracy trade-off.'
+learn_links: []

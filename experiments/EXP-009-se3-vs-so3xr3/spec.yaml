@@ -1,0 +1,40 @@
+id: EXP-009
+slug: se3-vs-so3xr3
+title: Does the coupled SE(3) retraction matter?
+phase: P4
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Does replacing the SE(3) exponential retraction with the separate SO(3)×R³ retraction (FAST-LIO
+  style) change ATE?
+hypothesis: For per-scan corrections (mm, mrad) the two retractions differ by about ½ φ×ρ, which is micrometres;
+  any effect should appear only in fast turns or with large rotation uncertainty.
+prediction: Within noise on every dev mission; if anything, a difference on the fastest-turning segments.
+falsified_if: SO(3)×R³ worse beyond noise on most missions (would support the paper's central claim more
+  strongly than the theory predicts).
+baseline: se3lvio_S8
+variants:
+- id: so3xr3
+  change: retraction SO(3)×R³ instead of SE(3) exp
+  overrides:
+    lio.retraction: so3xr3
+code_change: new flag retraction {se3,so3xr3} (default se3) in core/lie.cpp boxplus and resetErrorState
+  Jacobian
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links:
+- docs/explain/se3-vs-so3xr3.md

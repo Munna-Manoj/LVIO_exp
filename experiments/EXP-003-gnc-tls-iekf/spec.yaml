@@ -1,0 +1,45 @@
+id: EXP-003
+slug: gnc-tls-iekf
+title: Does GNC-TLS annealed across IEKF iterations help?
+phase: P1
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-002
+supersedes: null
+host: reference
+question: Does graduated non-convexity with a truncated-least-squares cost, annealed over the 4-6 IEKF
+  iterations, beat a fixed gate and a fixed robust kernel?
+hypothesis: GNC helps when outliers are many and the start is poor; with a good IMU prior it should match
+  the gate on clean data and only help where outliers are dense.
+prediction: Within noise of the best of EXP-002 on clean missions; better only under the P6 dynamic-clutter
+  stress profile.
+falsified_if: GNC-TLS is worse beyond noise on clean missions (annealing too slow for 5 iterations) AND
+  not better under stress.
+baseline: se3lvio_S8
+variants:
+- id: gnc_tls
+  change: GNC-TLS weights, μ annealed ×1.4 per iteration
+  overrides:
+    lio.robust_kernel: gnc_tls
+- id: gnc_tls_8it
+  change: GNC-TLS with max_iter 8 so the schedule can finish
+  overrides:
+    lio.robust_kernel: gnc_tls_8it
+code_change: robust_kernel gains gnc_tls / gnc_tls_8it (the second sets its own iteration cap inside the
+  kernel, so it stays one flag)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links:
+- docs/explain/outliers-in-an-iekf.md

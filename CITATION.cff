@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+message: "If you use this ablation study or its harness, please cite it."
+title: "LVIO_exp: a pre-registered ablation study of LiDAR-inertial-visual odometry"
+authors:
+  - alias: Munna-Manoj
+repository-code: "https://github.com/Munna-Manoj/LVIO_exp"
+license: MIT

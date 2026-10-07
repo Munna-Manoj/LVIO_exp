@@ -1,0 +1,8 @@
+# Host PROFILE (hardware only). Reported runs come from this profile unless a spec names another.
+# How to reach the machine that plays this profile (ssh alias, checkout path, python) is machine-specific
+# and lives in lvx.local.yaml under `hosts: {reference: ...}`, never here.
+name: reference
+cpu: Intel Xeon Silver 4216 @ 2.1 GHz
+cores_total: 64
+runtime: podman             # rootless: no --cpus/--cpuset, so cores are pinned with taskset inside the container
+pinned_cpus: "0-3"          # 4 cores = the comparison budget for every system (Pi 5 has 4 cores)

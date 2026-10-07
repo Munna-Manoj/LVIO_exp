@@ -1,0 +1,6 @@
+# arc6_stock + finer grids for indoor scale (0.2 m scan / map / iVox), denser point sampling.
+_extends: arc6_stock.yaml
+fasterlio.point_filter_num: 2
+fasterlio.filter_size_scan: 0.2
+fasterlio.filter_size_map: 0.2
+fasterlio.ivox_grid_resolution: 0.2

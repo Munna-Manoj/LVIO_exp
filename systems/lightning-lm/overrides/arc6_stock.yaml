@@ -1,0 +1,10 @@
+# Keys changed from upstream config/default_robosense.yaml (dotted paths). Nothing else is copied.
+# Hesai XT32 on GrandTour: blind 0.6 m, extrinsic T_imu_lidar from the mission calib.json.
+# plane_icp_weight / proj_kfs are missing upstream in default_robosense.yaml; values from upstream default.yaml.
+fasterlio.blind: 0.6
+fasterlio.extrinsic_T: [0.017039, -0.025798, 0.171351]
+fasterlio.extrinsic_R: [-0.00388518, -0.99998888, 0.00267321,
+                      0.99999245, -0.00388534, -0.00005794,
+                      0.00006832, 0.00267297, 0.99999643]
+fasterlio.plane_icp_weight: 300.0
+fasterlio.proj_kfs: false

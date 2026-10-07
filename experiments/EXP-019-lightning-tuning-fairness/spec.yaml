@@ -1,0 +1,44 @@
+id: EXP-019
+slug: lightning-tuning-fairness
+title: Is lightning-lm tuned fairly?
+phase: PX
+status: planned
+created: '2026-10-07'
+system: lightning-lm
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: With the same dev-split tuning budget SE(3)-LVIO had, how close does lightning-lm get?
+hypothesis: Most of the 0.6-0.8 cm ARC-6 gap comes from map representation and residual weighting, not
+  from tuning; tuning closes at most a third of it.
+prediction: Best lightning-lm variant within 0.3 cm of its indoor baseline.
+falsified_if: a tuned lightning-lm matches SE(3)-LVIO S8 within noise.
+baseline: lightning_indoor
+variants:
+- id: grid_0p1
+  change: 0.1 m scan/map/iVox grid
+  overrides:
+    fasterlio.ivox_grid_resolution: 0.1
+- id: icp_w_1000
+  change: plane_icp_weight 1000
+  overrides:
+    fasterlio.plane_icp_weight: 1000.0
+- id: filter_1
+  change: point_filter_num 1
+  overrides:
+    fasterlio.point_filter_num: 1
+code_change: none (config only)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

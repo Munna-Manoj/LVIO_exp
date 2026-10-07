@@ -1,0 +1,39 @@
+id: EXP-006
+slug: step-limits-cov-hygiene
+title: Do step limits and covariance hygiene change accuracy or only robustness?
+phase: P2
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Do lightning-lm-style guards (reject an update step > 0.5 m / 5°, symmetrise and floor the covariance)
+  change ATE?
+hypothesis: These guards never trigger on healthy data, so they should not change accuracy; they matter
+  only under stress (P6).
+prediction: Bit-identical or within noise on every dev mission; fewer divergences under the P6 scan-drop
+  profile.
+falsified_if: any change beyond noise on clean data (the guard triggers when it should not).
+baseline: se3lvio_S8
+variants:
+- id: guards
+  change: step limit 0.5 m / 5° + covariance symmetrise and floor
+  overrides:
+    lio.update_guards: true
+  single_change_reason: the two guards are one safety feature behind one flag
+code_change: new flag update_guards (default false)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

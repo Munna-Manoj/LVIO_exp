@@ -1,0 +1,96 @@
+site_name: LVIO_exp
+site_description: A pre-registered ablation study of LiDAR-inertial-visual odometry (SE(3)-LVIO vs lightning-lm).
+site_url: https://munna-manoj.github.io/LVIO_exp/
+repo_url: https://github.com/Munna-Manoj/LVIO_exp
+repo_name: Munna-Manoj/LVIO_exp
+docs_dir: docs
+edit_uri: edit/main/docs/
+
+# process/ is contributor-facing (protocol, ADRs, writing guide); it is read on GitHub, not published.
+exclude_docs: |
+  process/
+
+# Reports are reached through the generated table on experiments/index.md, not listed one by one.
+not_in_nav: |
+  experiments/EXP-*.md
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  # Same palette family as DS-MSP: black primary, teal accent, auto/light/dark toggle.
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle: {icon: material/lightbulb-auto, name: Switch to light mode}
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: teal
+      toggle: {icon: material/lightbulb, name: Switch to dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: teal
+      toggle: {icon: material/lightbulb-outline, name: Switch to system preference}
+
+plugins:
+  - search
+  - glightbox:
+      effect: zoom
+      zoomable: true
+
+markdown_extensions:
+  # GitHub alert syntax (> [!NOTE]) renders as admonitions, so one source works on GitHub and here.
+  - github-callouts
+  - admonition
+  - pymdownx.details
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Experiments:
+      - experiments/index.md
+  - Learn:
+      - learn/README.md
+      - B01 · IMU propagation: learn/B01-imu-propagation.md
+  - Explanation:
+      - explain/README.md
+      - SE(3) vs SO(3)×R³: explain/se3-vs-so3xr3.md
+      - Outliers in an IEKF: explain/outliers-in-an-iekf.md
+  - How-to:
+      - how-to/README.md
+      - Set up: how-to/setup.md
+      - Get the data: how-to/get-the-data.md
+      - Propose an experiment: how-to/propose-an-experiment.md
+      - Run an experiment: how-to/run-an-experiment.md
+  - Reference:
+      - reference/README.md
+      - lvx CLI: reference/lvx-cli.md
+      - Spec fields: reference/spec-fields.md

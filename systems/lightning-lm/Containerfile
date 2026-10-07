@@ -1,0 +1,10 @@
+# Lean build image for lightning-lm (ROS 2 Humble). Pangolin comes from the repo's bundled zip.
+FROM docker.io/library/ros:humble-perception
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libgoogle-glog-dev libgflags-dev libyaml-cpp-dev libepoxy-dev libgl1-mesa-dev libglew-dev \
+      ros-humble-pcl-conversions ros-humble-pcl-ros unzip python3-colcon-common-extensions \
+    && rm -rf /var/lib/apt/lists/*
+COPY Pangolin-0.9.3.zip /tmp/
+RUN cd /tmp && unzip -q Pangolin-0.9.3.zip && cd Pangolin-0.9.3 && cmake -B build -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_EXAMPLES=OFF -DBUILD_TOOLS=OFF -DBUILD_PANGOLIN_PYTHON=OFF -DBUILD_TESTS=OFF \
+    && cmake --build build -j16 && cmake --install build && ldconfig && rm -rf /tmp/Pangolin*

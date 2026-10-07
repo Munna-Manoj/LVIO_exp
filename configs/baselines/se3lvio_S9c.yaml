@@ -1,0 +1,7 @@
+# SE(3)-LVIO full system: S9b + online backend (plane BA + iSAM2). The COMFORT leaderboard configuration.
+system: se3-lvio
+title: "SE(3)-LVIO · full (LVIO + backend)"
+modes: [lidar_multi, backend]
+overrides: {}
+estimate: estimate_backend_prism
+reference_result: "ARC-6 ATE 0.90 cm (pre-repo run; re-measured in EXP-000)"

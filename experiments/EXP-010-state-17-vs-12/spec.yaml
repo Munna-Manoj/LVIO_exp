@@ -1,0 +1,37 @@
+id: EXP-010
+slug: state-17-vs-12
+title: Does estimating accelerometer bias and gravity online pay off?
+phase: P4
+status: planned
+created: '2026-10-07'
+system: se3-lvio
+depends_on:
+- EXP-000
+supersedes: null
+host: reference
+question: Does the 17-dim state (with accel bias and S2 gravity) beat a 12-dim state with them fixed after
+  initialisation, as in lightning-lm?
+hypothesis: Accel bias and gravity direction are weakly observable but matter when the start is not static;
+  fixing them saves compute and removes a source of drift-by-misestimation.
+prediction: Within noise on missions with a static start; 17-dim better on missions that start moving.
+falsified_if: 12-dim better beyond noise on most missions.
+baseline: se3lvio_S8
+variants:
+- id: state12
+  change: freeze ba and gravity after initialisation (zero their process noise and gain)
+  overrides:
+    lio.freeze_ba_gravity: true
+code_change: new flag freeze_ba_gravity (default false)
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+stress: null
+decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+learn_links: []

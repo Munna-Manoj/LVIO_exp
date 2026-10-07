@@ -1,0 +1,6 @@
+# SE(3)-LVIO, Hesai + Livox + IMU.
+system: se3-lvio
+title: "SE(3)-LVIO · LIO (Hesai + Livox + IMU)"
+modes: [lio_only, lidar_multi]
+overrides: {}
+reference_result: "ARC-6 ATE 0.89 cm (pre-repo run; re-measured in EXP-000)"

@@ -1,0 +1,20 @@
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+site/
+build/
+dist/
+scratch/
+web/node_modules/
+web/dist/
+# data and run outputs never live in the tree (ADR-0006)
+*.bag
+*.db3
+*.zarr/
+*.pcd
+*.ply
+systems/lightning-lm/Pangolin-*.zip
+lvx.local.yaml

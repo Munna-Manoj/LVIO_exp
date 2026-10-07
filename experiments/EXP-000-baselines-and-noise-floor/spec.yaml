@@ -1,0 +1,51 @@
+id: EXP-000
+slug: baselines-and-noise-floor
+title: How large is run-to-run noise, and do the pre-repo baselines reproduce?
+phase: P0
+status: planned
+created: '2026-10-07'
+system: both
+depends_on: []
+supersedes: null
+host: reference
+question: How much does ATE vary between identical runs of each baseline, and do the pre-repo ARC-6 numbers
+  reproduce inside the harness?
+hypothesis: Multithreaded map updates (OpenMP) make runs non-deterministic; the spread is small but not
+  zero, and it sets the smallest effect any later experiment may claim.
+prediction: σ(ATE) per baseline and mission below 0.05 cm; ARC-6 means within 3σ of the pre-repo numbers
+  (S8 0.81, S9a 0.89, S9b 0.90, S9c 0.90, lightning stock 1.64, indoor 1.41 cm).
+falsified_if: any baseline misses its pre-repo number by more than 3σ, which means the harness changed
+  the system (wrong config, frame or time offset).
+baseline: se3lvio_S8
+variants:
+- id: s9a
+  change: swap baseline config to S9a (adds Livox)
+  baseline: se3lvio_S9a
+- id: s9b
+  change: swap baseline config to S9b (adds camera)
+  baseline: se3lvio_S9b
+- id: s9c
+  change: swap baseline config to S9c (adds backend)
+  baseline: se3lvio_S9c
+- id: ll_stock
+  change: swap baseline config to lightning-lm stock
+  baseline: lightning_stock
+- id: ll_indoor
+  change: swap baseline config to lightning-lm indoor grid
+  baseline: lightning_indoor
+code_change: none
+missions:
+  set: dev
+repeats: 5
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_median_cm
+  - ate_max_cm
+  - ms_mean
+  - ms_p95
+  - rss_mb
+stress: null
+decision_rule: pass (verdict adopt = the harness is trusted) if every baseline reproduces within 3σ; otherwise
+  reject and fix the harness before any other experiment runs.
+learn_links: []

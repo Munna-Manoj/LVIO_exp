@@ -1,0 +1,60 @@
+# Pinned systems under test. lvx reads this file; nothing else may hard-code a repo, commit or command.
+# Changing a pin is a tracked change: bump it in its own commit `chore(systems): pin <system> <sha>` and rerun EXP-000.
+se3-lvio:
+  title: SE(3)-LVIO
+  upstream: https://github.com/url-kaist/se3-livom-comfort
+  fork: git@github.com:Munna-Manoj/se3-livom-comfort.git   # branch lvio-exp holds every ablation flag
+  branch: lvio-exp
+  pinned_commit: 9bba0e4e06d8662d3c0198e239da12967f687069  # upstream master 2026-10-05; fork branch starts here
+  licence: GPL-2.0
+  checkout: submodule                # systems/se3-lvio
+  image: lvx/se3-lvio:ros1          # neutral tag; map to your local tag in lvx.local.yaml
+  # Run template, executed on the host from the system checkout. {placeholders} are filled by lvx.
+  # Override keys:  lio.<field>     -> --set <field>=<value>        (SE3LIOConfig field)
+  #                 backend.<key>   -> --backend-set <key>=<value>   (comma-joined)
+  #                 mode.*          -> flags below
+  run: >-
+    bash scripts/run_se3lio.sh {mission} --tag {run_tag} {mode_flags} {set_flags} {backend_flags}
+  modes:
+    lidar_multi: "--lidar multi"
+    lio_only: "--lio-only"
+    backend: "--backend"
+  outputs:                           # relative to the system's results/<name>/ folder
+    estimate_imu: "{mission}_imu.tum"
+    estimate_prism: "{mission}.tum"
+    estimate_backend_prism: "{mission}_backend_prism.tum"
+    timing: timing.csv
+    log: run.log
+
+lightning-lm:
+  title: lightning-lm (LIO frontend)
+  upstream: https://github.com/gaoxiang12/lightning-lm
+  pinned_commit: 1325fed
+  licence: none                      # NO licence -> never vendor; fetch at build time (ADR-0003)
+  checkout: fetch                    # build_lightning.sh fetches upstream at pinned_commit into systems.lightning-lm.root
+  image: lvx/lightning-lm:humble    # neutral tag; map to your local tag in lvx.local.yaml
+  ours:                              # the only lightning-related files tracked here
+    - systems/lightning-lm/runner/run_lio_tum.cc
+    - systems/lightning-lm/offline_to_ros2bag.py
+    - systems/lightning-lm/Containerfile
+    - systems/lightning-lm/overrides/
+  # Config = upstream config/default_robosense.yaml + overrides/<name>.yaml merged by lvx (dotted keys).
+  base_config: config/default_robosense.yaml
+  run: >-
+    taskset -c {cpus} ./bin/run_lio_tum --input_bag {bag} --config {config} --output {out_imu_tum} --timing {timing_csv} --log_dir {log_dir}
+  outputs:
+    estimate_imu: "{mission}_imu.tum"
+    estimate_prism: "{mission}.tum"  # written by lvx via the same to_prism conversion as SE(3)-LVIO
+
+sad:
+  title: SLAM in Autonomous Driving (book code, reference implementations for course parts B-F)
+  upstream: https://github.com/gaoxiang12/slam_in_autonomous_driving
+  book_en_pdf: https://github.com/gaoxiang12/slam-in-ad-en/blob/main/sad-en.pdf
+  pinned_commit: 27f8e94798296650f6dcf72d198719e60a92fb04   # built on the reference host
+  licence: MIT                       # code only; the book text and figures are not copied, only linked
+  checkout: external                 # built outside the repo; its location: lvx.local.yaml systems.sad.root
+  image: lvx/sad:noetic             # built from the SAD Dockerfile; map your local tag in lvx.local.yaml
+  # Labs (course/curriculum.yaml `labs:`) run one app in a scratch copy: the apps write into ./data/.
+  # {app} {args} filled by lvx; libraries are not on the default path inside the image.
+  run: >-
+    source /opt/ros/noetic/setup.bash && export LD_LIBRARY_PATH=/sad/lib:$LD_LIBRARY_PATH && ./bin/{app} {args}

@@ -1,0 +1,6 @@
+# SE(3)-LVIO, Hesai + Livox + IMU + front camera (photometric update). Reference for camera ablations.
+system: se3-lvio
+title: "SE(3)-LVIO · LVIO (2 LiDAR + IMU + camera)"
+modes: [lidar_multi]
+overrides: {}
+reference_result: "ARC-6 ATE 0.90 cm (pre-repo run; re-measured in EXP-000)"

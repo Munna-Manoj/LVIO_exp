@@ -1,0 +1,76 @@
+# Every dataset the course and the study use: where to get it officially, its size, and where lvx expects it.
+# Code never names a path: it asks for a dataset by name (lvx.data.dataset("sad-ulhk")). On each machine the
+# dataset lives at <data_root>/<dir> unless lvx.local.yaml overrides it (`datasets: {sad-nclt: /other/disk}`).
+# `files` are the files chapters and labs read (globs allowed); `lvx data check` reports missing ones.
+# Links are the official ones published by the dataset / book authors. Respect each dataset's terms.
+
+sad_download:   # one archive server for all SAD datasets (from the SAD repository README)
+  baidu: "https://pan.baidu.com/s/1ELOcF1UTKdfiKBAaXnE8sQ?pwd=feky (extraction code: feky)"
+  onedrive: "https://1drv.ms/u/s!AgNFVSzSYXMahcEZejoUwCaHRcactQ?e=YsOYy2"
+  readme: "https://github.com/gaoxiang12/slam_in_autonomous_driving#datasets"
+
+datasets:
+  sad-builtin:
+    title: "SAD built-in data (IMU/RTK text, sample PCDs, EPFL registration pairs, map tiles)"
+    source: "ships inside the SAD repository (data/)"
+    size_gb: 0.7
+    dir: null                       # ships inside the SAD checkout: <systems.sad.root>/data
+    files: ["ch3/10.txt", "ch5/*.pcd", "ch7/EPFL"]
+    used_by: [B01, B02, I02, B03, B04, C02, C03, D01]
+  sad-2dmapping:
+    title: "2dmapping: 2D LiDAR, shopping mall floors"
+    source: sad_download
+    size_gb: 0.34
+    dir: sad/2dmapping
+    files: ["floor1.bag"]
+    used_by: [C04, C05]
+  sad-ulhk:
+    title: "UrbanLoco (ULHK): 3D LiDAR + IMU, urban roads in Hong Kong"
+    source: sad_download
+    official: "https://github.com/weisongwen/UrbanLoco"
+    size_gb: 13
+    dir: sad/ulhk
+    files: ["test2.bag", "test3.bag"]
+    used_by: [I01, D03, I03, D04, I07]
+  sad-wxb:
+    title: "WXB: 3D LiDAR + IMU, campus"
+    source: sad_download
+    size_gb: 7.9
+    dir: sad/wxb
+    files: ["test1.bag"]
+    used_by: [D03]
+  sad-nclt:
+    title: "NCLT: Velodyne HDL-32 + IMU + RTK, University of Michigan campus"
+    source: sad_download
+    official: "http://robots.engin.umich.edu/nclt/"
+    size_gb: 138
+    dir: sad/NCLT
+    files: ["20120115.bag"]
+    note: "SAD sources default to ./dataset/sad/nclt (lower case); labs pass the path explicitly"
+    used_by: [E02, I04, E03, F01, F02, I06, F03, G03]
+  sad-avia:
+    title: "AVIA: DJI Livox Avia solid-state LiDAR"
+    source: sad_download
+    size_gb: 1.8
+    dir: sad/avia
+    files: ["*.bag"]
+    used_by: []
+  sad-utbm:
+    title: "UTBM: 3D LiDAR, roads in France"
+    source: sad_download
+    official: "https://epan-utbm.github.io/utbm_robocar_dataset/"
+    size_gb: 71
+    dir: sad/UTBM
+    files: ["*.bag"]
+    used_by: []
+  grandtour:
+    title: "GrandTour (ANYmal legged robot): Hesai + Livox + STIM320 IMU + cameras, prism GT by total station"
+    source: huggingface
+    official: "https://grand-tour.leggedrobotics.com/"
+    huggingface: "https://huggingface.co/datasets/leggedrobotics/grand_tour_dataset"
+    benchmark: "https://grand-tour.leggedrobotics.com/tasks/localization"
+    size_gb_per_mission: 10
+    dir: grandtour
+    files: ["*_ARC-6_release_*/comfort_offline/imu.txt"]
+    note: "converted per mission to the comfort_offline layout (see docs/how-to/get-the-data.md)"
+    used_by: [I01, I02, I03, I04, I05, I06, I07, G02, G03]
