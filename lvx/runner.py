@@ -189,6 +189,10 @@ def execute(exp: Experiment, key: RunKey, host_name: str, allow_dirty: bool = Fa
     dirty = repo["dirty"] or sysgit["dirty"]
     if dirty and not allow_dirty:
         raise SystemExit("code is dirty (lvx/, configs/, systems/ or the system checkout); commit first")
+    pin = str(sysdef["pinned_commit"])
+    if not (sysgit["commit"].startswith(pin) or pin.startswith(sysgit["commit"])):
+        raise SystemExit(f"systems/{system} is at {sysgit['commit'][:7]} but systems.yaml pins {pin[:7]}: "
+                         "run `git submodule update`, or bump the pin in its own commit")
 
     if system == "se3-lvio":
         cmd = se3lvio_command(cfg, key.mission, run_tag=f"{exp.id}-{key.run_id}")

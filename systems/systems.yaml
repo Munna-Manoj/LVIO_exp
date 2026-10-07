@@ -3,7 +3,7 @@
 se3-lvio:
   title: SE(3)-LVIO
   upstream: https://github.com/url-kaist/se3-livom-comfort
-  fork: git@github.com:Munna-Manoj/se3-livom-comfort.git   # branch lvio-exp holds every ablation flag
+  fork: https://github.com/Munna-Manoj/se3-livom-comfort   # branch lvio-exp holds every ablation flag
   branch: lvio-exp
   pinned_commit: 9bba0e4e06d8662d3c0198e239da12967f687069  # upstream master 2026-10-05; fork branch starts here
   licence: GPL-2.0

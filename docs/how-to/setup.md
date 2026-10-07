@@ -5,7 +5,7 @@ Get a working `lvx` on a laptop (docs, specs, reports) and on the compute host (
 ## 1. Clone with the SE(3)-LVIO submodule
 
 ```bash
-git clone --recurse-submodules git@github.com:Munna-Manoj/LVIO_exp.git
+git clone --recurse-submodules https://github.com/Munna-Manoj/LVIO_exp.git
 cd LVIO_exp
 git submodule status        # systems/se3-lvio at the commit pinned in systems/systems.yaml
 ```

@@ -110,7 +110,7 @@ flowchart LR
 ## Quick start
 
 ```bash
-git clone --recurse-submodules git@github.com:Munna-Manoj/LVIO_exp.git && cd LVIO_exp
+git clone --recurse-submodules https://github.com/Munna-Manoj/LVIO_exp.git && cd LVIO_exp
 pip install -e ".[dev]"
 lvx init --data-root ~/datasets/lvx --run-root ~/lvx_runs   # this machine only (git-ignored lvx.local.yaml)
 lvx data check                     # which datasets are ready, and which chapters use them
