@@ -5,7 +5,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cat > "$REPO/.git/hooks/pre-commit" <<'HOOK'
 #!/bin/bash
-python3 tools/check_tree.py || { echo "pre-commit: fix the problems above (or remove the file from the commit)"; exit 1; }
+python3 tools/check_chapters.py && python3 tools/check_tree.py || { echo "pre-commit: fix the problems above (or remove the file from the commit)"; exit 1; }
 HOOK
 chmod +x "$REPO/.git/hooks/pre-commit"
 echo "installed .git/hooks/pre-commit"

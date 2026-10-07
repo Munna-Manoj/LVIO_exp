@@ -36,9 +36,9 @@ flowchart LR
   F --> X
 ```
 
-![IMU-only drift grows like a power of time](docs/assets/learn/B01/drift_vs_time.png)
+![30 IMU-only runs fanning out around the true figure-eight](course/chapters/B01-imu-propagation/results/drift_3d.png)
 
-*From course chapter [B01](docs/learn/B01-imu-propagation.md): why every LIO system needs more than its IMU.*
+*From course chapter [B01](course/chapters/B01-imu-propagation/): why every LIO system needs more than its IMU. Every chapter is one folder you can read and run on its own.*
 
 ## Why this repository exists
 
@@ -101,7 +101,7 @@ flowchart LR
 |---|---|
 | 📊 [Experiment reports](docs/experiments/index.md) | question → setup → results → verdict |
 | 🧭 [Roadmap](ROADMAP.md) | milestones and the experiment plan |
-| 📚 [Learn](docs/learn/README.md) | the course, book-aligned. Start with [B01 IMU propagation](docs/learn/B01-imu-propagation.md) |
+| 📚 [Learn](docs/learn/README.md) | the course, book-aligned. Start with [B01 IMU propagation](course/chapters/B01-imu-propagation/) |
 | 💾 [Get the data](docs/how-to/get-the-data.md) | official links for the SAD datasets and GrandTour |
 | 💡 [Explanation](docs/explain/README.md) | e.g. [SE(3) vs SO(3)×R³](docs/explain/se3-vs-so3xr3.md), [outliers in an IEKF](docs/explain/outliers-in-an-iekf.md) |
 | 🛠️ [How-to](docs/how-to/README.md) | set up, propose and run an experiment |

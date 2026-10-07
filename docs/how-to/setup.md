@@ -61,7 +61,7 @@ bash scripts/build_lightning.sh
 ```
 
 > [!TIP]
-> The **Build it** track of the course needs none of this: `python course/chapters/B01-imu-propagation/run.py`
+> The **Build it** track of the course needs none of this: `cd course/chapters/B01-imu-propagation && python main.py`
 > works right after `pip install -e .`.
 
 ## 6. Check everything

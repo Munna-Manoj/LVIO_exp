@@ -1,8 +1,0 @@
-trajectory: 4001 samples, dt = 5.0 ms, path length 37.5 m
-      perfect |    1 s:    0.0038 m     5 s:    0.0099 m    10 s:    0.0001 m    20 s:    0.0002 m
-  accel noise |    1 s:    0.0017 m     5 s:    0.0191 m    10 s:    0.0546 m    20 s:    0.1525 m
-   gyro noise |    1 s:    0.0007 m     5 s:    0.0421 m    10 s:    0.2401 m    20 s:    1.3805 m
-  white noise |    1 s:    0.0018 m     5 s:    0.0473 m    10 s:    0.2481 m    20 s:    1.3880 m
- noise + bias |    1 s:    0.0174 m     5 s:    0.3344 m    10 s:    1.1091 m    20 s:    4.7052 m
-perfect IMU: largest error over 20 s = 1.08 cm (discretisation only; noise rows are measured against this perfect-IMU path)
-at 20 s: Monte Carlo RMS 1.3880 m, covariance predicts 1.3404 m  (ratio 1.04)

@@ -26,9 +26,13 @@ A change is **done** only when every box that applies is checked. The PR templat
 
 ## A course chapter
 
-- [ ] `run.py` runs from a fresh clone in < ~30 s with no dataset; results and figures regenerated.
-- [ ] Reusable code is in `course/lvio_course/`, nothing earlier chapters built is reimplemented.
-- [ ] Page has the 10 sections in order; `python tools/sync_course.py --check` passes.
+- [ ] **Read-aloud test:** reading README.md, then the `.py` files top to bottom, without opening any other
+      file, explains the idea. Every line is understandable where it stands.
+- [ ] The folder is self-contained (copied helpers name their source chapter); `python tools/check_chapters.py` passes.
+- [ ] The synthetic scene is something a person recognises at a glance; the money plot is at the top.
+- [ ] `cd` into the folder and `python main.py` runs from a fresh clone in ≤ ~30 s with no dataset; the new
+      `results/output.txt` is pasted into the README.
+- [ ] README has the sections in order; `python tools/sync_course.py --check` passes. Every figure was looked at.
 - [ ] Every claim on the page is asserted in `tests/course/test_<ID>.py`.
 - [ ] Curriculum table (docs/learn/README.md), ROADMAP and mkdocs nav updated.
 
