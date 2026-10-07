@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-from . import paths, registry
+from . import config
 
 STATUSES = ["planned", "approved", "running", "analysed", "concluded", "abandoned"]
 PHASES = {
@@ -80,18 +80,18 @@ class Experiment:
 
     @property
     def report_path(self) -> Path:
-        return paths.REPORTS / f"{self.name}.md"
+        return config.REPORTS / f"{self.name}.md"
 
     @property
     def figures_dir(self) -> Path:
-        return paths.FIGURES / self.id
+        return config.FIGURES / self.id
 
     def variant_ids(self) -> List[str]:
         """Planned variants; the baseline is always run inside the experiment as variant `baseline`."""
         return ["baseline"] + [v["id"] for v in self.spec.get("variants") or []]
 
     def missions(self) -> List[str]:
-        return registry.resolve_missions(self.spec["missions"])
+        return config.resolve_missions(self.spec["missions"])
 
     def save(self) -> None:
         with open(self.spec_path, "w") as f:
@@ -105,7 +105,7 @@ def load(path: Path) -> Experiment:
 
 
 def all_experiments() -> List[Experiment]:
-    return [load(p.parent) for p in sorted(paths.EXPERIMENTS.glob("EXP-*/spec.yaml"))]
+    return [load(p.parent) for p in sorted(config.EXPERIMENTS.glob("EXP-*/spec.yaml"))]
 
 
 def find(exp_id: str) -> Experiment:
@@ -205,10 +205,10 @@ def validate(exp: Experiment, strict_todo: bool = False) -> List[str]:
         err.append(f"phase '{s['phase']}' not in {sorted(PHASES)}")
     if s["status"] not in STATUSES:
         err.append(f"status '{s['status']}' not in {STATUSES}")
-    if s["system"] not in list(registry.systems()) + ["both"]:
+    if s["system"] not in list(config.systems()) + ["both"]:
         err.append(f"system '{s['system']}' unknown")
     try:
-        registry.baseline(s["baseline"])
+        config.baseline(s["baseline"])
     except ValueError as e:
         err.append(str(e))
     try:
@@ -216,13 +216,13 @@ def validate(exp: Experiment, strict_todo: bool = False) -> List[str]:
     except ValueError as e:
         err.append(str(e))
     try:
-        registry.host(s["host"])
+        config.host_profile(s["host"])
     except ValueError as e:
         err.append(str(e))
-    if s.get("stress") and s["stress"] not in (registry.load_yaml(paths.CONFIGS / "stress.yaml").get("profiles") or {}):
+    if s.get("stress") and s["stress"] not in (config.stress_profiles()):
         err.append(f"stress profile '{s['stress']}' not in configs/stress.yaml")
     for link in s.get("learn_links") or []:
-        if not (paths.ROOT / link).exists():
+        if not (config.ROOT / link).exists():
             err.append(f"learn_links '{link}' does not exist")
     if not isinstance(s["repeats"], int) or s["repeats"] < 1:
         err.append("repeats must be a positive integer")

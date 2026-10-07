@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from . import plotstyle, runner
+from . import config, plotstyle
 from .evaluate import load_summary
 from .spec import Experiment
 
@@ -101,7 +101,7 @@ def trajectory_plots(exp: Experiment, summary: dict, out: Path) -> None:
         return
     worst = max(cells, key=lambda c: abs(c["delta"]))
     m, v = worst["mission"], worst["variant"]
-    gt = _read_tum(runner.mission_dir(m) / "comfort_offline" / "gt.tum")
+    gt = _read_tum(config.mission_dir(m) / "comfort_offline" / "gt.tum")
     idx = _variant_index(exp)
     tracks = {name: _read_tum(exp.results / "traj" / f"{name}__{m}__r1.tum.gz") for name in ("baseline", v)}
     if gt is None or any(t is None for t in tracks.values()):

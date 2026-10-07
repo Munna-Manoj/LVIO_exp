@@ -17,10 +17,12 @@
   - datasets, from `configs/datasets.yaml`, with a default `dir` and the `files` lvx checks;
   - systems, with neutral image tags `lvx/<system>:<tag>`;
   - host *profiles*, which describe hardware only (`reference`).
-- **Data access by name:** code reaches data only via `lvx.data.dataset(name)`.
+- **Data access by name:** lvx reaches data only via `config.dataset(name)`. Course chapters take the
+  folder as an argument (law 0, ADR-0010).
   `lvx data check` and `lvx course status` show what is ready.
-- **Sanitised records:** tracked run and lab records drop command lines, record image digests instead
-  of tags, and scrub logs.
+- **Sanitised records:** run commands carry no machine paths (locations are environment variables, see
+  `lvx/runner.py`), so run manifests keep them. Lab records drop their sandbox command. Both record image
+  digests instead of tags, and scrub logs.
 - **Enforcement:** `tools/check_tree.py` (CI + pre-commit) and a commit-msg hook reject
   machine-specific paths and every private token.
 

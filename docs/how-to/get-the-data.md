@@ -18,8 +18,13 @@ lvx init --dataset grandtour=/path/to/grandtour/missions   # any dataset, anywhe
 lvx data check                                         # ✅ ready / ⬜ missing for every dataset
 ```
 
-Chapters, labs and experiments never contain a path. They ask `lvx.data.dataset("sad-ulhk")`, so a
-dataset is linked to every chapter that uses it as soon as `lvx data check` shows ✅.
+Chapters, labs and experiments never contain a path; they name datasets (`sad-ulhk`). Experiments and
+labs find them through `lvx`. A chapter takes the folder on the command line, so it stays self-contained:
+
+```bash
+cd course/chapters/I01-real-imus-and-allan-variance
+python main.py --data "$(lvx config get dataset sad-ulhk)"
+```
 
 ## All datasets
 

@@ -1,5 +1,13 @@
-# arc6_stock + finer grids for indoor scale (0.2 m scan / map / iVox), denser point sampling.
-_extends: arc6_stock.yaml
+# Keys changed from upstream config/default_robosense.yaml (dotted paths). Nothing else is copied.
+# = arc6_stock.yaml (the first block, repeated so this file stands alone) + finer grids for indoor scale.
+fasterlio.blind: 0.6
+fasterlio.extrinsic_T: [0.017039, -0.025798, 0.171351]
+fasterlio.extrinsic_R: [-0.00388518, -0.99998888, 0.00267321,
+                      0.99999245, -0.00388534, -0.00005794,
+                      0.00006832, 0.00267297, 0.99999643]
+fasterlio.plane_icp_weight: 300.0
+fasterlio.proj_kfs: false
+# Indoor scale: 0.2 m scan / map / iVox grids, denser point sampling.
 fasterlio.point_filter_num: 2
 fasterlio.filter_size_scan: 0.2
 fasterlio.filter_size_map: 0.2

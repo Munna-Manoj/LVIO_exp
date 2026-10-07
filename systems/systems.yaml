@@ -1,4 +1,4 @@
-# Pinned systems under test. lvx reads this file; nothing else may hard-code a repo, commit or command.
+# Pinned systems under test: upstream, commit, licence, image. How each one is run is written out in lvx/runner.py.
 # Changing a pin is a tracked change: bump it in its own commit `chore(systems): pin <system> <sha>` and rerun EXP-000.
 se3-lvio:
   title: SE(3)-LVIO
@@ -9,22 +9,7 @@ se3-lvio:
   licence: GPL-2.0
   checkout: submodule                # systems/se3-lvio
   image: lvx/se3-lvio:ros1          # neutral tag; map to your local tag in lvx.local.yaml
-  # Run template, executed on the host from the system checkout. {placeholders} are filled by lvx.
-  # Override keys:  lio.<field>     -> --set <field>=<value>        (SE3LIOConfig field)
-  #                 backend.<key>   -> --backend-set <key>=<value>   (comma-joined)
-  #                 mode.*          -> flags below
-  run: >-
-    bash scripts/run_se3lio.sh {mission} --tag {run_tag} {mode_flags} {set_flags} {backend_flags}
-  modes:
-    lidar_multi: "--lidar multi"
-    lio_only: "--lio-only"
-    backend: "--backend"
-  outputs:                           # relative to the system's results/<name>/ folder
-    estimate_imu: "{mission}_imu.tum"
-    estimate_prism: "{mission}.tum"
-    estimate_backend_prism: "{mission}_backend_prism.tum"
-    timing: timing.csv
-    log: run.log
+  # How it is run: lvx/runner.py se3lvio_command() (the exact command is recorded in every manifest).
 
 lightning-lm:
   title: lightning-lm (LIO frontend)
@@ -38,14 +23,8 @@ lightning-lm:
     - systems/lightning-lm/offline_to_ros2bag.py
     - systems/lightning-lm/Containerfile
     - systems/lightning-lm/overrides/
-  # Runs in the image with the colcon workspace at /ws (libraries live in /ws/install).
-  # Config = upstream config/default_robosense.yaml + overrides/<name>.yaml merged by lvx (dotted keys).
-  base_config: config/default_robosense.yaml
-  run: >-
-    source /opt/ros/humble/setup.bash && source /ws/install/setup.bash && taskset -c {cpus} ./bin/run_lio_tum --input_bag {bag} --config {config} --output {out_imu_tum} --timing {timing_csv} --log_dir {log_dir}
-  outputs:
-    estimate_imu: "{mission}_imu.tum"
-    estimate_prism: "{mission}.tum"  # written by lvx via the same to_prism conversion as SE(3)-LVIO
+  # How it is run: lvx/runner.py lightning_command() + lightning_config() (upstream config/default_robosense.yaml
+  # + overrides/<name>.yaml, dotted keys). The exact command is recorded in every manifest.
 
 sad:
   title: SLAM in Autonomous Driving (book code, reference implementations for course parts B-F)
@@ -55,7 +34,4 @@ sad:
   licence: MIT                       # code only; the book text and figures are not copied, only linked
   checkout: external                 # built outside the repo; its location: lvx.local.yaml systems.sad.root
   image: lvx/sad:noetic             # built from the SAD Dockerfile; map your local tag in lvx.local.yaml
-  # Labs (course/curriculum.yaml `labs:`) run one app in a scratch copy: the apps write into ./data/.
-  # {app} {args} filled by lvx; libraries are not on the default path inside the image.
-  run: >-
-    source /opt/ros/noetic/setup.bash && export LD_LIBRARY_PATH=/sad/lib:$LD_LIBRARY_PATH && ./bin/{app} {args}
+  # Labs run one app in a scratch sandbox: lvx/course.py run_lab() (the command is recorded in the lab manifest).

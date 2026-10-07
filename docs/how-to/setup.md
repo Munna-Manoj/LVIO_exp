@@ -46,8 +46,8 @@ lvx data check                                        # ✅ ready / ⬜ missing,
 lvx course status                                     # per chapter: real-data step and C++ labs runnable?
 ```
 
-Chapters reach data only through `lvx.data.dataset("<name>")`, so once `lvx data check` shows ✅ the matching
-chapters just run.
+Once `lvx data check` shows ✅, pass the folder to a chapter's real-data step:
+`python main.py --data "$(lvx config get dataset <name>)"`.
 
 ## 5. Build the systems (compute host only)
 

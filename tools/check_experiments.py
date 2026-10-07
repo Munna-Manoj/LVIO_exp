@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from lvx import paths, spec  # noqa: E402
+from lvx import config, spec  # noqa: E402
 from lvx.evaluate import results_exist  # noqa: E402
 
 ORDER = {s: i for i, s in enumerate(spec.STATUSES)}
@@ -30,7 +30,7 @@ def check() -> list:
         if e.id in by_id:
             errors.append(f"{e.id}: duplicate id ({by_id[e.id].dir.name}, {e.dir.name})")
         by_id[e.id] = e
-    roadmap = paths.ROADMAP.read_text() if paths.ROADMAP.exists() else ""
+    roadmap = config.ROADMAP.read_text() if config.ROADMAP.exists() else ""
     for e in exps:
         where = e.dir.name
         errors += [f"{where}: {m}" for m in spec.validate(e)]

@@ -62,7 +62,10 @@ Read these before your first change in a session:
 ```
 LVIO_exp/
 ├─ CLAUDE.md  README.md  ROADMAP.md  CONTRIBUTING.md  LICENSE  LICENSING.md
-├─ lvx/                     Python package + CLI (`lvx`): specs, runs, eval, figures, reports
+├─ lvx/                     Python package + CLI (`lvx`). Read in this order:
+│                           config.py  every lookup: repo paths, YAML registries, this machine (lvx.local.yaml)
+│                           runner.py  spec -> config -> the exact command of each system -> manifest
+│                           evaluate.py, figures.py, report.py, spec.py, course.py (labs), cli.py
 ├─ tools/                   governance checkers run in CI (check_*.py)
 ├─ scripts/                 build + figure scripts (build_lightning.sh, make_*_figures.py)
 ├─ .claude/commands/        /exp-status, /exp-new, /exp-run, /exp-conclude (use them)
@@ -445,14 +448,18 @@ systems · Experiment hooks · Try it · Next.
   - host profiles: `reference` (`configs/hosts/`, hardware only).
 
 **Code reaches data by name**
-- **Datasets:** `from lvx.data import dataset; dataset("sad-ulhk") / "test2.bag"`.
-- **Missing data:** `dataset()` raises with the official link and the expected location.
+- **lvx and tools:** `config.dataset("sad-ulhk") / "test2.bag"`. When data is missing, `dataset()` raises
+  with the official link and the expected location.
+- **Course chapters** never import lvx (law 0). They take the folder on the command line
+  (`python main.py --data <dir>`), and `lvx config get dataset sad-ulhk` prints it on this machine.
 - **Status:** `lvx data check` and `lvx course status` show what this machine can run.
 - **Never write** `Path("/…")`, `~/…`, a hostname or a user name in tracked code, configs, docs, reports or commit messages.
 
 **What gets tracked from a run**
-- **Manifests:** the command line (which holds local paths) is dropped before a manifest is copied into
-  the repo. Images are recorded by content digest, not by local tag.
+- **Run manifests keep the exact command.** It holds no machine path: `lvx/runner.py` writes every
+  location as an environment variable (`$OUT`, `$GRANDTOUR`, …) set at run time. The manifest records
+  what each variable means, never its value. Images are recorded by content digest, not by local tag.
+- **Lab manifests** drop the sandbox command, which holds local paths.
 - **Logs:** tracked log tails go through `course.scrub()`.
 
 **Enforcement**

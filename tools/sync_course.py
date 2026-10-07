@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from lvx import course, registry  # noqa: E402
+from lvx import config, course  # noqa: E402
 
 CHAPTERS = ROOT / "course" / "chapters"
 SITE_LEARN = ROOT / "docs" / "learn"
@@ -111,7 +111,7 @@ def render_curriculum() -> str:
 
 
 def render_datasets() -> str:
-    reg = registry.load_yaml(ROOT / "configs" / "datasets.yaml")["datasets"]
+    reg = config.load_yaml(ROOT / "configs" / "datasets.yaml")["datasets"]
     rows = ["| Dataset | What | Size | Put it in (default) | Files lvx checks | Used by |", "|---|---|---|---|---|---|"]
     for name, d in reg.items():
         size = f"{d['size_gb']} GB" if "size_gb" in d else f"~{d.get('size_gb_per_mission', '?')} GB / mission"

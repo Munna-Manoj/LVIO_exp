@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from lvx import paths, report, spec  # noqa: E402
+from lvx import config, report, spec  # noqa: E402
 
 MKDOCS_ONLY = re.compile(r"^(///|!!! |\?\?\? )|\{\* .* \*\}", re.M)
 IMG = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
@@ -26,7 +26,7 @@ IMG = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 def check() -> list:
     errors = []
     for e in spec.all_experiments():
-        where = paths.rel(e.report_path) if e.report_path.exists() else e.report_path.name
+        where = config.rel(e.report_path) if e.report_path.exists() else e.report_path.name
         if not e.report_path.exists():
             errors.append(f"{e.id}: report {e.report_path.name} missing (lvx report {e.id})")
             continue
@@ -53,7 +53,7 @@ def check() -> list:
             if not img.startswith("http") and not (e.report_path.parent / img).resolve().exists():
                 errors.append(f"{where}: image {img} not found")
     errors += report.index_drift()
-    if paths.README.exists() and MKDOCS_ONLY.search(paths.README.read_text()):
+    if config.README.exists() and MKDOCS_ONLY.search(config.README.read_text()):
         errors.append("README.md: MkDocs-only syntax")
     return errors
 
