@@ -37,7 +37,7 @@ flowchart LR
 | M0.1 | Repo skeleton, CLAUDE.md, protocol, checkers, CI | ✅ | `check_*` + pytest green |
 | M0.2 | Fork `url-kaist/se3-livom-comfort` → `Munna-Manoj/se3-livom-comfort`, branch `lvio-exp`, add as submodule `systems/se3-lvio` | ✅ | `git submodule status` shows the pinned commit |
 | M0.3 | Clone this repo on the reference host, `pip install -e .[eval]`, set `LVX_DATA_ROOT`/`LVX_RUN_ROOT` | ⬜ | `lvx run EXP-000 --dry-run` prints a manifest on the host |
-| M0.4 | Build lightning-lm via `scripts/build_lightning.sh` (pinned 1325fed + our runner with `--timing`) | ⬜ | `bin/run_lio_tum` exists, timing.csv written |
+| M0.4 | Build lightning-lm via `scripts/build_lightning.sh` (pinned 1325fed + our runner with `--timing`) | ✅ | `bin/run_lio_tum` exists, timing.csv written |
 | M0.5 | Fix the mission split: confirm the six COMFORT Validation missions, download 5 more, convert to the offline layout + lightning bags | ⬜ | `configs/missions.yaml` has `dev` (3) and `test` (3) with GT, ADR-0005 updated |
 | M0.6 | EXP-000: baselines + noise floor | ⬜ | EXP-000 concluded `adopt` |
 

@@ -275,7 +275,8 @@ def lightning_invocation(cfg: Dict[str, Any], key: RunKey, host: Dict[str, Any],
     mdir = mission_dir(key.mission) / "comfort_offline"
     se3 = paths.ROOT / "systems" / "se3-lvio"
     cmd = (
-        f"podman run --rm -v {upstream}:/ll -v {bag}:/bag:ro -v {out}:/out -w /ll {config.image('lightning-lm')} "
+        f"podman run --rm -v {workspace}:/ws -v {bag}:/bag:ro -v {out}:/out -w /ws/src/lightning-lm "
+        f"{config.image('lightning-lm')} "
         f"bash -c {shlex.quote(inner)} > {out}/run.log 2>&1 && "
         f"python3 {se3}/tools/to_prism.py {mdir}/calib.json {out}/{key.mission}_imu.tum {out}/estimate.tum"
     )

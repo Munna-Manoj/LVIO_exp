@@ -38,10 +38,11 @@ lightning-lm:
     - systems/lightning-lm/offline_to_ros2bag.py
     - systems/lightning-lm/Containerfile
     - systems/lightning-lm/overrides/
+  # Runs in the image with the colcon workspace at /ws (libraries live in /ws/install).
   # Config = upstream config/default_robosense.yaml + overrides/<name>.yaml merged by lvx (dotted keys).
   base_config: config/default_robosense.yaml
   run: >-
-    taskset -c {cpus} ./bin/run_lio_tum --input_bag {bag} --config {config} --output {out_imu_tum} --timing {timing_csv} --log_dir {log_dir}
+    source /opt/ros/humble/setup.bash && source /ws/install/setup.bash && taskset -c {cpus} ./bin/run_lio_tum --input_bag {bag} --config {config} --output {out_imu_tum} --timing {timing_csv} --log_dir {log_dir}
   outputs:
     estimate_imu: "{mission}_imu.tum"
     estimate_prism: "{mission}.tum"  # written by lvx via the same to_prism conversion as SE(3)-LVIO
