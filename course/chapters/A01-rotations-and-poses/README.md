@@ -2,7 +2,8 @@
 
 Three short lessons, for readers who know matrices and vectors. **Lesson 1:** a small turn can go on two
 sides of a rotation, and they differ. **Lesson 2:** nudging a rotation vector is not the nudge you think.
-**Lesson 3:** why a robot's position uncertainty is shaped like a banana, and what "on SE(3)" means. No
+**Lesson 3:** why a robot's position uncertainty is shaped like a banana, and how that shape gives a better
+answer when the next measurement arrives. No
 dataset is needed.
 
 > [!NOTE]
@@ -21,7 +22,8 @@ dataset is needed.
 A LiDAR-inertial filter does three things with rotations, about a hundred times a second:
 - it **turns** its estimate by a small amount (a gyro reading, or a correction);
 - it asks **how a small change** in its numbers moves the robot (a Jacobian);
-- it keeps a **bell curve** of how wrong it might be (a covariance).
+- it keeps a **bell curve** of how wrong it might be (a covariance), and combines it with every new
+  measurement by a small optimisation.
 
 Each step hides a trap that numbers on a line don't have. A wrong side, a missing Jacobian or the wrong
 shape of bell curve gives a filter that drifts or claims a certainty it doesn't have. This chapter shows
@@ -47,6 +49,7 @@ each trap with a picture, then the fix.
 | [`lesson2_jacobian.py`](lesson2_jacobian.py) | Lesson 2: nudging a rotation vector, with and without $`J_r`$ |
 | [`lesson3_walk.py`](lesson3_walk.py) | Lesson 3: one robot step by step, then 2000, then what `se3_exp` does |
 | [`lesson3_banana.py`](lesson3_banana.py) | Lesson 3: two bell curves for the cloud, the same numbers through SO(3)×R³ and SE(3), the knob |
+| [`lesson3_fuse.py`](lesson3_fuse.py) | Lesson 3: what the belief is for: fusing one measurement by Gauss–Newton (Eq. 12) |
 | [`main.py`](main.py) | Runs all three lessons, prints the numbers quoted below, writes `results/` |
 | [`live_box.py`](live_box.py), [`live_walk.py`](live_walk.py), [`live_dots.py`](live_dots.py) | Animations, one per idea, with knobs on the command line |
 
@@ -83,14 +86,18 @@ $`\delta`$ = 40° about x:
 
 ![live_box.py: the same turn growing on each side](results/live_box.gif)
 
-*`python live_box.py`: the turn grows from 0 to 40°. Coloured arrows are the box's own axes, grey arrows the
-world's.*
+*`python live_box.py`: the turn grows from 0 to 40°. The box sits 2 m from the world origin (+). On the
+right it spins in place about its own x: its centre moves 0.00 m. On the left it turns about the world's x,
+which passes through the origin, so it also swings up and around: its centre moves 1.37 m (dotted trail).
+Coloured arrows are the box's own axes, grey arrows the world's.*
 
 ### Two ways, side by side
 
 ![The same 40° turn applied on the right and on the left](results/box_perturbation.png)
 
-*Same numbers, different turns: the two results are 56.0° apart.*
+*Same numbers, different turns: the two results are 56.0° apart. Here the box sits at the world origin, so
+only its orientation can differ; away from the origin (the GIF above, and the pose below) a left turn also
+moves it.*
 
 A **pose** $`T = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix}`$ has the same two sides, with one more
 surprise. A turn on the left is about the **world origin**, so it swings the robot's position too:
@@ -231,13 +238,17 @@ needs $`J_r`$, and why 3-D does.
    <details><summary>Answer</summary>0.64 of it, about an axis turned by -90°: along -y (the last arrow in
    the figure).</details>
 
-## Lesson 3 — Uncertainty on poses: the banana, and what "on SE(3)" means
+## Lesson 3 — Uncertainty on poses: the banana, and what "on SE(3)" buys a filter
 
 ### The question
 
 A robot walks blindfolded: 10 steps of 1 m, trying to go straight. After each step it slips by a small
-random turn (a bell curve with a spread of 6°). **Where does it end?** And how should a filter describe
-"where it might be" with one bell curve?
+random turn (a bell curve with a spread of 6°). Three questions, in order:
+1. **Where does it end?** Simulate it, many times.
+2. **How should a filter remember "where I might be"?** It can't keep thousands of robots. It keeps
+   **one** bell curve: a mean and a covariance, its *belief*.
+3. **What is that belief for?** A moment later a measurement arrives, and the filter must combine the
+   two. A wrong-shaped belief gives a wrong answer, and that is where SE(3) earns its keep.
 
 ### Step by step
 
@@ -283,16 +294,19 @@ If each slip were forgotten (right), the robots would end within y ±0.31 m: no 
 
 ### Two ways, side by side
 
-A filter can't simulate 2000 robots. It keeps one bell curve. Two recipes make "guesses" from one:
+The black dots are the truth. A filter must replace them with one bell curve. **Why draw coloured dots,
+then?** A bell curve is only a mean and a covariance: numbers you can't see. Drawing random samples from
+it is a way to **look at what it believes**. A good belief puts its samples where the real robots are.
+Samples off the cloud are places the belief thinks possible that aren't.
 
-- **A: a bell curve in x and y** (blue). Draw x and y, put a dot there. It is even **fitted** to the real
-  robots (x 9.76 ± 0.28 m, y ± 1.70 m). Its centre, the x–y average, is 3.7 cm from the nearest robot: in the
+Two ways to write the bell curve:
+- **A: in x and y** (blue). Draw x and y, put a dot there. It is even **fitted** to the real robots
+  (x 9.76 ± 0.28 m, y ± 1.71 m). Its centre, the x–y average, is 6.4 cm from the nearest robot: in the
   empty middle of the curve.
-- **B: a bell curve over a move and a turn** (orange). Draw six numbers $`\xi = [\rho, \phi]`$, then drive
-  from the noise-free end pose with `se3_exp`. This bell curve is **predicted** by Eq. 10, without the
-  robots.
+- **B: over a move and a turn** (orange). Draw six numbers $`\xi = [\rho, \phi]`$, then drive from the
+  noise-free end pose with `se3_exp`. This bell curve is **predicted** by Eq. 10, without the robots.
 
-Off the cloud: A 50.0%, B 12.2% (the figure at the top of the page).
+Off the cloud: A 46.5%, B 11.4% (the figure at the top of the page).
 
 What does `se3_exp` do with those numbers? It **drives while turning steadily**:
 
@@ -301,7 +315,7 @@ What does `se3_exp` do with those numbers? It **drives while turning steadily**:
 *10 m while turning 20° ends at (9.80, 1.73); turning 40° ends at (9.21, 3.35). The arcs bend back, like the
 robots.*
 
-Now the decisive test: **the same six random numbers**, applied two ways (Eq. 11).
+Now **the same six random numbers**, applied two ways (Eq. 11):
 - **SO(3)×R³:** add the move to the position, and turn on the spot.
 - **SE(3):** one `se3_exp`, so the turn bends the move.
 
@@ -309,10 +323,45 @@ Now the decisive test: **the same six random numbers**, applied two ways (Eq. 11
 
 ![live_dots.py part 2: one draw, two ways](results/live_dots.gif)
 
-One draw: forward -0.01 m, sideways -2.81 m, yaw -27.6°. SO(3)×R³ puts the robot at (9.99, -2.81), off the
-cloud. SE(3) puts it at (9.33, -2.70), on it. Over 2000 draws: SO(3)×R³ 38.5% off, SE(3) 12.2%.
+One draw: forward -0.03 m, sideways +2.24 m, yaw +34.8°. SO(3)×R³ puts the robot at (9.97, 2.24), off the
+cloud. SE(3) puts it at (9.31, 2.09), on it. Over 2000 draws: SO(3)×R³ 38.1% off, SE(3) 11.4%.
 
 *`python live_dots.py`: part 1 makes each blue and orange dot one at a time; part 2 is this test.*
+
+### What the belief is for: combining it with a measurement
+
+A filter never draws those dots. What it does with its belief is **fuse the next measurement**. Say the
+robot passes a wall that tells it its sideways position: y = -2.7 ± 0.05 m. Where is it in x? The truth: the
+40 real robots at that y have x 9.48 m.
+
+The filter answers by finding the pose that best agrees with **both** its belief and the measurement: a
+small least-squares problem (Eq. 12). Gauss–Newton solves it in a few steps, starting from the mean pose:
+
+| iteration | cost | x (m) | y (m) |
+|---|---|---|---|
+| 0 (the mean pose) | 2916.00 | 10.00 | +0.00 |
+| 1 | 5.08 | 9.43 | -2.62 |
+| 2 | 2.48 | 9.41 | -2.70 |
+| 3 | 2.48 | 9.42 | -2.70 |
+
+![One measurement of y; the answer of each bell curve](results/fuse.png)
+
+| belief | estimated x | the robots there |
+|---|---|---|
+| SE(3) | 9.42 m | 9.48 m |
+| x–y bell curve | 9.74 m | 9.48 m |
+| SO(3)×R³ | 10.00 m | 9.48 m |
+
+Only the SE(3) belief "knows" that a robot found far to the side must also have fallen back. That is
+the banana, used. The SE(3) estimate also recovers the heading from the y measurement alone: -24.5°,
+for -26.9° in the robots there.
+
+> [!IMPORTANT]
+> **This is what a LiDAR-inertial filter does every scan,** with hundreds of point-to-plane residuals
+> instead of one wall. The belief is its prior (the propagated covariance), the measurements add their
+> residuals, and the "iterated" in iterated EKF is these Gauss–Newton steps. Each step applies its
+> correction on the right of the pose (lesson 1), through a Jacobian (lesson 2). A pose-graph optimiser
+> does the same with many poses at once.
 
 ### The maths
 
@@ -348,56 +397,84 @@ Eq. 8 carries the old error past the step $`U = \mathrm{Exp}(u)`$, so, to first 
 > No random numbers are needed. After 10 steps Eq. 10 predicts forward ±0.032 m, sideways ±1.77 m and
 > yaw ±19.0°. Its $`[t]_\times`$ block turns a heading error into a sideways error after the next metre.
 
-The two ways of applying a draw $`\xi`$ to the mean pose $`(\bar R, \bar p)`$:
+The two ways of applying a $`\xi`$ to the mean pose $`(\bar R, \bar p)`$:
 
 ```math
 \text{SO(3)×R³:}\;\; \bar p + \rho,\;\; \bar R\,\mathrm{Exp}(\phi) \qquad\quad \text{SE(3):}\;\; \bar T\,\mathrm{Exp}(\xi),\ \text{position}\ \bar p + \bar R\,J_l(\phi)\,\rho \qquad (11)
 ```
 
-How good is Eq. 10? Monte Carlo / predicted covariance: total 1.00, lateral 0.99. Along the track the real
-spread is 27.6 times the prediction. Forward error also comes from products of two errors (a heading error
-times a sideways error), which a first-order model drops.
+Fusing a measurement $`y_m`$ (std $`\sigma_m`$) with the belief: find the $`\xi`$ that makes the sum of the
+two squared residuals smallest. The first term is the belief's cost, the second the measurement's:
+
+```math
+\hat\xi = \arg\min_\xi \; \xi^\top \Sigma^{-1} \xi \; + \; \left(\frac{y(\xi) - y_m}{\sigma_m}\right)^2 \qquad (12)
+```
+
+> $`y(\xi)`$ is the sideways position of the pose given by Eq. 11 (left or right). Gauss–Newton
+> linearises $`y(\xi)`$, solves the linear least squares, and repeats. With SE(3), $`y(\xi)`$ bends, so its
+> cost is low along the banana; with SO(3)×R³ it is straight.
+
+How good is Eq. 10 itself? Monte Carlo / predicted covariance: total 1.00, lateral 0.99. Along the track the
+real spread is 25.3 times the prediction. Forward error also comes from products of two errors (a heading
+error times a sideways error), which a first-order model drops.
 
 ### Turn the knob
 
-The yaw slip per step, and how often a draw lands off the cloud:
+**Knob 1, the yaw slip per step:** how often a draw lands off the cloud.
 
 | yaw slip per step | facing doubt after 10 m | SO(3)×R³ off | SE(3) off |
 |---|---|---|---|
-| 0.5° | ± 1.6° | 0.9% | 1.1% |
-| 1.0° | ± 3.2° | 1.7% | 1.5% |
-| 2.0° | ± 6.3° | 7.5% | 1.7% |
-| 6.0° | ±19.0° | 33.5% | 9.0% |
-| 10.0° | ±31.6° | 44.8% | 13.5% |
+| 0.5° | ± 1.6° | 1.1% | 1.3% |
+| 1.0° | ± 3.2° | 2.1% | 1.0% |
+| 2.0° | ± 6.3° | 7.1% | 2.1% |
+| 6.0° | ±19.0° | 39.6% | 13.1% |
+| 10.0° | ±31.6° | 46.6% | 14.4% |
 
-With a few degrees of heading doubt or less, the banana is straight and the two models **agree**. A LiDAR
-filter corrects its pose every 0.1 s, so between corrections its heading doubt stays far below a degree:
-the top row. Try `python live_walk.py --turn-std 1`.
+**Knob 2, where the measurement says the robot is** (6° slips): the estimated x.
+
+| measured y | robots there | SE(3) | x–y bell curve | SO(3)×R³ |
+|---|---|---|---|---|
+| -0.5 m | 9.93 | 9.98 | 9.75 | 10.00 |
+| -1.5 m | 9.80 | 9.82 | 9.75 | 10.00 |
+| -2.7 m | 9.48 | 9.42 | 9.74 | 10.00 |
+| -3.5 m | 9.16 | 9.01 | 9.73 | 10.00 |
+
+With a few degrees of heading doubt or less, the banana is straight and the beliefs **agree**; near the
+middle of the cloud the measurement barely moves x. A LiDAR filter corrects its pose every 0.1 s, so
+between corrections its heading doubt stays far below a degree: the top row of knob 1. The difference
+grows when the doubt grows: long stretches without geometry, dropouts, a bad start. Try
+`python live_walk.py --turn-std 1`.
 
 ### Misconceptions
 
-- **"The x–y average is where the robot most likely is."** It sits in the empty middle of the curve, 3.7 cm
+- **"The coloured dots are what the filter computes."** A filter never samples. The dots are only a
+  picture of its belief; what it computes is Eq. 12.
+- **"The x–y average is where the robot most likely is."** It sits in the empty middle of the curve, 6.4 cm
   from the nearest robot.
 - **"SO(3)×R³ is wrong, so filters built on it can't work."** Both store the same rotation and position
-  exactly. They differ only in how a change is applied. For the small changes of each optimiser step they
-  agree (the knob), and an optimiser recomputes its residuals after every step.
+  exactly; they differ in how a change is applied. With small heading doubt they agree (knob 1), and an
+  optimiser recomputes its residuals after every step.
 - **"SE(3) means polar coordinates."** No. `se3_exp` means "move while turning steadily", which also bends,
   and it carries the facing as well as the position.
 - **"The banana is a 3-D effect."** The yaw slip alone makes it (the cos/sin walk). Roll and pitch move the
   robot up and down, which the top view doesn't show.
-- **"Eq. 10 is exact."** It is first order: along the track the real spread is 27.6 times the prediction.
+- **"Eq. 10 is exact."** It is first order: along the track the real spread is 25.3 times the prediction.
 
 ### Check yourself
 
-1. The yaw slip is 1° per step. Which model should a filter use for the position?
-   <details><summary>Answer</summary>Either: 1.7% off for SO(3)×R³ and 1.5% for SE(3). With small heading
+1. The yaw slip is 1° per step. Which belief should a filter use for the position?
+   <details><summary>Answer</summary>Either: 2.1% off for SO(3)×R³ and 1.0% for SE(3). With small heading
    doubt the banana is straight.</details>
 2. Why do almost no grey paths cross after the first few metres?
    <details><summary>Answer</summary>A slip changes where the robot faces from then on. A robot that drifted
    down tends to keep pointing down, so robots that are apart keep moving apart.</details>
-3. A draw has a large sideways move and a large turn. Where does SO(3)×R³ put it, compared with SE(3)?
-   <details><summary>Answer</summary>Straight sideways from the mean, at the full forward distance (like
-   (9.99, -2.81)). SE(3) bends it back toward the start (like (9.33, -2.70)), where real robots are.</details>
+3. The wall says y = -3.5 m. Which belief gives the better x, and why does the x–y one fail?
+   <details><summary>Answer</summary>SE(3): 9.01 m, for 9.16 m in the robots there. The x–y bell curve gives
+   9.73 m: its x and y are uncorrelated (the cloud is symmetric), so learning y tells it nothing about x.
+   The banana's curl is exactly the information it can't hold.</details>
+4. In Eq. 12, what plays the role of the belief's cost in a LiDAR-inertial filter?
+   <details><summary>Answer</summary>The propagated error-state covariance: $`\xi^\top P^{-1} \xi`$, with
+   $`P`$ grown by the IMU between scans, as Eq. 10 grows $`\Sigma`$.</details>
 
 ## Build it
 
@@ -414,8 +491,10 @@ Open the files in this order; each block is commented with the equation it imple
 5. **[`lesson3_walk.py`](lesson3_walk.py).** `walk` is the cos/sin robot; `walk_se3` is the same robot with
    Eq. 9. Then 2000 robots, and `se3_exp` as an arc.
 6. **[`lesson3_banana.py`](lesson3_banana.py).** `separate` and `together` are the two sides of Eq. 11.
-   `scene_recipes` makes the two figures; `scene_knob` the table.
-7. **[`main.py`](main.py)** runs it all. The animations (`live_*.py`) reuse the lesson files and only draw.
+   `scene_recipes` makes the two figures; `scene_knob` the first knob table.
+7. **[`lesson3_fuse.py`](lesson3_fuse.py).** `gauss_newton` is Eq. 12, with the Jacobian by finite
+   differences so every line is visible; `scene_fuse` runs it for each belief and the second knob.
+8. **[`main.py`](main.py)** runs it all. The animations (`live_*.py`) reuse the lesson files and only draw.
 
 "Off the cloud" means farther from every real robot than 99% of the robots are from their nearest neighbour.
 
@@ -426,6 +505,7 @@ LESSON 1  which side: the box faces +y, delta = 40 deg about x
   nose at the start (0.00, 1.00, 0.00), after R·Exp(δ) (0.00, 1.00, 0.00), after Exp(δ)·R (0.00, 0.77, 0.64)
   the two results are 56.0° apart; Eq. 5 converts one into the other to 1.3e-15
   knob, how the box faces before the turn -> gap: 0° 0.0°, 30° 20.3°, 60° 39.4°, 90° 56.0°, 180° 80.0°
+  the box 2 m from the origin, turned 40° about x: its centre moves 0.00 m on the right, 1.37 m on the left
   a pose 10 m from the origin, turned 5°: on the right it moves 0.00 m, on the left 0.87 m
 LESSON 2  nudge the rotation vector w = 90 deg about z by 0.01 along x
   the body really turns by (+0.00637, -0.00637, +0.00001): 0.90 times as much, tilted -45.0°; J_r predicts (+0.00637, -0.00637, +0.00000)
@@ -441,18 +521,26 @@ LESSON 3  one robot, 10 x (walk 1 m, then slip by a random turn, std 6 deg)
   slips forgotten instead of added up: end y ±0.31 m
   se3_exp, 10 m while turning 20°: ends at (9.80, 1.73); turning 40°: (9.21, 3.35)
 the banana, 6-D noise per step (1 cm, 0.5° roll and pitch, 6° yaw):
-  x 9.76 ± 0.28 m, y ± 1.70 m; the x-y average is 3.7 cm from the nearest robot
-  off the cloud: A (bell curve in x-y, fitted) 50.0%, B (over xi, predicted) 12.2%
-  the same draws of xi through SO(3)xR3 (Eq. 11 left): 38.5%
-  one draw: forward -0.01 m, sideways -2.81 m, yaw -27.6° -> SO(3)xR3 (9.99, -2.81), SE(3) (9.33, -2.70)
+  x 9.76 ± 0.28 m, y ± 1.71 m; the x-y average is 6.4 cm from the nearest robot
+  off the cloud: A (bell curve in x-y, fitted) 46.5%, B (over xi, predicted) 11.4%
+  the same draws of xi through SO(3)xR3 (Eq. 11 left): 38.1%
+  one draw: forward -0.03 m, sideways +2.24 m, yaw +34.8° -> SO(3)xR3 (9.97, 2.24), SE(3) (9.31, 2.09)
   Eq. 10 predicts: forward ±0.032 m, sideways ±1.77 m, yaw ±19.0°
-  Monte Carlo / predicted: total 1.00, lateral 0.99, along-track 27.6
+  Monte Carlo / predicted: total 1.00, lateral 0.99, along-track 25.3
 knob, yaw noise per step -> facing doubt after 10 m -> off the cloud SO(3)xR3 / SE(3):
-   0.5° -> ± 1.6° ->  0.9% /  1.1%
-   1.0° -> ± 3.2° ->  1.7% /  1.5%
-   2.0° -> ± 6.3° ->  7.5% /  1.7%
-   6.0° -> ±19.0° -> 33.5% /  9.0%
-  10.0° -> ±31.6° -> 44.8% / 13.5%
+   0.5° -> ± 1.6° ->  1.1% /  1.3%
+   1.0° -> ± 3.2° ->  2.1% /  1.0%
+   2.0° -> ± 6.3° ->  7.1% /  2.1%
+   6.0° -> ±19.0° -> 39.6% / 13.1%
+  10.0° -> ±31.6° -> 46.6% / 14.4%
+fuse one measurement, y = -2.7 ± 0.05 m (Eq. 12): the 40 robots there have x 9.48 m, yaw -26.9°
+  Gauss-Newton on SE(3), cost / x / y per iteration: 2916.00 / 10.00 / +0.00; 5.08 / 9.43 / -2.62; 2.48 / 9.41 / -2.70; 2.48 / 9.42 / -2.70
+  estimate x: SE(3) 9.42 m (yaw -24.5°), x-y bell curve 9.74 m, SO(3)xR3 10.00 m
+knob, measured y -> true x / SE(3) / x-y / SO(3)xR3:
+  -0.5 m -> 9.93 / 9.98 / 9.75 / 10.00
+  -1.5 m -> 9.80 / 9.82 / 9.75 / 10.00
+  -2.7 m -> 9.48 / 9.42 / 9.74 / 10.00
+  -3.5 m -> 9.16 / 9.01 / 9.73 / 10.00
 ```
 
 The GIFs are written by `python live_box.py --gif`, `python live_walk.py --slow 1 --robots 80 --gif` and
@@ -490,6 +578,7 @@ The same operations there:
 | Pose correction | `core/lie.cpp` `boxplus`: `pose * SE3d::exp(delta)`, Eq. 11 right | `src/common/nav_state.h` `NavState::boxplus`: `rot_ * SO3::exp(dx)`, translation added: Eq. 11 left |
 | Which side | right | right |
 | Uncertainty of the pose | SE(3) error state: recipe B | rotation and position errors as separate vectors (SO(3)×R³), with full cross-covariance |
+| Fusing a measurement (Eq. 12) | iterated EKF update: prior from the propagated covariance, point-to-plane residuals, Gauss–Newton steps | the same, on SO(3)×R³ |
 
 **So why does a filter on SO(3)×R³ work so well?** Both store the pose exactly; they differ only in how a
 change is applied. An optimiser takes many small, self-checking steps, and a LiDAR update every 0.1 s

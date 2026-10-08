@@ -42,9 +42,8 @@ def off_cloud(xy):
     return lambda pts: float(np.mean(tree.query(pts)[0] > reach))
 
 
-def scene_recipes(out, rng):
+def scene_recipes(out, rng, ends, T_mean, Sigma):
     """The chapter's money plot: recipe A (bell curve in x-y, fitted) vs recipe B (bell curve over xi, predicted)."""
-    ends, T_mean, Sigma = robots(rng, SIGMA)
     xy = np.array([T[:2, 3] for T in ends])
     off = off_cloud(xy)
     A = rng.multivariate_normal(xy.mean(0), np.cov(xy.T), RUNS)                     # recipe A: fitted to the truth

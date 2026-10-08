@@ -60,7 +60,9 @@ def scene_box(out, rng):
     knob = {}
     for yaw in (0, 30, 60, 90, 180):                          # turn the knob: how the box faces before the turn
         knob[yaw] = gap_deg(*turned(so3_exp([0, 0, np.radians(yaw)]), TURN))
-    return {"right_vs_left_deg": gap_deg(R_right, R_left), "eq5_max_error": float(worst),
+    t = np.array([0, 2.0, 0])                                 # live_box.py: the box 2 m out along world y
+    swing = float(np.linalg.norm(so3_exp(TURN) @ t - t))      # a left turn moves its centre; a right one doesn't
+    return {"right_vs_left_deg": gap_deg(R_right, R_left), "eq5_max_error": float(worst), "box_2m_left_moved_m": swing,
             "nose_start": (R @ NOSE).tolist(), "nose_right": (R_right @ NOSE).tolist(),
             "nose_left": (R_left @ NOSE).tolist(), "gap_by_start_yaw_deg": knob}
 

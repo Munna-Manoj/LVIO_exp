@@ -2,6 +2,7 @@ LESSON 1  which side: the box faces +y, delta = 40 deg about x
   nose at the start (0.00, 1.00, 0.00), after R·Exp(δ) (0.00, 1.00, 0.00), after Exp(δ)·R (0.00, 0.77, 0.64)
   the two results are 56.0° apart; Eq. 5 converts one into the other to 1.3e-15
   knob, how the box faces before the turn -> gap: 0° 0.0°, 30° 20.3°, 60° 39.4°, 90° 56.0°, 180° 80.0°
+  the box 2 m from the origin, turned 40° about x: its centre moves 0.00 m on the right, 1.37 m on the left
   a pose 10 m from the origin, turned 5°: on the right it moves 0.00 m, on the left 0.87 m
 LESSON 2  nudge the rotation vector w = 90 deg about z by 0.01 along x
   the body really turns by (+0.00637, -0.00637, +0.00001): 0.90 times as much, tilted -45.0°; J_r predicts (+0.00637, -0.00637, +0.00000)
@@ -17,15 +18,23 @@ LESSON 3  one robot, 10 x (walk 1 m, then slip by a random turn, std 6 deg)
   slips forgotten instead of added up: end y ±0.31 m
   se3_exp, 10 m while turning 20°: ends at (9.80, 1.73); turning 40°: (9.21, 3.35)
 the banana, 6-D noise per step (1 cm, 0.5° roll and pitch, 6° yaw):
-  x 9.76 ± 0.28 m, y ± 1.70 m; the x-y average is 3.7 cm from the nearest robot
-  off the cloud: A (bell curve in x-y, fitted) 50.0%, B (over xi, predicted) 12.2%
-  the same draws of xi through SO(3)xR3 (Eq. 11 left): 38.5%
-  one draw: forward -0.01 m, sideways -2.81 m, yaw -27.6° -> SO(3)xR3 (9.99, -2.81), SE(3) (9.33, -2.70)
+  x 9.76 ± 0.28 m, y ± 1.71 m; the x-y average is 6.4 cm from the nearest robot
+  off the cloud: A (bell curve in x-y, fitted) 46.5%, B (over xi, predicted) 11.4%
+  the same draws of xi through SO(3)xR3 (Eq. 11 left): 38.1%
+  one draw: forward -0.03 m, sideways +2.24 m, yaw +34.8° -> SO(3)xR3 (9.97, 2.24), SE(3) (9.31, 2.09)
   Eq. 10 predicts: forward ±0.032 m, sideways ±1.77 m, yaw ±19.0°
-  Monte Carlo / predicted: total 1.00, lateral 0.99, along-track 27.6
+  Monte Carlo / predicted: total 1.00, lateral 0.99, along-track 25.3
 knob, yaw noise per step -> facing doubt after 10 m -> off the cloud SO(3)xR3 / SE(3):
-   0.5° -> ± 1.6° ->  0.9% /  1.1%
-   1.0° -> ± 3.2° ->  1.7% /  1.5%
-   2.0° -> ± 6.3° ->  7.5% /  1.7%
-   6.0° -> ±19.0° -> 33.5% /  9.0%
-  10.0° -> ±31.6° -> 44.8% / 13.5%
+   0.5° -> ± 1.6° ->  1.1% /  1.3%
+   1.0° -> ± 3.2° ->  2.1% /  1.0%
+   2.0° -> ± 6.3° ->  7.1% /  2.1%
+   6.0° -> ±19.0° -> 39.6% / 13.1%
+  10.0° -> ±31.6° -> 46.6% / 14.4%
+fuse one measurement, y = -2.7 ± 0.05 m (Eq. 12): the 40 robots there have x 9.48 m, yaw -26.9°
+  Gauss-Newton on SE(3), cost / x / y per iteration: 2916.00 / 10.00 / +0.00; 5.08 / 9.43 / -2.62; 2.48 / 9.41 / -2.70; 2.48 / 9.42 / -2.70
+  estimate x: SE(3) 9.42 m (yaw -24.5°), x-y bell curve 9.74 m, SO(3)xR3 10.00 m
+knob, measured y -> true x / SE(3) / x-y / SO(3)xR3:
+  -0.5 m -> 9.93 / 9.98 / 9.75 / 10.00
+  -1.5 m -> 9.80 / 9.82 / 9.75 / 10.00
+  -2.7 m -> 9.48 / 9.42 / 9.74 / 10.00
+  -3.5 m -> 9.16 / 9.01 / 9.73 / 10.00

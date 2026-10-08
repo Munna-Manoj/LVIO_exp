@@ -14,6 +14,7 @@ import numpy as np  # noqa: E402
 import lesson1_sides  # noqa: E402
 import lesson2_jacobian  # noqa: E402
 import lesson3_banana  # noqa: E402
+import lesson3_fuse  # noqa: E402
 import lesson3_walk  # noqa: E402
 
 OUT = Path(__file__).parent / "results"
@@ -31,7 +32,10 @@ def main():
          "jacobian": lesson2_jacobian.scene_error(OUT, rng),
          "one": lesson3_walk.scene_one_robot(OUT, np.random.default_rng(3)),
          "many": lesson3_walk.scene_many(OUT, rng), "arc": lesson3_walk.scene_exp_arc(OUT),
-         "banana": lesson3_banana.scene_recipes(OUT, rng), "knob": lesson3_banana.scene_knob(rng)}
+         "knob": lesson3_banana.scene_knob(rng)}
+    ends, T_mean, Sigma = lesson3_banana.robots(rng, lesson3_banana.SIGMA)    # one set of robots for parts 2 and 3
+    m["banana"] = lesson3_banana.scene_recipes(OUT, rng, ends, T_mean, Sigma)
+    m["fuse"] = lesson3_fuse.scene_fuse(OUT, ends, T_mean, Sigma)
     box, pose, ex, ar, jac = m["box"], m["pose"], m["example"], m["arrows"], m["jacobian"]
     one, many, arc, ban = m["one"], m["many"], m["arc"], m["banana"]
     lines = [
@@ -42,6 +46,8 @@ def main():
         f"to {box['eq5_max_error']:.1e}",
         "  knob, how the box faces before the turn -> gap: "
         + ", ".join(f"{k}° {g:.1f}°" for k, g in box["gap_by_start_yaw_deg"].items()),
+        f"  the box 2 m from the origin, turned 40° about x: its centre moves 0.00 m on the right, "
+        f"{box['box_2m_left_moved_m']:.2f} m on the left",
         f"  a pose 10 m from the origin, turned 5°: on the right it moves {pose['right_moved_m']:.2f} m, "
         f"on the left {pose['left_moved_m']:.2f} m",
         "LESSON 2  nudge the rotation vector w = 90 deg about z by 0.01 along x",
@@ -77,6 +83,17 @@ def main():
         "knob, yaw noise per step -> facing doubt after 10 m -> off the cloud SO(3)xR3 / SE(3):",
     ] + [f"  {deg:4.1f}° -> ±{r['facing_std_deg']:4.1f}° -> {r['off_separate']:5.1%} / {r['off_se3']:5.1%}"
          for deg, r in m["knob"].items()]
+    fu = m["fuse"]
+    lines += [
+        f"fuse one measurement, y = {fu['y_meas']} ± 0.05 m (Eq. 12): the {fu['robots_near']} robots there have "
+        f"x {fu['true_x']:.2f} m, yaw {fu['true_yaw_deg']:.1f}°",
+        "  Gauss-Newton on SE(3), cost / x / y per iteration: "
+        + "; ".join(f"{c:.2f} / {x:.2f} / {y:+.2f}" for c, x, y in fu["steps"]),
+        f"  estimate x: SE(3) {fu['se3_x']:.2f} m (yaw {fu['se3_yaw_deg']:.1f}°), x-y bell curve {fu['xy_x']:.2f} m, "
+        f"SO(3)xR3 {fu['separate_x']:.2f} m",
+        "knob, measured y -> true x / SE(3) / x-y / SO(3)xR3:",
+    ] + [f"  {ym:+.1f} m -> {r['true_x']:.2f} / {r['se3_x']:.2f} / {r['xy_x']:.2f} / {r['separate_x']:.2f}"
+         for ym, r in fu["knob"].items()]
     text = "\n".join(lines)
     print(text)
     (OUT / "output.txt").write_text(text + "\n")

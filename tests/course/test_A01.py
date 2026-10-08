@@ -99,3 +99,15 @@ def test_lesson3_claims_hold():
     small, large = knob["1.0"], knob["6.0"]
     assert abs(small["off_separate"] - small["off_se3"]) < 0.02             # small heading doubt: they agree
     assert large["off_separate"] > 3 * large["off_se3"]                     # large: SE(3) wins
+
+
+def test_lesson3_fusion_claims_hold():
+    fu, box = M["fuse"], M["box"]
+    assert abs(fu["se3_x"] - fu["true_x"]) < 0.1                            # SE(3) finds the robots' x
+    assert fu["xy_x"] - fu["true_x"] > 0.2 and fu["separate_x"] - fu["true_x"] > 0.4   # the others don't
+    costs = [c for c, _, _ in fu["steps"]]
+    assert costs[0] > 100 * costs[1] and abs(costs[-1] - costs[-2]) < 1e-4 * costs[-1]   # converges in a few steps
+    assert abs(fu["se3_yaw_deg"] - fu["true_yaw_deg"]) < 5                  # and recovers the heading
+    for row in fu["knob"].values():                                         # SE(3) is closest wherever y is
+        assert abs(row["se3_x"] - row["true_x"]) < abs(row["separate_x"] - row["true_x"])
+    assert 1.3 < box["box_2m_left_moved_m"] < 1.4                           # a left turn swings the box
