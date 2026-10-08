@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `both` · **Depends on:** none
+**Status:** 🔒 approved (pre-registered) · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `both` · **Depends on:** none
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -17,7 +17,7 @@
 | **Falsified if** | any baseline misses its pre-repo ARC-6 number by more than 3σ, or any run has pose_coverage below 0.99. Either means the harness changed the system (wrong config, frame, time offset or core budget). |
 | **Decision rule** | pass (verdict adopt = the harness is trusted) if every baseline reproduces on ARC-6 within 3σ and every run has pose_coverage ≥ 0.99; otherwise reject and fix the harness before any other experiment runs. The σ per (baseline, mission) from this experiment is the noise floor for all later ones (ADR-0004). |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>Fields above are pre-registered (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
@@ -43,7 +43,7 @@
 
 <!-- lvx:begin results -->
 > [!NOTE]
-> Not run yet (status `planned`). Numbers appear here after `lvx eval EXP-000`.
+> Not run yet (status `approved`). Numbers appear here after `lvx eval EXP-000`.
 <!-- lvx:end results -->
 
 TODO up to 5 observations, each pointing at a table cell or figure.
