@@ -12,6 +12,7 @@
 
 ### If this adds or changes a course chapter
 - [ ] Read-aloud test passed; the folder is self-contained (law 0); the output pasted in the README matches `results/output.txt`
+- [ ] Each lesson climbs the ladder (CLAUDE.md §11); first-reader test done, or its open questions listed here
 
 ### If this freezes an experiment
 - [ ] No TODO in frozen fields; one change per variant; decision rule uses the noise floor

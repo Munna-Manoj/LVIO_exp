@@ -11,6 +11,8 @@ For every chapter folder course/chapters/<ID>-<slug>/ with a README.md:
   honest numbers   results/output.txt exists and README.md quotes it verbatim in a ```text block;
                    every image README.md shows exists
   page shape       title line, the fixed sections in order, a test in tests/course/, an entry in mkdocs nav
+  lessons          (template 2, the default) one or more "## Lesson n — ..." between "What you will build" and
+                   "Build it", each with the teaching ladder of LESSON_PARTS in order, and answers in <details>
 """
 from __future__ import annotations
 
@@ -25,6 +27,12 @@ ROOT = Path(__file__).resolve().parent.parent
 CHAPTERS = ROOT / "course" / "chapters"
 ALLOWED = {"numpy", "scipy", "matplotlib", "mpl_toolkits", "rosbags"}
 MAX_LINES = 300
+SECTIONS_V2 = ["## Why you should care", "## What you need first", "## What you will build", "## Build it",
+               "## Run it in C++", "## On real data", "## In the real systems", "## Experiment hooks", "## Try it",
+               "## Next"]
+LESSON_PARTS = ["### The question", "### Step by step", "### Two ways, side by side", "### The maths",
+                "### Turn the knob", "### Misconceptions", "### Check yourself"]
+LESSON = re.compile(r"^## Lesson (\d+) — \S.*$", re.M)
 SECTIONS = ["## What you will build", "## Intuition", "## The math", "## Build it", "## See it", "## Break it",
             "## Run it in C++", "## On real data", "## In the real systems", "## Experiment hooks", "## Try it",
             "## Next"]
@@ -97,15 +105,7 @@ def check_chapter(d: Path, entry: dict, nav: str) -> list:
     cid = entry["id"]
     if not readme.startswith(f"# {cid} — "):
         errs.append(f"{rel}/README.md: first line must be '# {cid} — <title>'")
-    wanted = [s for s in SECTIONS
-              if (s != "## Run it in C++" or entry.get("labs"))
-              and (s != "## On real data" or entry.get("kind") == "bridge" or f"\n{s}\n" in readme)]
-    pos = [readme.find("\n" + s + "\n") for s in wanted]
-    missing = [s for s, p in zip(wanted, pos) if p < 0]
-    if missing:
-        errs.append(f"{rel}/README.md: missing sections {missing}")
-    elif pos != sorted(pos):
-        errs.append(f"{rel}/README.md: sections out of order (CLAUDE.md §11)")
+    errs += check_sections(readme, entry, rel)
     if "TODO" in readme:
         errs.append(f"{rel}/README.md: TODO left")
     if not (ROOT / "tests" / "course" / f"test_{cid}.py").exists():
@@ -114,6 +114,52 @@ def check_chapter(d: Path, entry: dict, nav: str) -> list:
         errs.append(f"{rel}: add `learn/{d.name}/index.md` to the nav in mkdocs.yml")
     if entry["status"] == "planned":
         errs.append(f"{rel}: has a README but curriculum status is 'planned' (set drafted/done)")
+    return errs
+
+
+def check_lessons(readme: str, rel) -> list:
+    """Template 2: each lesson climbs the same ladder (CLAUDE.md §11), and answers its own questions."""
+    errs = []
+    heads = list(LESSON.finditer(readme))
+    if not heads:
+        errs.append(f"{rel}/README.md: no '## Lesson 1 — <title>' section (template 2, CLAUDE.md §11)")
+    if [int(h.group(1)) for h in heads] != list(range(1, len(heads) + 1)):
+        errs.append(f"{rel}/README.md: lessons must be numbered 1, 2, 3, ... in order")
+    for h in heads:
+        nxt = readme.find("\n## ", h.end())
+        body = readme[h.end(): nxt if nxt >= 0 else len(readme)]
+        pos = [body.find("\n" + part + "\n") for part in LESSON_PARTS]
+        missing = [part for part, q in zip(LESSON_PARTS, pos) if q < 0]
+        if missing:
+            errs.append(f"{rel}/README.md: Lesson {h.group(1)} is missing {missing}")
+        elif pos != sorted(pos):
+            errs.append(f"{rel}/README.md: Lesson {h.group(1)}: the parts {LESSON_PARTS} are out of order")
+        elif "<details>" not in body[pos[-1]:]:
+            errs.append(f"{rel}/README.md: Lesson {h.group(1)}: 'Check yourself' needs answers in <details>")
+    return errs
+
+
+def check_sections(readme: str, entry: dict, rel) -> list:
+    errs = []
+    v2 = entry.get("template", 2) == 2
+    wanted = [s for s in (SECTIONS_V2 if v2 else SECTIONS)
+              if (s != "## Run it in C++" or entry.get("labs"))
+              and (s != "## On real data" or entry.get("kind") == "bridge" or f"\n{s}\n" in readme)]
+    pos = [readme.find("\n" + s + "\n") for s in wanted]
+    missing = [s for s, p in zip(wanted, pos) if p < 0]
+    if missing:
+        errs.append(f"{rel}/README.md: missing sections {missing}")
+    elif pos != sorted(pos):
+        errs.append(f"{rel}/README.md: sections out of order (CLAUDE.md §11)")
+    if v2:
+        errs += check_lessons(readme, rel)
+        lessons = [m.start() for m in LESSON.finditer(readme)]
+        built, build = readme.find("\n## What you will build\n"), readme.find("\n## Build it\n")
+        if lessons and not (built < lessons[0] and lessons[-1] < build):
+            errs.append(f"{rel}/README.md: the lessons go between 'What you will build' and 'Build it'")
+        try_it = readme[readme.find("\n## Try it\n"):]
+        if try_it.count("<details>") < 2:
+            errs.append(f"{rel}/README.md: 'Try it' needs at least two predict-then-run exercises with <details>")
     return errs
 
 

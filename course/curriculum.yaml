@@ -18,6 +18,8 @@
 #   kind: bridge I-chapters: content the SAD book does not cover, placed where the course needs it. They have
 #                no book companion and a required "On real data" step on SAD datasets and/or GrandTour.
 #   status       planned | drafted | done   (done = README + code + results + test; set by hand, checked by CI)
+#   template     2 (default): README in lessons, each climbing the ladder of CLAUDE.md §11. 1: the older fixed
+#                sections (Intuition, The math, See it, Break it); only chapters written before the ladder, to port
 
 parts:
   A: {title: "Mathematical foundations", sad_chapters: [2]}
@@ -31,8 +33,10 @@ parts:
 
 chapters:
   - {id: A01, slug: rotations-and-poses, title: "Rotations and poses: SO(3), SE(3), Exp/Log, boxplus, Jacobians",
-     scene: "a rotating box: local vs global perturbation; the pose 'banana'",
-     part: A, sad: {chapter: 2, apps: [motion]}, builds: [so3.py, se3.py, main.py], depends_on: [], labs: [],
+     scene: "three lessons: a box turned on its own axes or the world's; a nudged rotation vector; a blindfolded robot whose end points form the pose 'banana'",
+     part: A, sad: {chapter: 2, apps: [motion]},
+     builds: [so3.py, se3.py, lesson1_sides.py, lesson2_jacobian.py, lesson3_walk.py, lesson3_banana.py, main.py,
+              live_box.py, live_walk.py, live_dots.py], depends_on: [], labs: [],
      experiments: [EXP-009], status: done}
   - {id: A02, slug: kalman-filters, title: "From the Kalman filter to the error-state Kalman filter",
      scene: "a cart on a rail, then a unicycle: ±3σ band, shrinking ellipses",
@@ -42,7 +46,8 @@ chapters:
   - {id: B01, slug: imu-propagation, title: "IMU propagation: why IMU-only odometry drifts, and how fast",
      scene: "a 3D figure-eight: IMU-only runs fanning out",
      part: B, sad: {chapter: 3, apps: [run_imu_integration]}, builds: [simulate.py, propagate.py, main.py], depends_on: [A01],
-     labs: [sad-ch3-imu-integration], experiments: [EXP-010, EXP-011], status: done}
+     labs: [sad-ch3-imu-integration], experiments: [EXP-010, EXP-011], status: done,
+     template: 1}
   - {id: I01, kind: bridge, slug: real-imus-and-allan-variance, title: "Real IMUs: noise densities, bias instability and Allan variance (vehicle IMU vs STIM320)",
      scene: "a still IMU for hours: Allan-deviation slopes −½, 0, +½",
      part: B, builds: [allan.py], depends_on: [B01], labs: [], datasets: [sad-ulhk, grandtour],

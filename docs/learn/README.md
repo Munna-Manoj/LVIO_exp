@@ -47,7 +47,7 @@ Generated from [`course/curriculum.yaml`](https://github.com/Munna-Manoj/LVIO_ex
 
 | # | Chapter | Synthetic scene | Real data | Experiments | Status |
 |---|---|---|---|---|---|
-| A01 | [Rotations and poses: SO(3), SE(3), Exp/Log, boxplus, Jacobians](../../course/chapters/A01-rotations-and-poses/README.md) | a rotating box: local vs global perturbation; the pose 'banana' | – | [EXP-009](../experiments/EXP-009-se3-vs-so3xr3.md) | ✅ |
+| A01 | [Rotations and poses: SO(3), SE(3), Exp/Log, boxplus, Jacobians](../../course/chapters/A01-rotations-and-poses/README.md) | three lessons: a box turned on its own axes or the world's; a nudged rotation vector; a blindfolded robot whose end points form the pose 'banana' | – | [EXP-009](../experiments/EXP-009-se3-vs-so3xr3.md) | ✅ |
 | A02 | From the Kalman filter to the error-state Kalman filter | a cart on a rail, then a unicycle: ±3σ band, shrinking ellipses | – | – | ⬜ |
 
 ### Part B · Inertial and integrated navigation  <sub>(SAD ch. 3, 4)</sub>
@@ -126,18 +126,29 @@ Generated from [`course/curriculum.yaml`](https://github.com/Munna-Manoj/LVIO_ex
 
 | Section | What you get |
 |---|---|
-| What you will build | the modules and the one command to run (plus the book chapter it accompanies) |
-| Intuition | the idea in plain words, before any symbol |
-| The math | one equation per block, every symbol explained |
-| Build it | step-by-step Python, each step with its printed output |
-| See it | generated figures with "what to look at" captions |
-| Break it | change one thing and watch it fail, with a number |
+| Why you should care | where the idea shows up in a LiDAR-inertial filter, before any maths |
+| What you need first | the few facts the chapter assumes, in one short list |
+| What you will build | the files and the one command to run (plus the book chapter it accompanies) |
+| **Lesson 1, 2, …** | one idea each, always climbing the same ladder (below) |
+| Build it | the files in reading order, and the exact printed output |
 | Run it in C++ | the official SAD implementation on the official dataset (chapters with a book counterpart) |
 | On real data | your Python code on SAD bags or GrandTour (always in 🔗 bridge chapters) |
-| In the real systems | where the idea lives in lightning-lm and SE(3)-LVIO |
+| In the real systems | where the idea lives in lightning-lm and SE(3)-LVIO, and why the simpler way often still works |
 | Experiment hooks | the ablations that test it on GrandTour |
 | Try it | predict-then-run exercises, answers folded |
 | Next | the chapter that builds on this one |
+
+Every lesson climbs the same ladder:
+
+| Step | What you get |
+|---|---|
+| The question | a plain question you can picture, before any symbol |
+| Step by step | **one** example worked by hand, with its numbers, and an animation you can run (`python live_*.py`) |
+| Two ways, side by side | the naive way and the right way on the same inputs, and a number for the difference |
+| The maths | only now the equations, every symbol in words |
+| Turn the knob | one setting swept: when the idea matters, and when it doesn't |
+| Misconceptions | the wrong beliefs learners really have, each corrected with a number |
+| Check yourself | questions with folded answers |
 
 > [!NOTE]
 > The book's text and figures are not reproduced here. Each chapter links its book chapter for the full

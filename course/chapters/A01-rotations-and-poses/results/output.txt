@@ -1,7 +1,31 @@
-box: R·Exp(δ) and Exp(δ)·R end 56.0° apart; Eq. 5 holds to 1.3e-15
-J_r: error/|δ| at 60° is 0.405 without J_r, 0.00007 with it; at 170° 0.91 without
-banana (2000 runs, 10 x 1 m, 6°/step heading noise):
-  x-y average is 3.6 cm from the nearest robot
-  samples off the cloud: Gaussian in x-y 47.5%, Gaussian on SE(3) 12.6%
-  Monte Carlo / predicted covariance (Eq. 10): total 1.01, lateral 1.00, along-track 26.5
-break it, 10°/step: off the cloud x-y 51.3%, SE(3) 19.6%
+LESSON 1  which side: the box faces +y, delta = 40 deg about x
+  nose at the start (0.00, 1.00, 0.00), after R·Exp(δ) (0.00, 1.00, 0.00), after Exp(δ)·R (0.00, 0.77, 0.64)
+  the two results are 56.0° apart; Eq. 5 converts one into the other to 1.3e-15
+  knob, how the box faces before the turn -> gap: 0° 0.0°, 30° 20.3°, 60° 39.4°, 90° 56.0°, 180° 80.0°
+  a pose 10 m from the origin, turned 5°: on the right it moves 0.00 m, on the left 0.87 m
+LESSON 2  nudge the rotation vector w = 90 deg about z by 0.01 along x
+  the body really turns by (+0.00637, -0.00637, +0.00001): 0.90 times as much, tilted -45.0°; J_r predicts (+0.00637, -0.00637, +0.00000)
+  length of J_r·δ for |w| = 0° 1.00, 45° 0.97, 90° 0.90, 135° 0.78, 180° 0.64
+  error / |δ| without J_r: 0.069 at 10°, 0.405 at 60°, 0.91 at 170°; with J_r 0.00007 at 60°
+  knob, nudge along w's own axis at 60°: 0.00000 without J_r
+LESSON 3  one robot, 10 x (walk 1 m, then slip by a random turn, std 6 deg)
+  slips (deg): +12.2 -15.3 +2.5 -3.4 -2.7 -1.3 -12.1 -1.4 -5.2 +19.9
+  facing after each slip (deg): +12.2 -3.1 -0.6 -4.0 -6.7 -8.0 -20.1 -21.5 -26.7 -6.8
+  corners: (1.00, 0.00) (1.98, 0.21) (2.98, 0.16) (3.98, 0.15) (4.97, 0.08) (5.97, -0.04) (6.96, -0.18) (7.90, -0.52) (8.83, -0.89) (9.72, -1.34)
+  cos/sin and se3_exp (Eq. 9) agree to 4e-16 m
+2000 robots: facing spread ±19.2°, end y ±1.70 m, distance from the start 9.91 ± 0.08 m, x as low as 7.26 m
+  slips forgotten instead of added up: end y ±0.31 m
+  se3_exp, 10 m while turning 20°: ends at (9.80, 1.73); turning 40°: (9.21, 3.35)
+the banana, 6-D noise per step (1 cm, 0.5° roll and pitch, 6° yaw):
+  x 9.76 ± 0.28 m, y ± 1.70 m; the x-y average is 3.7 cm from the nearest robot
+  off the cloud: A (bell curve in x-y, fitted) 50.0%, B (over xi, predicted) 12.2%
+  the same draws of xi through SO(3)xR3 (Eq. 11 left): 38.5%
+  one draw: forward -0.01 m, sideways -2.81 m, yaw -27.6° -> SO(3)xR3 (9.99, -2.81), SE(3) (9.33, -2.70)
+  Eq. 10 predicts: forward ±0.032 m, sideways ±1.77 m, yaw ±19.0°
+  Monte Carlo / predicted: total 1.00, lateral 0.99, along-track 27.6
+knob, yaw noise per step -> facing doubt after 10 m -> off the cloud SO(3)xR3 / SE(3):
+   0.5° -> ± 1.6° ->  0.9% /  1.1%
+   1.0° -> ± 3.2° ->  1.7% /  1.5%
+   2.0° -> ± 6.3° ->  7.5% /  1.7%
+   6.0° -> ±19.0° -> 33.5% /  9.0%
+  10.0° -> ±31.6° -> 44.8% / 13.5%

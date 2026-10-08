@@ -33,7 +33,11 @@ A change is **done** only when every box that applies is checked. The PR templat
 - [ ] The synthetic scene is something a person recognises at a glance; the money plot is at the top.
 - [ ] `cd` into the folder and `python main.py` runs from a fresh clone in ≤ ~30 s with no dataset; the new
       `results/output.txt` is pasted into the README.
-- [ ] README has the sections in order; `python tools/sync_course.py --check` passes. Every figure was looked at.
+- [ ] README has the sections in order, and each lesson climbs the ladder (question, step by step, two ways
+      side by side, maths, knob, misconceptions, check yourself; CLAUDE.md §11).
+      `python tools/sync_course.py --check` passes. Every figure and GIF was looked at.
+- [ ] **First-reader test:** someone new to the topic answered every "Check yourself" without help, or every
+      question they had to ask was turned into a step, figure or misconception in the chapter.
 - [ ] Every claim on the page is asserted in `tests/course/test_<ID>.py`.
 - [ ] Curriculum table (docs/learn/README.md), ROADMAP and mkdocs nav updated.
 

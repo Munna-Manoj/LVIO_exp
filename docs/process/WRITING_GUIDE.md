@@ -89,12 +89,16 @@ Use one or two per page at most.
 ## 7. Tutorials (Learn)
 
 - **The title says what and for whom.** Prerequisites go once, at the top.
-- **Fixed sections, in order:** What you will build, Intuition, The math, Build it, See it, Break it,
-  In the real systems, Experiment hooks, Try it, Next. [B01](../../course/chapters/B01-imu-propagation/README.md) is the
-  reference chapter; match its depth and tone.
+- **Fixed sections, in order:** Why you should care, What you need first, What you will build, Lesson 1 … n,
+  Build it, In the real systems, Experiment hooks, Try it, Next. Each lesson climbs the same ladder: the
+  question, step by step, two ways side by side, the maths, turn the knob, misconceptions, check yourself
+  (CLAUDE.md §11). [A01](../../course/chapters/A01-rotations-and-poses/README.md) is the reference chapter;
+  match its depth and tone.
+- **Teach from zero.** One sample before a statistic, 2-D before 3-D, a picture before a symbol. Every
+  question a reader had to ask is a missing rung: add it to the chapter.
 - **Small steps,** each ending in something the reader can check (a printed number, a plot).
 - **Intuition first.** One plain-language paragraph or a `> [!TIP]` before the first symbol.
-- **"Break it"** shows a failure with a number. Readers learn more from a broken filter than a working one.
+- **"Two ways, side by side"** shows a failure with a number, on the same inputs. Readers learn more from a broken filter than a working one.
 - **"Try it":** at least two predict-then-run exercises, answers in `<details>`.
 - **The chapter folder is the whole lesson** (law 0). Nothing the reader needs lives anywhere else.
 - **Code mirrors the maths:** number equations `\qquad (n)` inside a ` ```math ` fence, cite them in code as `(Eq. n)`, and use the symbols as names.
