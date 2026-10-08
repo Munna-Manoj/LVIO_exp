@@ -31,7 +31,7 @@
 | `gate_4p0` | residual gate 4.0σ (baseline 3.0σ) |
 | `gate_5p0` | residual gate 5.0σ (baseline 3.0σ) |
 
-- **Missions:** arc-6 (`{"set": "dev"}`)
+- **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
 - **Host:** `reference` (configs/hosts/reference.yaml)
 - **Metrics:** primary `ate_rmse_cm`, secondary `ate_max_cm`, `inliers_mean`, `ms_p95`

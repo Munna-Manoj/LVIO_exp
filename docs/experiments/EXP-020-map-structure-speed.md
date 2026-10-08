@@ -28,7 +28,7 @@
 | `baseline` | se3lvio_S8 as is |
 | `ivox` | map backend iVox (hashed voxels, 5-NN plane fit, covariance from the fit residual) instead of VoxelMap |
 
-- **Missions:** arc-6 (`{"set": "dev"}`)
+- **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
 - **Host:** `reference` (configs/hosts/reference.yaml)
 - **Metrics:** primary `ms_p95`, secondary `ms_mean`, `rss_mb`, `ate_rmse_cm`, `ate_max_cm`

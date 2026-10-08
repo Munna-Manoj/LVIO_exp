@@ -32,7 +32,7 @@
 | `ll_stock` | swap baseline config to lightning-lm stock |
 | `ll_indoor` | swap baseline config to lightning-lm indoor grid |
 
-- **Missions:** arc-6 (`{"set": "dev"}`)
+- **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 5 per variant × mission
 - **Host:** `reference` (configs/hosts/reference.yaml)
 - **Metrics:** primary `ate_rmse_cm`, secondary `ate_median_cm`, `ate_max_cm`, `ms_mean`, `ms_p95`, `rss_mb`

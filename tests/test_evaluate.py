@@ -15,24 +15,23 @@ def _rows(exp, values):
 
 def test_effect_needs_more_than_two_sigma(monkeypatch):
     e = spec.find("EXP-001")
-    monkeypatch.setattr(evaluate, "noise_sigma", lambda name: {"arc-6": 0.01})
-    vals = {("baseline", "arc-6"): [0.80, 0.81, 0.82]}
-    for v in e.spec["variants"]:
-        vals[(v["id"], "arc-6")] = [0.80, 0.81, 0.82]
-    vals[("gate_2p0", "arc-6")] = [0.86, 0.87, 0.88]     # +0.06 > 2σ -> worse
-    vals[("gate_4p0", "arc-6")] = [0.80, 0.82, 0.83]     # +0.007 -> within noise
+    missions = e.missions()                                  # every mission of the spec's set gets data
+    monkeypatch.setattr(evaluate, "noise_sigma", lambda name: {m: 0.01 for m in missions})
+    vals = {(v, m): [0.80, 0.81, 0.82] for v in e.variant_ids() for m in missions}
+    for m in missions:
+        vals[("gate_2p0", m)] = [0.86, 0.87, 0.88]          # +0.06 > 2σ -> worse
+        vals[("gate_4p0", m)] = [0.80, 0.82, 0.83]          # +0.007 -> within noise
     s = evaluate.summarise(e, _rows(e, vals))
-    by = {c["variant"]: c for c in s["cells"]}
-    assert by["gate_2p0"]["effect"] == "worse"
-    assert by["gate_4p0"]["effect"] == "none"
-    assert by["baseline"]["effect"] is None
+    for c in s["cells"]:
+        want = {"gate_2p0": "worse", "gate_4p0": "none", "baseline": None}.get(c["variant"], "none")
+        assert c["effect"] == want, c
     assert s["complete"]
 
 
 def test_missing_noise_floor_is_flagged_not_guessed(monkeypatch):
     e = spec.find("EXP-001")
     monkeypatch.setattr(evaluate, "noise_sigma", lambda name: {})
-    vals = {(v, "arc-6"): [0.8, 0.8, 0.8] for v in e.variant_ids()}
+    vals = {(v, m): [0.8, 0.8, 0.8] for v in e.variant_ids() for m in e.missions()}
     s = evaluate.summarise(e, _rows(e, vals))
     assert {c["effect"] for c in s["cells"] if c["variant"] != "baseline"} == {"no-noise-floor"}
 
