@@ -3,4 +3,4 @@ system: lightning-lm
 title: "lightning-lm · LIO indoor grid"
 overrides_file: systems/lightning-lm/overrides/arc6_indoor.yaml
 overrides: {}
-reference_result: "ARC-6 ATE 1.41 cm (pre-repo run 2026-10-07; re-measured in EXP-000)"
+reference_result: "ARC-6 ATE 1.4066 cm (pre-repo run, recomputed with lvx.evaluate 2026-10-08)"

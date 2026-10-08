@@ -6,7 +6,7 @@ Every experiment, its status and its verdict. Each row links its report. Generat
 <!-- lvx:begin index -->
 | ID | Question | Phase | Status | Verdict | Headline |
 |---|---|---|---|---|---|
-| [EXP-000](EXP-000-baselines-and-noise-floor.md) | How large is run-to-run noise, and do the pre-repo baselines reproduce? | P0 | 🗒️ planned |  |  |
+| [EXP-000](EXP-000-baselines-and-noise-floor.md) | How large is run-to-run noise, and do the pre-repo baselines reproduce? | P0 | 🔒 approved (pre-registered) |  |  |
 | [EXP-001](EXP-001-chi2-gate-sweep.md) | How wide should the point-to-plane residual gate be? | P1 | 🗒️ planned |  |  |
 | [EXP-002](EXP-002-robust-kernels-iekf.md) | Does a robust kernel in the IEKF update beat hard gating alone? | P1 | 🗒️ planned |  |  |
 | [EXP-003](EXP-003-gnc-tls-iekf.md) | Does GNC-TLS annealed across IEKF iterations help? | P1 | 🗒️ planned |  |  |

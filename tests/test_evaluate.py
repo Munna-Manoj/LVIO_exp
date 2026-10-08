@@ -49,3 +49,11 @@ def test_timing_parsing(tmp_path):
     p.write_text("stamp,ms,rss_mb,leaf_m,inliers\n1,10,100,0.2,0\n2,20,120,0.2,2000\n3,30,110,0.2,1800\n")
     t = evaluate.timing(p)
     assert t["ms_mean"] == 20 and t["ms_max"] == 30 and t["rss_mb"] == 120 and t["inliers_mean"] == 1900
+
+
+def test_usable_scans_count_only_scans_inside_the_imu_span(tmp_path):
+    (tmp_path / "lidar").mkdir()
+    for t in (100, 200, 300, 400, 500):                         # ns, as the converter names scan files
+        (tmp_path / "lidar" / f"{t}.bin").touch()
+    (tmp_path / "imu.txt").write_text("150 0 0 0 0 0 9.8\n250 0 0 0 0 0 9.8\n420 0 0 0 0 0 9.8\n")
+    assert evaluate.usable_scans(tmp_path) == 3                 # 200, 300, 400; the IMU stopped at 420

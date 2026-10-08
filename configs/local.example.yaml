@@ -14,6 +14,9 @@ systems:                         # optional: where a system is built and its loc
   # se3-lvio: {image: my-se3lvio:latest}
   # lightning-lm: {root: ~/lvx_runs/systems/lightning-lm, image: lightning:humble}
 
+path: []                         # optional: folders put first on PATH when a system runs, e.g. a shim that
+                                 # maps `docker` to rootless podman: [~/bin/docker-shim]
+
 hosts:                           # optional: how to reach the machine that plays a host profile
   # reference: {ssh: my-server, repo: ~/LVIO_exp}
 

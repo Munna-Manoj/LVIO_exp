@@ -12,6 +12,7 @@
 | [ADR-0008](ADR-0008-sad-book-integration.md) | SAD book as the course backbone, real systems as the capstone, C++ labs | Accepted |
 | [ADR-0009](ADR-0009-machine-config-and-privacy.md) | One git-ignored machine file; tracked files use logical names only; leak checks | Accepted |
 | [ADR-0010](ADR-0010-self-contained-chapters.md) | Self-contained chapters: readability over reuse (law 0) | Accepted |
+| [ADR-0011](ADR-0011-pose-coverage.md) | Report pose coverage, not the GT pairing ratio | Accepted (2026-10-08) |
 
 Template: Context → Decision → Consequences → Alternatives considered. A new ADR is required for a new
 top-level directory, a new dependency, a change to the evaluation protocol, or a change to the split.

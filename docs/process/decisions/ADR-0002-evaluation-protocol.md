@@ -14,8 +14,9 @@ separates the two (measured in the pre-repo ARC-6 analysis). lightning-lm also o
   - Pairing uses `t_max = min(GT dt, est dt)/2 + 5 ms`, capped at 50 ms.
   - Implemented once, in `lvx/evaluate.py`.
 - **Time offsets:** per-mission IMU offsets are fixed in `configs/missions.yaml` and used by both systems.
-- **Reporting:** RMSE, median and max are all reported, plus the pairing ratio, so a run that loses
-  half its poses can't look good.
+- **Reporting:** RMSE, median and max are all reported, plus the pose coverage (estimate poses per LiDAR
+  scan), so a run that loses half its poses can't look good. The GT pairing ratio first used here sits
+  near 0.55 even for a perfect run; [ADR-0011](ADR-0011-pose-coverage.md) replaced it.
 
 ## Consequences
 - A per-system fitted lever arm would make ATE look better (0.85 → 0.45 cm on ARC-6, pre-repo). It is

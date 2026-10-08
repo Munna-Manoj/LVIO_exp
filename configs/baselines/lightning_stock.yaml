@@ -3,4 +3,4 @@ system: lightning-lm
 title: "lightning-lm · LIO stock"
 overrides_file: systems/lightning-lm/overrides/arc6_stock.yaml
 overrides: {}
-reference_result: "ARC-6 ATE 1.64 cm (pre-repo run 2026-10-07; re-measured in EXP-000)"
+reference_result: "ARC-6 ATE 1.6391 cm (pre-repo run, recomputed with lvx.evaluate 2026-10-08)"
