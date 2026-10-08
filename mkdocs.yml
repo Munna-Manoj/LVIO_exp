@@ -88,6 +88,7 @@ nav:
       - learn/README.md
       - A01 · Rotations and poses: learn/A01-rotations-and-poses/index.md
       - B01 · IMU propagation: learn/B01-imu-propagation/index.md
+  - 3D viewer: https://munna-manoj.github.io/LVIO_exp/viewer/
   - Explanation:
       - explain/README.md
       - SE(3) vs SO(3)×R³: explain/se3-vs-so3xr3.md

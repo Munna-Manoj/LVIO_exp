@@ -1,13 +1,15 @@
-# 3D viewer (planned, M2.2)
+# 3D viewer (M2.2)
 
-A static three.js page deployed at `/viewer/`, the 3D companion of every experiment report.
+The viewer is one static page, [`docs/viewer/index.html`](../docs/viewer/index.html), published with the site at
+`/viewer/`. It is the 3D companion of every experiment report.
 
-| Requirement | Detail |
+| | Detail |
 |---|---|
-| Input | `docs/assets/experiments/<EXP>/viewer/<mission>.json` (trajectories: GT prism, baseline, variants) + `<mission>.bin` (float32 xyz + uint8 intensity, ≤ 1.5 M points, Git LFS) |
-| Produced by | `lvx viewer <EXP>` (to be added), from repeat-1 runs; same colours as `lvx/plotstyle.py` |
-| Deep link | `/viewer/?exp=EXP-001&mission=arc-6` |
-| Controls | orbit, toggle each trajectory, colour points by height / intensity, error-coloured trajectory |
-| Budget | first paint < 3 s on a laptop; no server |
+| Input | `docs/assets/experiments/<EXP>/viewer/`: `index.json` (missions), `<mission>.json` (trajectories in the GT frame), `<mission>.bin` (map, uint16 x y z, ≤ 300k points, ≤ 2 MB: no Git LFS) |
+| Produced by | `lvx viewer <EXP>` on the host ([`lvx/viewer.py`](../lvx/viewer.py)), from the repeat-1 runs; colours from `lvx/plotstyle.py` |
+| Also writes | `<mission>_map.png` (top view, shown in the report on GitHub) and, on request, `<mission>.gif` (README) |
+| Deep link | `/viewer/?exp=EXP-000&mission=arc-6` |
+| Controls | orbit, toggle each trajectory, height cut (hides the ceiling), point size |
+| Stack | three.js 0.160 from jsDelivr through an import map: no build step, no server |
 
-Stack: Vite + React + three.js (@react-three/fiber), the same stack as the DS-MSP studio.
+This folder holds only this README. The page lives under `docs/`, so MkDocs publishes it unchanged.

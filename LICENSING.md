@@ -8,4 +8,4 @@
 | SAD code (`slam_in_autonomous_driving`) | MIT; pinned, built outside the repo, never vendored (ADR-0008) |
 | SAD book text and figures | not reproduced; chapters are linked only (ADR-0008) |
 | SAD datasets (NCLT, UrbanLoco, UTBM, WXB, 2dmapping, AVIA) | each dataset's own terms; never committed |
-| GrandTour data and anything derived from it (maps, GT) | dataset terms; GT is not committed (ADR-0006) |
+| GrandTour data and anything derived from it (maps, GT) | MIT (HuggingFace release); cite Frey, Tuna et al., arXiv:2602.18164. Derived viewer maps are published with that attribution; GT is not committed (ADR-0006) |
