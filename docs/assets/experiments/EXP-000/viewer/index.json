@@ -1,0 +1,1 @@
+{"experiment": "EXP-000", "title": "How large is run-to-run noise, and do the pre-repo baselines reproduce?", "missions": ["arc-6", "eig-2", "snow-3"], "report": "../experiments/EXP-000-baselines-and-noise-floor/"}
