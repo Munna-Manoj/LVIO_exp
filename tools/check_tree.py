@@ -33,7 +33,8 @@ COURSE_OK = re.compile(
     r"^course/(curriculum\.yaml|chapters/[A-GXI]\d{2}-[a-z0-9-]+/"
     r"(README\.md|[a-z0-9_]+\.py|results/([a-z0-9_]+\.(txt|json|png|gif|svg)"
     r"|labs/[a-z0-9-]+/(manifest\.json|log_tail\.txt))))$")
-TEXT_SUFFIX = {".py", ".md", ".yaml", ".yml", ".toml", ".txt", ".cc", ".h", ".sh", ".json", ".csv", ".cff", ""}
+TEXT_SUFFIX = {".py", ".md", ".yaml", ".yml", ".toml", ".txt", ".cc", ".h", ".sh", ".json", ".csv", ".cff", ".html",
+               ".js", ""}
 
 
 def tracked() -> list:

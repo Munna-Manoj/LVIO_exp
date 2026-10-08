@@ -67,6 +67,7 @@ TODO failed or dirty runs and why (or "none").
 lvx run EXP-011 --host reference     # every variant × mission × repeat, on the reference host
 lvx eval EXP-011                  # runs.csv + summary.json
 lvx figures EXP-011
+lvx viewer EXP-011                # on the host: map + trajectories for the 3D viewer
 lvx report EXP-011
 ```
 <!-- lvx:end reproduce -->

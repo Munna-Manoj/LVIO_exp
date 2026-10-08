@@ -99,6 +99,13 @@ def cmd_figures(a: argparse.Namespace) -> None:
         print(config.rel(p))
 
 
+def cmd_viewer(a: argparse.Namespace) -> None:
+    from .viewer import make
+
+    for p in make(spec.find(a.exp), [a.mission] if a.mission else None):
+        print(config.rel(p))
+
+
 def cmd_report(a: argparse.Namespace) -> None:
     if a.exp:
         print(config.rel(report.write_report(spec.find(a.exp))))
@@ -251,6 +258,10 @@ def build_parser() -> argparse.ArgumentParser:
     x = sub.add_parser("figures", help="the standard figure set")
     x.add_argument("exp")
     x.set_defaults(fn=cmd_figures)
+    x = sub.add_parser("viewer", help="3D viewer data: map + trajectories per mission (run on the host)")
+    x.add_argument("exp")
+    x.add_argument("--mission")
+    x.set_defaults(fn=cmd_viewer)
     x = sub.add_parser("report", help="regenerate report blocks; --index for registry + README")
     x.add_argument("exp", nargs="?")
     x.add_argument("--index", action="store_true")

@@ -15,6 +15,7 @@ from . import config
 from .evaluate import load_summary
 from .spec import PHASES, Experiment, all_experiments
 
+SITE_URL = "https://munna-manoj.github.io/LVIO_exp/"     # the published site (mkdocs.yml site_url)
 BLOCK_RE = re.compile(r"<!-- lvx:begin (?P<name>[\w:-]+) -->\n(?P<body>.*?)<!-- lvx:end (?P=name) -->", re.S)
 SECTIONS = [
     "## Question & hypothesis", "## Setup", "## Results", "## Discussion", "## Verdict",
@@ -111,7 +112,24 @@ def render_results(exp: Experiment) -> str:
     for f in figs:
         rel = os.path.relpath(exp.figures_dir / f, exp.report_path.parent).replace(os.sep, "/")
         lines.append(f"\n![{f[:-4]}]({rel})")
-    return "\n".join(lines) + "\n"
+    return "\n".join(lines) + "\n" + render_maps(exp)
+
+
+def render_maps(exp: Experiment) -> str:
+    """Per-mission map + trajectories (lvx viewer): a PNG for GitHub, a link to the interactive 3D viewer."""
+    index = exp.figures_dir / "viewer" / "index.json"
+    if not index.exists():
+        return ""
+    lines = ["\n### Maps\n", "Map rebuilt from the baseline's repeat-1 estimate, all repeat-1 trajectories, in the GT "
+             "frame (`lvx viewer`). Open a mission in the [interactive 3D viewer]"
+             f"({SITE_URL}viewer/?exp={exp.id}) to orbit, hide the ceiling and toggle trajectories. Data: "
+             "[GrandTour](https://huggingface.co/datasets/leggedrobotics/grand_tour_dataset) (MIT; Frey, Tuna et al., "
+             "[arXiv:2602.18164](https://arxiv.org/abs/2602.18164)).\n"]
+    for m in json.loads(index.read_text())["missions"]:
+        png = exp.figures_dir / "viewer" / f"{m}_map.png"
+        rel = os.path.relpath(png, exp.report_path.parent).replace(os.sep, "/")
+        lines.append(f"[![{m}: map and trajectories]({rel})]({SITE_URL}viewer/?exp={exp.id}&mission={m})\n")
+    return "\n".join(lines)
 
 
 def render_reproduce(exp: Experiment) -> str:
@@ -120,6 +138,7 @@ def render_reproduce(exp: Experiment) -> str:
         f"lvx run {exp.id} --host {exp.spec['host']}     # every variant × mission × repeat, on the reference host\n"
         f"lvx eval {exp.id}                  # runs.csv + summary.json\n"
         f"lvx figures {exp.id}\n"
+        f"lvx viewer {exp.id}                # on the host: map + trajectories for the 3D viewer\n"
         f"lvx report {exp.id}\n"
         "```\n"
     )
