@@ -1,7 +1,10 @@
 """Evaluation: one protocol for every system (ADR-0002), then the noise-floor verdict (ADR-0004).
 
 ATE follows the COMFORT/Codabench scorer: evo point_distance APE, rigid alignment without scale,
-pairing with t_max = min(GT dt, est dt)/2 + 5 ms capped at 50 ms. Results are written to
+pairing with t_max = min(GT dt, est dt)/2 + 5 ms capped at 50 ms. Dropped poses show in pose_coverage:
+estimate poses / LiDAR scans inside the IMU span (both systems output one pose per scan). A GT pairing
+ratio would not show them: it is ~0.55 even for a perfect run (GT ~23 Hz, estimates 10 Hz; ADR-0011).
+Results are written to
 experiments/<EXP>/results/runs.csv and summary.json. Nothing else may write those files.
 """
 from __future__ import annotations
@@ -23,7 +26,8 @@ from .spec import Experiment, all_experiments, set_status
 
 RUN_COLUMNS = [
     "run_id", "variant", "mission", "repeat", "status", "ate_rmse_cm", "ate_median_cm", "ate_max_cm",
-    "n_pair", "n_gt", "pair_ratio", "ms_mean", "ms_p95", "ms_max", "rss_mb", "inliers_mean", "wall_s",
+    "n_pair", "n_gt", "n_est", "n_scans", "pose_coverage", "ms_mean", "ms_p95", "ms_max", "rss_mb",
+    "inliers_mean", "wall_s",
     "config_hash", "repo_commit", "system_commit", "host",
 ]
 NOISE_K = 2.0          # an effect must exceed NOISE_K * sigma_noise (ADR-0004)
@@ -36,7 +40,19 @@ def t_max_rule(t_ref: np.ndarray, t_est: np.ndarray) -> float:
     return min(dt / 2 + 0.005, 0.05)
 
 
-def ate(est_tum: Path, gt_tum: Path) -> Dict[str, float]:
+def usable_scans(offline: Path) -> int:
+    """LiDAR scans a system can process: those inside the IMU's time span. GrandTour's IMU stops ~12 s
+    before the LiDAR on most missions, and no system outputs poses there (ADR-0011)."""
+    with open(offline / "imu.txt") as f:
+        lines = f.read().split("\n")
+    stamps = [ln.split()[0] for ln in lines if ln.strip() and not ln.startswith("#")]
+    imu_first, imu_last = int(stamps[0]), int(stamps[-1])                 # ns, as in the scan file names
+    scans = [int(p.stem) for p in (offline / "lidar").glob("*.bin")]
+    return sum(imu_first <= t <= imu_last for t in scans)
+
+
+def ate(est_tum: Path, gt_tum: Path, n_scans: Optional[int] = None) -> Dict[str, float]:
+    """ATE by the COMFORT rule, the pair counts, and pose_coverage = estimate poses / LiDAR scans."""
     from evo.core import sync
     from evo.core.metrics import PoseRelation
     from evo.main_ape import ape
@@ -44,14 +60,15 @@ def ate(est_tum: Path, gt_tum: Path) -> Dict[str, float]:
 
     ref = file_interface.read_tum_trajectory_file(str(gt_tum))
     est = file_interface.read_tum_trajectory_file(str(est_tum))
-    n_gt = ref.num_poses
+    n_gt, n_est = ref.num_poses, est.num_poses
+    coverage = {"n_est": n_est, "n_scans": n_scans, "pose_coverage": n_est / n_scans if n_scans else None}
     ref, est = sync.associate_trajectories(ref, est, t_max_rule(ref.timestamps, est.timestamps))
     if ref.num_poses < 10:
-        return {"n_pair": ref.num_poses, "n_gt": n_gt}
+        return {"n_pair": ref.num_poses, "n_gt": n_gt, **coverage}
     s = ape(ref, est, PoseRelation.point_distance, align=True, correct_scale=False, n_to_align=-1,
             align_origin=False).stats
     return {"ate_rmse_cm": 100 * s["rmse"], "ate_median_cm": 100 * s["median"], "ate_max_cm": 100 * s["max"],
-            "n_pair": ref.num_poses, "n_gt": n_gt, "pair_ratio": ref.num_poses / n_gt}
+            "n_pair": ref.num_poses, "n_gt": n_gt, **coverage}
 
 
 def timing(csv_path: Path) -> Dict[str, float]:
@@ -87,7 +104,7 @@ def evaluate_run(exp: Experiment, key: runner.RunKey) -> Dict[str, Any]:
                host=man["host"])
     gt = config.mission_dir(key.mission) / "comfort_offline" / "gt.tum"
     if man["status"] == "ok" and gt.exists():
-        row.update(ate(out / "estimate.tum", gt))
+        row.update(ate(out / "estimate.tum", gt, n_scans=usable_scans(gt.parent)))
         if "ate_rmse_cm" not in row:
             row["status"] = "failed"
     row.update(timing(out / "timing.csv"))

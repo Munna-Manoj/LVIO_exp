@@ -43,3 +43,8 @@ def test_tree_has_no_machine_paths_or_private_tokens(monkeypatch):
     assert check_tree.check() == []                                      # absent word -> still clean
     monkeypatch.setattr(check_tree, "private_tokens", lambda: ["reference"])
     assert any("private token 'reference'" in e for e in check_tree.check())   # present word -> flagged
+
+
+def test_extra_path_comes_from_the_local_file_only(tmp_path):
+    config.write_local({"data_root": str(tmp_path), "path": [str(tmp_path / "shim")]})
+    assert config.extra_path() == [tmp_path / "shim"]

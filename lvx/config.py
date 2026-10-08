@@ -147,6 +147,11 @@ def image(name: str) -> str:
     return local or systems()[name]["image"]
 
 
+def extra_path() -> List[Path]:
+    """Machine-local tool folders put first on PATH when a system runs (lvx.local.yaml `path`)."""
+    return [_path(p) for p in load().get("path") or []]
+
+
 def host(profile: str) -> Dict[str, Any]:
     """How to reach the machine that plays a host profile (ssh alias, checkout): local only."""
     h = (load().get("hosts") or {}).get(profile)

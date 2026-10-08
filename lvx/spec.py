@@ -32,7 +32,7 @@ PHASES = {
 VERDICTS = ["adopt", "reject", "inconclusive"]
 METRICS = [
     "ate_rmse_cm", "ate_median_cm", "ate_max_cm", "ms_mean", "ms_p95", "ms_max", "rss_mb",
-    "inliers_mean", "pair_ratio",
+    "inliers_mean", "pose_coverage",
 ]
 FROZEN = [
     "question", "hypothesis", "prediction", "falsified_if", "baseline", "variants", "missions",

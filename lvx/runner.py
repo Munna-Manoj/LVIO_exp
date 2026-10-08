@@ -39,6 +39,7 @@ ENV_MEANING = {
     "IMAGE": "the system's container image (systems/systems.yaml; local tag in lvx.local.yaml)",
     "LIGHTNING_WS": "the lightning-lm colcon workspace built by scripts/build_lightning.sh",
     "BAG": "the mission as a ROS 2 bag: <run_root>/derived/lightning-bags/<mission>",
+    "PATH": "the caller's PATH, after the machine's own tool folders (lvx.local.yaml `path`, e.g. a docker shim)",
 }
 
 
@@ -200,6 +201,8 @@ def execute(exp: Experiment, key: RunKey, host_name: str, allow_dirty: bool = Fa
     # The command, and the machine locations it refers to (in env only, never in the command text).
     env = {"OUT": str(out), "GRANDTOUR": str(config.dataset_dir("grandtour")),
            "MISSION": str(config.mission_dir(key.mission)), "IMAGE": config.image(system)}
+    if config.extra_path():
+        env["PATH"] = os.pathsep.join([*map(str, config.extra_path()), os.environ.get("PATH", "")])
     if system == "se3-lvio":
         command = se3lvio_command(cfg, key.mission, run_tag=f"{exp.id}-{key.run_id}", cpus=cpus)
         cwd = "systems/se3-lvio"
