@@ -8,8 +8,9 @@ import numpy as np
 CHAPTER = Path(__file__).resolve().parents[2] / "course" / "chapters" / "B01-imu-propagation"
 sys.path.insert(0, str(CHAPTER))      # the test reaches into the chapter; the chapter never reaches out
 
-from propagate import propagate, so3_exp  # noqa: E402
-from simulate import figure_eight, imu_readings, so3_log  # noqa: E402
+from propagate import propagate  # noqa: E402
+from simulate import figure_eight, imu_readings  # noqa: E402
+from so3 import so3_exp, so3_log  # noqa: E402
 
 M = json.loads((CHAPTER / "results" / "metrics.json").read_text())
 

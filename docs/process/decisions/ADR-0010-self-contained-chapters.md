@@ -38,6 +38,12 @@ A learner who is lost in the plumbing leaves for another source.
 - **Enforcement:** `tools/check_chapters.py` runs in CI and the pre-commit hook. It checks imports,
   `sys.path`, inheritance, decorators, file length, equation cross-references, the quoted output, images,
   sections, the test and the nav entry.
+- **One way to write 3D maths (added 2026-10-08):** Lie groups, optimisation, robust kernels and
+  covariances follow [DS-MSP](https://github.com/Munna-Manoj/DS-MSP) `ds_msp/core/`, the same author's
+  library: same names, same conventions (tangent `[rho, phi]`, right perturbation by default), and the same
+  function bodies, copied verbatim. `tools/lie_reference.py` holds the reference copy (with the DS-MSP
+  commit it came from), and `tools/check_lie.py` fails CI if a chapter's copy differs or uses a look-alike
+  name. An improvement goes to DS-MSP first, then here, so the two never diverge.
 
 ## Consequences
 - Fixing a bug in a duplicated helper means fixing each copy. That's acceptable: the copies are short,

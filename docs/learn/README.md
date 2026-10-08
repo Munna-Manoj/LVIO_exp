@@ -47,7 +47,7 @@ Generated from [`course/curriculum.yaml`](https://github.com/Munna-Manoj/LVIO_ex
 
 | # | Chapter | Synthetic scene | Real data | Experiments | Status |
 |---|---|---|---|---|---|
-| A01 | Rotations and poses: SO(3), SE(3), Exp/Log, boxplus, Jacobians | a rotating box: local vs global perturbation; the pose 'banana' | – | [EXP-009](../experiments/EXP-009-se3-vs-so3xr3.md) | ⬜ |
+| A01 | [Rotations and poses: SO(3), SE(3), Exp/Log, boxplus, Jacobians](../../course/chapters/A01-rotations-and-poses/README.md) | a rotating box: local vs global perturbation; the pose 'banana' | – | [EXP-009](../experiments/EXP-009-se3-vs-so3xr3.md) | ✅ |
 | A02 | From the Kalman filter to the error-state Kalman filter | a cart on a rail, then a unicycle: ±3σ band, shrinking ellipses | – | – | ⬜ |
 
 ### Part B · Inertial and integrated navigation  <sub>(SAD ch. 3, 4)</sub>
@@ -86,7 +86,7 @@ Generated from [`course/curriculum.yaml`](https://github.com/Munna-Manoj/LVIO_ex
 
 | # | Chapter | Synthetic scene | Real data | Experiments | Status |
 |---|---|---|---|---|---|
-| E01 | The iterated EKF is Gauss-Newton with a prior | one range measurement: EKF vs IEKF iterates walking to the optimum | – | [EXP-009](../experiments/EXP-009-se3-vs-so3xr3.md) | ⬜ |
+| E01 | The iterated EKF is Gauss-Newton with a prior | one range measurement: EKF vs IEKF iterates walking to the optimum | – | [EXP-009](../experiments/EXP-009-se3-vs-so3xr3.md) | ✅ |
 | E02 | Tightly coupled LIO with an IEKF (a mini FAST-LIO) | the Courtyard: map coloured by point-to-plane residual | – | [EXP-001](../experiments/EXP-001-chi2-gate-sweep.md), [EXP-006](../experiments/EXP-006-step-limits-cov-hygiene.md), [EXP-010](../experiments/EXP-010-state-17-vs-12.md) | ⬜ |
 | I04 | 🔗 Map structures in the loop: kd-tree vs ikd-tree vs iVox vs VoxelMap inside your LIO | the Courtyard: memory and query time vs map size, per structure | nclt, grandtour | [EXP-008](../experiments/EXP-008-keyframe-map-insertion.md), [EXP-016](../experiments/EXP-016-point-budget-sweep.md), [EXP-020](../experiments/EXP-020-map-structure-speed.md) | ⬜ |
 | I05 | 🔗 Multi-LiDAR fusion: two scanners, two noise models, one map | two LiDARs: a 'doubled' wall before/after extrinsic calibration | grandtour | [EXP-000](../experiments/EXP-000-baselines-and-noise-floor.md), [EXP-018](../experiments/EXP-018-stress-suite.md) | ⬜ |

@@ -1,0 +1,7 @@
+box: R·Exp(δ) and Exp(δ)·R end 56.0° apart; Eq. 5 holds to 1.3e-15
+J_r: error/|δ| at 60° is 0.405 without J_r, 0.00007 with it; at 170° 0.91 without
+banana (2000 runs, 10 x 1 m, 6°/step heading noise):
+  x-y average is 3.6 cm from the nearest robot
+  samples off the cloud: Gaussian in x-y 47.5%, Gaussian on SE(3) 12.6%
+  Monte Carlo / predicted covariance (Eq. 10): total 1.01, lateral 1.00, along-track 26.5
+break it, 10°/step: off the cloud x-y 51.3%, SE(3) 19.6%

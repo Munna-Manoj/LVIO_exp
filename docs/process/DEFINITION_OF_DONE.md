@@ -29,6 +29,7 @@ A change is **done** only when every box that applies is checked. The PR templat
 - [ ] **Read-aloud test:** reading README.md, then the `.py` files top to bottom, without opening any other
       file, explains the idea. Every line is understandable where it stands.
 - [ ] The folder is self-contained (copied helpers name their source chapter); `python tools/check_chapters.py` passes.
+- [ ] 3D maths uses DS-MSP's names and function bodies; `python tools/check_lie.py` passes.
 - [ ] The synthetic scene is something a person recognises at a glance; the money plot is at the top.
 - [ ] `cd` into the folder and `python main.py` runs from a fresh clone in ≤ ~30 s with no dataset; the new
       `results/output.txt` is pasted into the README.
