@@ -8,6 +8,12 @@
 [![Docs](https://img.shields.io/badge/docs-site-0f9d8a)](https://munna-manoj.github.io/LVIO_exp/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
+[![EIG-2 (Eigergletscher, GrandTour): the map SE(3)-LVIO builds, with its trajectory on the GT prism path](docs/assets/experiments/EXP-000/viewer/eig-2.gif)](https://munna-manoj.github.io/LVIO_exp/viewer/?exp=EXP-000&mission=eig-2)
+
+*EIG-2 from EXP-000: the map rebuilt from SE(3)-LVIO's estimate (LIO baseline, repeat 1), white = GT prism.
+[Open it in 3D](https://munna-manoj.github.io/LVIO_exp/viewer/?exp=EXP-000&mission=eig-2). Data: [GrandTour](https://huggingface.co/datasets/leggedrobotics/grand_tour_dataset)
+(MIT; Frey, Tuna et al., [arXiv:2602.18164](https://arxiv.org/abs/2602.18164)).*
+
 > [!NOTE]
 > Status: **foundation (M0)**. The harness, protocol and 20 experiment specs are in place; no
 > experiment has run inside the harness yet, so this page shows no result numbers. See the
