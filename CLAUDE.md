@@ -34,6 +34,9 @@ Read these before your first change in a session:
    - No shared course library, no imports from other chapters or from `lvx`, no `sys.path` tricks.
    - Copy, don't import: a chapter that needs `so3_exp` from an earlier one has its own copy.
    - The code mirrors the maths: the README numbers the equations, and the code cites them as `(Eq. n)`.
+   - 3D maths is written one way, DS-MSP's: Lie groups, optimisation, robust kernels and covariances use
+     the names, conventions and exact function bodies of [DS-MSP](https://github.com/Munna-Manoj/DS-MSP)
+     `ds_msp/core/` (the same author's library). Details in §11; `tools/check_lie.py` enforces it.
    - When readability conflicts with DRY, generality, speed or tooling convenience, **readability wins**.
 
    Details in §11, reasons in ADR-0010. `tools/check_chapters.py` enforces it in CI and the pre-commit hook.
@@ -282,7 +285,8 @@ Read [`docs/process/WRITING_GUIDE.md`](docs/process/WRITING_GUIDE.md). In short:
   - `main` changes only by merging a PR whose template is the Definition of Done.
 - **These git rules are enforced by tracked hooks, not by memory.** Run `bash scripts/install_hooks.sh`
   once per clone; it sets `core.hooksPath` to `scripts/hooks/`.
-  - `pre-commit` refuses commits on `main`/`master`, then runs `check_chapters.py` and `check_tree.py`.
+  - `pre-commit` refuses commits on `main`/`master`, then runs `check_chapters.py`, `check_lie.py`,
+    `check_links.py`, `check_math.py` and `check_tree.py`.
   - `commit-msg` refuses a non-Conventional subject or machine-specific text.
   - `pre-push` refuses pushes to `main`/`master`.
   - For Claude Code, `.claude/settings.json` runs `scripts/hooks/claude_guard.py` before every Bash call.
@@ -304,6 +308,7 @@ python tools/check_tree.py
 python tools/check_experiments.py
 python tools/check_reports.py
 python tools/check_chapters.py
+python tools/check_lie.py
 python tools/check_links.py
 python tools/check_math.py
 python tools/sync_course.py --check
@@ -357,6 +362,16 @@ Plus `tests/course/test_<ID>.py`, outside the folder so learners never have to r
   files of the same folder. Nothing else: no `lvx`, no other chapter, no shared course package, no
   relative imports, no `sys.path` edits.
 - **Copy, don't import.** Need `so3_exp` from A01? Copy its eight lines and write `# same as A01 (Eq. 3)`.
+- **3D maths is DS-MSP's** (`tools/check_lie.py`, reference copy in `tools/lie_reference.py`).
+  - Same names: `hat`, `vee`, `so3_exp`, `so3_log`, `so3_right_jacobian`, `so3_left_jacobian`, `se3_exp`,
+    `se3_log`, `se3_adjoint`. No look-alikes (`skew`, `rodrigues`, `Exp`, ...).
+  - Same bodies, copied verbatim; only docstrings and `# (Eq. n)` comments may be added.
+  - Same conventions: tangent `xi = [rho, phi]` (translation first); state corrections on the **right**,
+    `R @ so3_exp(d)`; frames named `T_a_b`.
+  - Later chapters do the same with `ds_msp/core/optimize.py` (`lm_solve`, re-based `retract`),
+    `robust.py` (kernel names, `rho(s)` with `s = |r|^2`, weight `2 rho'(s)`) and `covariance.py`.
+  - A better formulation is welcome, but it goes to DS-MSP first (its own PR), then into
+    `tools/lie_reference.py` and the chapters. The two repositories never diverge.
   Integration chapters (D04, E02, G02) may hold several idea files, each copied visibly from the chapter
   that taught it, so the reader can diff them against the original.
 - **Code mirrors the maths.**

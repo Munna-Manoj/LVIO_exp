@@ -5,21 +5,9 @@ Everything here is the README's "The math" section, one equation per block.
 """
 import numpy as np
 
+from so3 import hat, so3_exp
+
 GRAVITY = np.array([0.0, 0.0, -9.81])  # world frame, z up (m/s^2)
-
-
-def hat(w):
-    """Vector -> skew-symmetric matrix, so that hat(a) @ b == np.cross(a, b)."""
-    return np.array([[0.0, -w[2], w[1]], [w[2], 0.0, -w[0]], [-w[1], w[0], 0.0]])
-
-
-def so3_exp(phi):
-    """Rotation vector (rad) -> rotation matrix (Rodrigues' formula)."""
-    th = np.linalg.norm(phi)
-    if th < 1e-8:
-        return np.eye(3) + hat(phi)
-    K = hat(phi / th)
-    return np.eye(3) + np.sin(th) * K + (1.0 - np.cos(th)) * K @ K
 
 
 def propagate(R0, v0, p0, gyro, accel, dt):

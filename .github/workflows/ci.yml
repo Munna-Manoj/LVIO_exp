@@ -19,6 +19,7 @@ jobs:
       - run: python tools/check_experiments.py
       - run: python tools/check_reports.py
       - run: python tools/check_chapters.py
+      - run: python tools/check_lie.py
       - run: python tools/check_links.py
       - run: python tools/check_math.py
       - run: python tools/sync_course.py --check
