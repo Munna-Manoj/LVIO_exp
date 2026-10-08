@@ -29,3 +29,19 @@ def test_abstractions_are_rejected(tmp_path):
     assert "inherits" in problems(tmp_path, "class Filter(Base):\n    pass\n")
     assert "@lru_cache" in problems(tmp_path, "from functools import lru_cache\n@lru_cache\ndef f():\n    pass\n")
     assert "lines >" in problems(tmp_path, "x = 1\n" * 400)
+
+
+LADDER = "".join(f"\n{part}\n\ntext\n" for part in check_chapters.LESSON_PARTS[:-1]) + \
+    "\n### Check yourself\n\n1. Q <details>A</details>\n"
+
+
+def test_lessons_must_climb_the_ladder():
+    good = f"\n## What you will build\n\n## Lesson 1 — One idea\n{LADDER}\n## Build it\n"
+    assert check_chapters.check_lessons(good, "A99") == []
+    no_knob = good.replace("\n### Turn the knob\n", "\n")
+    assert "missing ['### Turn the knob']" in " ".join(check_chapters.check_lessons(no_knob, "A99"))
+    no_answer = good.replace("<details>A</details>", "")
+    assert "<details>" in " ".join(check_chapters.check_lessons(no_answer, "A99"))
+    skipped = good.replace("## Lesson 1 —", "## Lesson 2 —")
+    assert "numbered" in " ".join(check_chapters.check_lessons(skipped, "A99"))
+    assert "no '## Lesson 1" in " ".join(check_chapters.check_lessons("\n## Build it\n", "A99"))

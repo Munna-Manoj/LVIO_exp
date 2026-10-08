@@ -1,95 +1,373 @@
 # A01 — Rotations and poses: SO(3), SE(3), Exp/Log, perturbations, Jacobians
 
-For readers who know matrices and vectors and want the toolkit every later chapter uses: how to turn a
-small rotation into a rotation matrix and back, which side to apply it on, and why a robot's position
-uncertainty is shaped like a banana. No dataset needed.
+Three short lessons, for readers who know matrices and vectors. **Lesson 1:** a small turn can go on two
+sides of a rotation, and they differ. **Lesson 2:** nudging a rotation vector is not the nudge you think.
+**Lesson 3:** why a robot's position uncertainty is shaped like a banana, and how that shape gives a better
+answer when the next measurement arrives. No
+dataset is needed.
 
 > [!NOTE]
 > **Book companion:** *SLAM in Autonomous Driving*, chapter 2
 > ([English PDF](https://github.com/gaoxiang12/slam-in-ad-en/blob/main/sad-en.pdf)). Read the book for the
-> full derivations; this chapter builds the tools in about 250 lines of Python.
+> full derivations; this chapter builds the ideas one picture at a time.
 >
 > **Same code as DS-MSP.** `so3.py` and `se3.py` are copied verbatim from
 > [DS-MSP](https://github.com/Munna-Manoj/DS-MSP) (`ds_msp/core/lie.py`), the same author's camera library,
 > so the maths reads the same in both. `tools/check_lie.py` keeps the copies identical.
 
-![2000 robots drive 10 m with a little heading noise; their end points bend into a banana](results/banana.png)
+![2000 robots walk 10 m with a little heading noise; their end points bend into a banana](results/banana.png)
+
+## Why you should care
+
+A LiDAR-inertial filter does three things with rotations, about a hundred times a second:
+- it **turns** its estimate by a small amount (a gyro reading, or a correction);
+- it asks **how a small change** in its numbers moves the robot (a Jacobian);
+- it keeps a **bell curve** of how wrong it might be (a covariance), and combines it with every new
+  measurement by a small optimisation.
+
+Each step hides a trap that numbers on a line don't have. A wrong side, a missing Jacobian or the wrong
+shape of bell curve gives a filter that drifts or claims a certainty it doesn't have. This chapter shows
+each trap with a picture, then the fix.
+
+## What you need first
+
+- **A rotation matrix** $`R`$ (3×3) turns body coordinates into world coordinates: $`p_w = R\,p_b`$. Its
+  columns are the body's own x, y and z axes, written in world coordinates.
+- **A matrix product is read right to left**, the way a point travels through it: in $`A\,B\,p`$, the point
+  meets $`B`$ first.
+- **A bell curve** (a Gaussian) is described by its centre (mean) and its spread (covariance). Drawing a
+  "sample" means picking random numbers from it. Lesson 3 needs only this.
+- Python with NumPy, SciPy and Matplotlib.
 
 ## What you will build
-
-Three files, readable top to bottom, needing only NumPy, SciPy and Matplotlib:
 
 | File | What it does |
 |---|---|
 | [`so3.py`](so3.py) | Rotations: `hat` (Eq. 1), `so3_exp` (Eq. 2), `so3_log` (Eq. 3), the right Jacobian (Eq. 6) |
-| [`se3.py`](se3.py) | Poses: `se3_exp` (Eq. 7), `se3_adjoint` (Eq. 8), driving with noise (Eq. 9) and predicting the spread (Eq. 10) |
-| [`main.py`](main.py) | The three scenes: a box turned on two sides, the Jacobian check, the banana |
+| [`se3.py`](se3.py) | Poses: `se3_exp` (Eq. 7), `se3_adjoint` (Eq. 8), driving with noise (Eq. 9), predicting the spread (Eq. 10) |
+| [`lesson1_sides.py`](lesson1_sides.py) | Lesson 1: the box turned on its own axes or the world's, and a pose that swings |
+| [`lesson2_jacobian.py`](lesson2_jacobian.py) | Lesson 2: nudging a rotation vector, with and without $`J_r`$ |
+| [`lesson3_walk.py`](lesson3_walk.py) | Lesson 3: one robot step by step, then 2000, then what `se3_exp` does |
+| [`lesson3_banana.py`](lesson3_banana.py) | Lesson 3: two bell curves for the cloud, the same numbers through SO(3)×R³ and SE(3), the knob |
+| [`lesson3_fuse.py`](lesson3_fuse.py) | Lesson 3: what the belief is for: fusing one measurement by Gauss–Newton (Eq. 12) |
+| [`main.py`](main.py) | Runs all three lessons, prints the numbers quoted below, writes `results/` |
+| [`live_box.py`](live_box.py), [`live_walk.py`](live_walk.py), [`live_dots.py`](live_dots.py) | Animations, one per idea, with knobs on the command line |
 
 ```bash
 cd course/chapters/A01-rotations-and-poses
-python main.py          # about 10 s
+python main.py          # about 12 s
+python live_walk.py     # opens a window; space pauses
 ```
 
-## Intuition
+## Lesson 1 — Which side? The body's own axes or the world's
 
-> [!TIP]
-> Rotations don't add like vectors: turning 90° left then 90° forward is not the same as the other way
-> round. So a rotation is stored as a matrix, and changed by **multiplying** it with a small rotation, built
-> from a 3-vector by the exponential map.
+### The question
 
-Multiplying raises a question vectors never ask: on which side? On the right, the small turn is about the
-body's own axes (what a gyro measures). On the left, it is about the world's axes. Same numbers,
-different result.
+A drone faces north. You tell it "roll 40° about x". About **its own** x axis (its nose), or about the
+**world's** x axis (east)? Both make sense, and a rotation matrix makes you choose: the small turn
+$`\mathrm{Exp}(\delta)`$ goes either on the right of $`R`$ or on the left.
 
-The same non-additivity bends uncertainty. A robot unsure of its heading by a few degrees, driving 10 m,
-could end anywhere on an arc, not an ellipse. A Gaussian written on the pose itself (SE(3)) bends with the
-arc; a Gaussian on x and y cannot.
+### Step by step
 
-## The math
+Read each product right to left, with $`p_b`$ a point of the body:
+- $`R\,\mathrm{Exp}(\delta)\,p_b`$: the point is turned **while still in body coordinates**, then carried to
+  the world. So $`\delta`$ is about the body's own axes.
+- $`\mathrm{Exp}(\delta)\,R\,p_b`$: the point is carried to the world **first**, then turned. So $`\delta`$
+  is about the world's axes.
 
-A rotation vector $`w`$ (axis × angle, rad) is written as the skew-symmetric matrix of the cross product:
+Follow the box's nose, body point $`(1, 0, 0)`$. The box starts yawed 90°, so it faces world +y. Then
+$`\delta`$ = 40° about x:
+
+| | nose in world coordinates |
+|---|---|
+| start | (0.00, 1.00, 0.00) |
+| right, $`R\,\mathrm{Exp}(\delta)`$: turn about the nose itself | (0.00, 1.00, 0.00): the nose stays, the box **rolls** |
+| left, $`\mathrm{Exp}(\delta)\,R`$: turn about world x | (0.00, 0.77, 0.64): the nose lifts, the box **pitches** |
+
+![live_box.py: the same turn growing on each side](results/live_box.gif)
+
+*`python live_box.py`: the turn grows from 0 to 40°. The box sits 2 m from the world origin (+). On the
+right it spins in place about its own x: its centre moves 0.00 m. On the left it turns about the world's x,
+which passes through the origin, so it also swings up and around: its centre moves 1.37 m (dotted trail).
+Coloured arrows are the box's own axes, grey arrows the world's.*
+
+### Two ways, side by side
+
+![The same 40° turn applied on the right and on the left](results/box_perturbation.png)
+
+*Same numbers, different turns: the two results are 56.0° apart. Here the box sits at the world origin, so
+only its orientation can differ; away from the origin (the GIF above, and the pose below) a left turn also
+moves it.*
+
+A **pose** $`T = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix}`$ has the same two sides, with one more
+surprise. A turn on the left is about the **world origin**, so it swings the robot's position too:
+
+![A pose turned 5° on the right stays put; on the left it swings about the origin](results/pose_left_right.png)
+
+*A robot 10 m from the origin, turned 5°. On the right it moves 0.00 m (it turns in place). On the left it
+moves 0.87 m.*
+
+### The maths
+
+A rotation vector $`w`$ (axis × angle, in radians) is first written as the matrix of the cross product:
 
 ```math
 [w]_\times = \begin{bmatrix} 0 & -w_3 & w_2 \\ w_3 & 0 & -w_1 \\ -w_2 & w_1 & 0 \end{bmatrix}, \quad [w]_\times v = w \times v \qquad (1)
 ```
 
-The exponential map turns it into a rotation matrix (Rodrigues' formula), with $`\theta = \lVert w \rVert`$:
+The exponential map turns it into a rotation matrix (Rodrigues' formula), with $`\theta = \lVert w \rVert`$
+the angle:
 
 ```math
 \mathrm{Exp}(w) = I + \frac{\sin\theta}{\theta}[w]_\times + \frac{1-\cos\theta}{\theta^2}[w]_\times^2 \qquad (2)
 ```
 
-The logarithm goes back. `so3_log` also handles $`\theta \approx 0`$ and $`\theta \approx \pi`$, where this
-formula divides by zero:
+The logarithm goes back from a matrix to a vector. `so3_log` also handles $`\theta \approx 0`$ and
+$`\theta \approx \pi`$, where this formula divides by zero:
 
 ```math
 \theta = \arccos\frac{\mathrm{tr}(R) - 1}{2}, \quad w = \frac{\theta}{2\sin\theta}\,(R - R^\top)^\vee \qquad (3)
 ```
 
-A small rotation $`\delta`$ can be applied on either side of $`R`$ (body to world):
+The two sides, for a small turn $`\delta`$ and a body-to-world $`R`$:
 
 ```math
 R \leftarrow R\,\mathrm{Exp}(\delta) \;\;\text{(right: body axes)}, \qquad R \leftarrow \mathrm{Exp}(\delta)\,R \;\;\text{(left: world axes)} \qquad (4)
 ```
 
-> This course uses the **right** form by default: an IMU measures in the body frame, and both systems
-> studied here (SE(3)-LVIO and lightning-lm) correct their state on the right. The two forms are related
-> exactly, by rotating the vector:
+They are related exactly: a body-axis turn equals the world-axis turn about the same axis written in world
+coordinates, $`R\,\delta`$. Eq. 5 holds to 1.3e-15 in the code:
 
 ```math
 R\,\mathrm{Exp}(\delta) = \mathrm{Exp}(R\,\delta)\,R \qquad (5)
 ```
 
-Nudging the rotation vector itself is not the same as multiplying by a nudge. The right Jacobian
-$`J_r`$ converts one into the other:
+> [!IMPORTANT]
+> This course puts corrections on the **right**: a gyro measures in the body's axes, and both systems
+> studied here (SE(3)-LVIO and lightning-lm) correct their state on the right. When you need the other
+> side, use Eq. 5 (or Eq. 8 for poses).
+
+### Turn the knob
+
+How the box faces before the turn decides how far apart the two sides end (40° about x):
+
+| box faces (yaw) | 0° | 30° | 60° | 90° | 180° |
+|---|---|---|---|---|---|
+| right vs left | 0.0° | 20.3° | 39.4° | 56.0° | 80.0° |
+
+At yaw 0° the box's axes *are* the world's, so the sides agree. Try `python live_box.py --start-yaw 0`, or
+`--axis z`: a turn about z commutes with a yaw, so the sides agree again.
+
+### Misconceptions
+
+- **"Left is local, right is global."** It is the other way round for $`T_{w b}`$ (body to world,
+  $`p_w = T\,p_b`$). A perturbation sits next to the frame it is written in:
+  $`T_{w b}\,\mathrm{Exp}(\delta)`$ has $`\delta`$ in $`b`$, the body.
+- **"For a small turn the side doesn't matter."** Both results are close to $`R`$, but they are different
+  turns, about different axes. The difference is comparable to the turn itself (56.0° for a 40° turn).
+- **"A left turn of a pose turns the robot in place."** It swings it about the world origin: 0.87 m for 5°
+  at 10 m.
+
+### Check yourself
+
+1. A gyro reads $`\omega`$ (rad/s) for $`\Delta t`$ seconds. On which side does $`\mathrm{Exp}(\omega\,\Delta t)`$ go?
+   <details><summary>Answer</summary>The right: $`R \leftarrow R\,\mathrm{Exp}(\omega\,\Delta t)`$. A gyro is
+   fixed to the body and measures about the body's own axes.</details>
+2. In `turned` (`lesson1_sides.py`), make the left side give the same box as the right. What do you change?
+   <details><summary>Answer</summary>Use $`R\,\delta`$ instead of $`\delta`$ on the left:
+   $`\mathrm{Exp}(R\,\delta)\,R`$. That is Eq. 5.</details>
+
+## Lesson 2 — Nudging a rotation vector: the right Jacobian
+
+### The question
+
+An optimiser stores a rotation as a vector $`w`$ and changes it a little, $`w \to w + \delta`$. By how much,
+and about which axis, does the body really turn? The easy guess is "by $`\delta`$". That is exact for
+numbers on a line, and wrong for 3-D rotations.
+
+### Step by step
+
+Take $`w`$ = 90° about z, and nudge the vector by 0.01 along x. The body really turns by
+(+0.00637, -0.00637, +0.00001). That is 0.90 times as much as the nudge, about an axis tilted -45.0°:
+half of the 90° rotation.
+
+![J_r(w)·δ for w about z of growing size](results/jacobian_arrows.png)
+
+*The grey arrow is the nudge you made to the vector (along x). Each coloured arrow is the turn the body
+really makes, for a bigger $`w`$. Lengths: 1.00 at 0°, 0.97 at 45°, 0.90 at 90°, 0.78 at 135°, 0.64 at 180°.*
+
+### Two ways, side by side
+
+![Error of a nudged rotation, with and without the right Jacobian](results/jacobian_error.png)
+
+*Nudge by $`|\delta| = 0.001`$, and compare with the exact $`\mathrm{Exp}(w + \delta)`$. Pretending the body
+turns by $`\delta`$ is off by 0.069 of the nudge at 10°, 0.405 at 60° and 0.91 at 170°. With $`J_r`$ the error
+at 60° is 0.00007: what is left is second order.*
+
+### The maths
+
+The right Jacobian $`J_r(w)`$ converts a nudge of the vector into the turn of the body, on the right:
 
 ```math
 \mathrm{Exp}(w + \delta) \approx \mathrm{Exp}(w)\,\mathrm{Exp}(J_r(w)\,\delta), \quad J_r(w) = I - \frac{1-\cos\theta}{\theta^2}[w]_\times + \frac{\theta - \sin\theta}{\theta^3}[w]_\times^2 \qquad (6)
 ```
 
-A pose $`T = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix}`$ maps body points to world points. Its tangent
-vector is $`\xi = [\rho, \phi]`$, translation part first (the DS-MSP order). Its exponential couples them
-through the left Jacobian $`J_l(\phi) = J_r(\phi)^\top`$:
+> $`\theta = \lVert w \rVert`$. For $`w`$ about z and $`\delta`$ along x, $`J_r\,\delta`$ is $`\delta`$ turned by
+> $`-\theta/2`$ and shortened by $`\sin(\theta/2)/(\theta/2)`$: the arrows above.
+
+### Turn the knob
+
+Nudge along $`w`$'s own axis instead (60° about an axis, then a little more about the same axis). Without
+$`J_r`$ the error is 0.00000: turns about **one** axis add like numbers. That is why 2-D (yaw only) never
+needs $`J_r`$, and why 3-D does.
+
+### Misconceptions
+
+- **"$`\mathrm{Exp}(a + b) = \mathrm{Exp}(a)\,\mathrm{Exp}(b)`$, like $`e^{a+b} = e^a e^b`$."** Only when
+  $`a`$ and $`b`$ share an axis.
+- **"$`J_r`$ only matters for huge rotations."** At 10° the error is already 0.069 of the nudge.
+- **"The optimiser will fix a small error anyway."** It converges slowly or not at all. DS-MSP's solver
+  re-bases the rotation after every step, keeping $`w`$ small.
+
+### Check yourself
+
+1. A robot only turns about z (yaw). Does its filter need $`J_r`$ for the yaw?
+   <details><summary>Answer</summary>No. Every change is about the same axis, so turns add like numbers and
+   $`J_r = 1`$. This is the knob above.</details>
+2. $`w`$ = 180° about z, nudge along x. How much does the body turn, compared with the nudge?
+   <details><summary>Answer</summary>0.64 of it, about an axis turned by -90°: along -y (the last arrow in
+   the figure).</details>
+
+## Lesson 3 — Uncertainty on poses: the banana, and what "on SE(3)" buys a filter
+
+### The question
+
+A robot walks blindfolded: 10 steps of 1 m, trying to go straight. After each step it slips by a small
+random turn (a bell curve with a spread of 6°). Three questions, in order:
+1. **Where does it end?** Simulate it, many times.
+2. **How should a filter remember "where I might be"?** It can't keep thousands of robots. It keeps
+   **one** bell curve: a mean and a covariance, its *belief*.
+3. **What is that belief for?** A moment later a measurement arrives, and the filter must combine the
+   two. A wrong-shaped belief gives a wrong answer, and that is where SE(3) earns its keep.
+
+### Step by step
+
+One robot. Each step: walk 1 m the way you face, then slip.
+
+| step | facing while walking | then slip | facing after | corner reached |
+|---|---|---|---|---|
+| 1 | +0.0° | +12.2° | +12.2° | (1.00, 0.00) |
+| 2 | +12.2° | -15.3° | -3.1° | (1.98, 0.21) |
+| 3 | -3.1° | +2.5° | -0.6° | (2.98, 0.16) |
+| 4 | -0.6° | -3.4° | -4.0° | (3.98, 0.15) |
+| 5 | -4.0° | -2.7° | -6.7° | (4.97, 0.08) |
+| 6 | -6.7° | -1.3° | -8.0° | (5.97, -0.04) |
+| 7 | -8.0° | -12.1° | -20.1° | (6.96, -0.18) |
+| 8 | -20.1° | -1.4° | -21.5° | (7.90, -0.52) |
+| 9 | -21.5° | -5.2° | -26.7° | (8.83, -0.89) |
+| 10 | -26.7° | +19.9° | -6.8° | (9.72, -1.34) |
+
+The slips **add up**. After step 7 the robot faces -20.1°, so every later metre carries it down. The +19.9°
+at the end turns it back, but the metres already walked are not returned.
+
+![One robot, with every step's walk and slip](results/one_robot.png)
+
+![live_walk.py: robots walking, slips adding up on the left and forgotten on the right](results/live_walk.gif)
+
+*`python live_walk.py`: the same slips on both sides. Left: they add up (a real robot). Right: each slip is
+forgotten and the robot re-aims at +x.*
+
+### Many at once
+
+![1, 5, 50 and 2000 robots](results/many_robots.png)
+
+Repeat with new random slips each time. A robot that ends far to the side faced away from +x for many
+metres, so it also made less progress in x. The end points pile up on a curve, the **banana**:
+- facing spread ±19.2°, end y ±1.70 m;
+- distance from the start 9.91 ± 0.08 m: almost fixed;
+- x as low as 7.26 m: the ends curl back.
+
+![Slips that add up, big slips, and slips that are forgotten](results/turns_add_up.png)
+
+*Why the paths look smooth: a 6° slip is a small kink, and it changes where the robot faces **from then on**.
+If each slip were forgotten (right), the robots would end within y ±0.31 m: no fan, no banana.*
+
+### Two ways, side by side
+
+The black dots are the truth. A filter must replace them with one bell curve. **Why draw coloured dots,
+then?** A bell curve is only a mean and a covariance: numbers you can't see. Drawing random samples from
+it is a way to **look at what it believes**. A good belief puts its samples where the real robots are.
+Samples off the cloud are places the belief thinks possible that aren't.
+
+Two ways to write the bell curve:
+- **A: in x and y** (blue). Draw x and y, put a dot there. It is even **fitted** to the real robots
+  (x 9.76 ± 0.28 m, y ± 1.71 m). Its centre, the x–y average, is 6.4 cm from the nearest robot: in the
+  empty middle of the curve.
+- **B: over a move and a turn** (orange). Draw six numbers $`\xi = [\rho, \phi]`$, then drive from the
+  noise-free end pose with `se3_exp`. This bell curve is **predicted** by Eq. 10, without the robots.
+
+Off the cloud: A 46.5%, B 11.4% (the figure at the top of the page).
+
+What does `se3_exp` do with those numbers? It **drives while turning steadily**:
+
+![se3_exp: drive 10 m while turning by θ](results/exp_arc.png)
+
+*10 m while turning 20° ends at (9.80, 1.73); turning 40° ends at (9.21, 3.35). The arcs bend back, like the
+robots.*
+
+Now **the same six random numbers**, applied two ways (Eq. 11):
+- **SO(3)×R³:** add the move to the position, and turn on the spot.
+- **SE(3):** one `se3_exp`, so the turn bends the move.
+
+![The same draws of ξ, through SO(3)×R³ and through SE(3)](results/same_numbers.png)
+
+![live_dots.py part 2: one draw, two ways](results/live_dots.gif)
+
+One draw: forward -0.03 m, sideways +2.24 m, yaw +34.8°. SO(3)×R³ puts the robot at (9.97, 2.24), off the
+cloud. SE(3) puts it at (9.31, 2.09), on it. Over 2000 draws: SO(3)×R³ 38.1% off, SE(3) 11.4%.
+
+*`python live_dots.py`: part 1 makes each blue and orange dot one at a time; part 2 is this test.*
+
+### What the belief is for: combining it with a measurement
+
+A filter never draws those dots. What it does with its belief is **fuse the next measurement**. Say the
+robot passes a wall that tells it its sideways position: y = -2.7 ± 0.05 m. Where is it in x? The truth: the
+40 real robots at that y have x 9.48 m.
+
+The filter answers by finding the pose that best agrees with **both** its belief and the measurement: a
+small least-squares problem (Eq. 12). Gauss–Newton solves it in a few steps, starting from the mean pose:
+
+| iteration | cost | x (m) | y (m) |
+|---|---|---|---|
+| 0 (the mean pose) | 2916.00 | 10.00 | +0.00 |
+| 1 | 5.08 | 9.43 | -2.62 |
+| 2 | 2.48 | 9.41 | -2.70 |
+| 3 | 2.48 | 9.42 | -2.70 |
+
+![One measurement of y; the answer of each bell curve](results/fuse.png)
+
+| belief | estimated x | the robots there |
+|---|---|---|
+| SE(3) | 9.42 m | 9.48 m |
+| x–y bell curve | 9.74 m | 9.48 m |
+| SO(3)×R³ | 10.00 m | 9.48 m |
+
+Only the SE(3) belief "knows" that a robot found far to the side must also have fallen back. That is
+the banana, used. The SE(3) estimate also recovers the heading from the y measurement alone: -24.5°,
+for -26.9° in the robots there.
+
+> [!IMPORTANT]
+> **This is what a LiDAR-inertial filter does every scan,** with hundreds of point-to-plane residuals
+> instead of one wall. The belief is its prior (the propagated covariance), the measurements add their
+> residuals, and the "iterated" in iterated EKF is these Gauss–Newton steps. Each step applies its
+> correction on the right of the pose (lesson 1), through a Jacobian (lesson 2). A pose-graph optimiser
+> does the same with many poses at once.
+
+### The maths
+
+A pose has a tangent vector $`\xi = [\rho, \phi]`$, translation part first (the DS-MSP order). Its
+exponential couples the two through the left Jacobian $`J_l(\phi) = J_r(\phi)^\top`$. That coupling is the
+bend:
 
 ```math
 \mathrm{Exp}(\xi) = \begin{bmatrix} \mathrm{Exp}(\phi) & J_l(\phi)\,\rho \\ 0 & 1 \end{bmatrix} \qquad (7)
@@ -101,94 +379,172 @@ The adjoint is Eq. 5 for poses: it moves a perturbation from one side of $`T`$ t
 T\,\mathrm{Exp}(\xi) = \mathrm{Exp}(\mathrm{Ad}_T\,\xi)\,T, \quad \mathrm{Ad}_T = \begin{bmatrix} R & [t]_\times R \\ 0 & R \end{bmatrix} \qquad (8)
 ```
 
-The banana robot drives $`N`$ steps $`u`$ (1 m forward). After each step it lands slightly off, by noise
-$`w_k \sim \mathcal{N}(0, Q)`$ in its own frame:
+The robot walks $`N`$ steps $`u`$ (1 m forward), and after each it slips by noise
+$`w_k \sim \mathcal{N}(0, Q)`$ in its own frame. The cos/sin walk above is this with only a yaw slip; the
+two agree to 4e-16 m:
 
 ```math
 T_{k+1} = T_k\,\mathrm{Exp}(u)\,\mathrm{Exp}(w_k) \qquad (9)
 ```
 
 Write the true pose as the noise-free pose $`\bar T_k`$ times an error, $`T_k = \bar T_k\,\mathrm{Exp}(\xi_k)`$.
-Eq. 8 moves the old error past the step $`U = \mathrm{Exp}(u)`$, so to first order its covariance grows as:
+Eq. 8 carries the old error past the step $`U = \mathrm{Exp}(u)`$, so, to first order, its covariance grows as:
 
 ```math
 \Sigma_{k+1} = \mathrm{Ad}_{U^{-1}}\,\Sigma_k\,\mathrm{Ad}_{U^{-1}}^\top + Q \qquad (10)
 ```
 
-> Eq. 10 needs no random numbers. $`\mathrm{Ad}_{U^{-1}}`$ has the block $`-[t]_\times`$: a heading error
-> now becomes a sideways position error after the next metre. That block is what bends the cloud.
+> No random numbers are needed. After 10 steps Eq. 10 predicts forward ±0.032 m, sideways ±1.77 m and
+> yaw ±19.0°. Its $`[t]_\times`$ block turns a heading error into a sideways error after the next metre.
+
+The two ways of applying a $`\xi`$ to the mean pose $`(\bar R, \bar p)`$:
+
+```math
+\text{SO(3)×R³:}\;\; \bar p + \rho,\;\; \bar R\,\mathrm{Exp}(\phi) \qquad\quad \text{SE(3):}\;\; \bar T\,\mathrm{Exp}(\xi),\ \text{position}\ \bar p + \bar R\,J_l(\phi)\,\rho \qquad (11)
+```
+
+Fusing a measurement $`y_m`$ (std $`\sigma_m`$) with the belief: find the $`\xi`$ that makes the sum of the
+two squared residuals smallest. The first term is the belief's cost, the second the measurement's:
+
+```math
+\hat\xi = \arg\min_\xi \; \xi^\top \Sigma^{-1} \xi \; + \; \left(\frac{y(\xi) - y_m}{\sigma_m}\right)^2 \qquad (12)
+```
+
+> $`y(\xi)`$ is the sideways position of the pose given by Eq. 11 (left or right). Gauss–Newton
+> linearises $`y(\xi)`$, solves the linear least squares, and repeats. With SE(3), $`y(\xi)`$ bends, so its
+> cost is low along the banana; with SO(3)×R³ it is straight.
+
+How good is Eq. 10 itself? Monte Carlo / predicted covariance: total 1.00, lateral 0.99. Along the track the
+real spread is 25.3 times the prediction. Forward error also comes from products of two errors (a heading
+error times a sideways error), which a first-order model drops.
+
+### Turn the knob
+
+**Knob 1, the yaw slip per step:** how often a draw lands off the cloud.
+
+| yaw slip per step | facing doubt after 10 m | SO(3)×R³ off | SE(3) off |
+|---|---|---|---|
+| 0.5° | ± 1.6° | 1.1% | 1.3% |
+| 1.0° | ± 3.2° | 2.1% | 1.0% |
+| 2.0° | ± 6.3° | 7.1% | 2.1% |
+| 6.0° | ±19.0° | 39.6% | 13.1% |
+| 10.0° | ±31.6° | 46.6% | 14.4% |
+
+**Knob 2, where the measurement says the robot is** (6° slips): the estimated x.
+
+| measured y | robots there | SE(3) | x–y bell curve | SO(3)×R³ |
+|---|---|---|---|---|
+| -0.5 m | 9.93 | 9.98 | 9.75 | 10.00 |
+| -1.5 m | 9.80 | 9.82 | 9.75 | 10.00 |
+| -2.7 m | 9.48 | 9.42 | 9.74 | 10.00 |
+| -3.5 m | 9.16 | 9.01 | 9.73 | 10.00 |
+
+With a few degrees of heading doubt or less, the banana is straight and the beliefs **agree**; near the
+middle of the cloud the measurement barely moves x. A LiDAR filter corrects its pose every 0.1 s, so
+between corrections its heading doubt stays far below a degree: the top row of knob 1. The difference
+grows when the doubt grows: long stretches without geometry, dropouts, a bad start. Try
+`python live_walk.py --turn-std 1`.
+
+### Misconceptions
+
+- **"The coloured dots are what the filter computes."** A filter never samples. The dots are only a
+  picture of its belief; what it computes is Eq. 12.
+- **"The x–y average is where the robot most likely is."** It sits in the empty middle of the curve, 6.4 cm
+  from the nearest robot.
+- **"SO(3)×R³ is wrong, so filters built on it can't work."** Both store the same rotation and position
+  exactly; they differ in how a change is applied. With small heading doubt they agree (knob 1), and an
+  optimiser recomputes its residuals after every step.
+- **"SE(3) means polar coordinates."** No. `se3_exp` means "move while turning steadily", which also bends,
+  and it carries the facing as well as the position.
+- **"The banana is a 3-D effect."** The yaw slip alone makes it (the cos/sin walk). Roll and pitch move the
+  robot up and down, which the top view doesn't show.
+- **"Eq. 10 is exact."** It is first order: along the track the real spread is 25.3 times the prediction.
+
+### Check yourself
+
+1. The yaw slip is 1° per step. Which belief should a filter use for the position?
+   <details><summary>Answer</summary>Either: 2.1% off for SO(3)×R³ and 1.0% for SE(3). With small heading
+   doubt the banana is straight.</details>
+2. Why do almost no grey paths cross after the first few metres?
+   <details><summary>Answer</summary>A slip changes where the robot faces from then on. A robot that drifted
+   down tends to keep pointing down, so robots that are apart keep moving apart.</details>
+3. The wall says y = -3.5 m. Which belief gives the better x, and why does the x–y one fail?
+   <details><summary>Answer</summary>SE(3): 9.01 m, for 9.16 m in the robots there. The x–y bell curve gives
+   9.73 m: its x and y are uncorrelated (the cloud is symmetric), so learning y tells it nothing about x.
+   The banana's curl is exactly the information it can't hold.</details>
+4. In Eq. 12, what plays the role of the belief's cost in a LiDAR-inertial filter?
+   <details><summary>Answer</summary>The propagated error-state covariance: $`\xi^\top P^{-1} \xi`$, with
+   $`P`$ grown by the IMU between scans, as Eq. 10 grows $`\Sigma`$.</details>
 
 ## Build it
 
 Open the files in this order; each block is commented with the equation it implements.
 
-1. **[`so3.py`](so3.py), `hat` and `so3_exp`.** Eq. 1 and 2. The small-angle branch is the Taylor series
-   of Eq. 2, so nothing divides by zero.
-2. **`so3_log`.** Eq. 3, plus the branch near 180° where $`\sin\theta \to 0`$: the axis comes from
-   $`(R + I)/2 \approx a a^\top`$ instead.
-3. **`so3_right_jacobian`.** Eq. 6, again with a Taylor branch.
-4. **[`se3.py`](se3.py), `se3_exp` and `se3_adjoint`.** Eq. 7 and 8, built from the `so3.py` functions.
-5. **`drive` and `propagate_covariance`.** Eq. 9 drives one noisy robot. Eq. 10 predicts the spread of all
-   of them.
-6. **[`main.py`](main.py).** Three scenes. The box applies one 40° turn on each side of Eq. 4. The Jacobian
-   scene nudges rotation vectors of growing size. The banana drives 2000 robots, then compares two ways of
-   describing where they ended up:
-   - a Gaussian fitted to their x–y positions;
-   - the SE(3) Gaussian of Eq. 10, mapped through Eq. 7.
+1. **[`so3.py`](so3.py): `hat`, `so3_exp`, `so3_log`.** Eq. 1, 2 and 3. The small-angle branches are the
+   Taylor series, so nothing divides by zero. Near 180° the axis comes from $`(R + I)/2 \approx a a^\top`$.
+2. **[`lesson1_sides.py`](lesson1_sides.py).** `turned` is Eq. 4. `scene_box` checks Eq. 5 on 1000 random
+   rotations. `scene_pose` turns a 4×4 pose on each side.
+3. **`so3_right_jacobian` in `so3.py`, then [`lesson2_jacobian.py`](lesson2_jacobian.py).** Eq. 6.
+   `body_turn` measures the true turn; `scene_error` compares it with and without $`J_r`$.
+4. **[`se3.py`](se3.py): `se3_exp`, `se3_adjoint`, `drive`, `propagate_covariance`.** Eq. 7 to 10, built
+   from the `so3.py` functions.
+5. **[`lesson3_walk.py`](lesson3_walk.py).** `walk` is the cos/sin robot; `walk_se3` is the same robot with
+   Eq. 9. Then 2000 robots, and `se3_exp` as an arc.
+6. **[`lesson3_banana.py`](lesson3_banana.py).** `separate` and `together` are the two sides of Eq. 11.
+   `scene_recipes` makes the two figures; `scene_knob` the first knob table.
+7. **[`lesson3_fuse.py`](lesson3_fuse.py).** `gauss_newton` is Eq. 12, with the Jacobian by finite
+   differences so every line is visible; `scene_fuse` runs it for each belief and the second knob.
+8. **[`main.py`](main.py)** runs it all. The animations (`live_*.py`) reuse the lesson files and only draw.
 
-   It samples both, and counts how many samples land "off the cloud": farther from every robot than 99%
-   of the robots are from their nearest neighbour.
+"Off the cloud" means farther from every real robot than 99% of the robots are from their nearest neighbour.
 
 Output (`results/output.txt`):
 
 ```text
-box: R·Exp(δ) and Exp(δ)·R end 56.0° apart; Eq. 5 holds to 1.3e-15
-J_r: error/|δ| at 60° is 0.405 without J_r, 0.00007 with it; at 170° 0.91 without
-banana (2000 runs, 10 x 1 m, 6°/step heading noise):
-  x-y average is 3.6 cm from the nearest robot
-  samples off the cloud: Gaussian in x-y 47.5%, Gaussian on SE(3) 12.6%
-  Monte Carlo / predicted covariance (Eq. 10): total 1.01, lateral 1.00, along-track 26.5
-break it, 10°/step: off the cloud x-y 51.3%, SE(3) 19.6%
+LESSON 1  which side: the box faces +y, delta = 40 deg about x
+  nose at the start (0.00, 1.00, 0.00), after R·Exp(δ) (0.00, 1.00, 0.00), after Exp(δ)·R (0.00, 0.77, 0.64)
+  the two results are 56.0° apart; Eq. 5 converts one into the other to 1.3e-15
+  knob, how the box faces before the turn -> gap: 0° 0.0°, 30° 20.3°, 60° 39.4°, 90° 56.0°, 180° 80.0°
+  the box 2 m from the origin, turned 40° about x: its centre moves 0.00 m on the right, 1.37 m on the left
+  a pose 10 m from the origin, turned 5°: on the right it moves 0.00 m, on the left 0.87 m
+LESSON 2  nudge the rotation vector w = 90 deg about z by 0.01 along x
+  the body really turns by (+0.00637, -0.00637, +0.00001): 0.90 times as much, tilted -45.0°; J_r predicts (+0.00637, -0.00637, +0.00000)
+  length of J_r·δ for |w| = 0° 1.00, 45° 0.97, 90° 0.90, 135° 0.78, 180° 0.64
+  error / |δ| without J_r: 0.069 at 10°, 0.405 at 60°, 0.91 at 170°; with J_r 0.00007 at 60°
+  knob, nudge along w's own axis at 60°: 0.00000 without J_r
+LESSON 3  one robot, 10 x (walk 1 m, then slip by a random turn, std 6 deg)
+  slips (deg): +12.2 -15.3 +2.5 -3.4 -2.7 -1.3 -12.1 -1.4 -5.2 +19.9
+  facing after each slip (deg): +12.2 -3.1 -0.6 -4.0 -6.7 -8.0 -20.1 -21.5 -26.7 -6.8
+  corners: (1.00, 0.00) (1.98, 0.21) (2.98, 0.16) (3.98, 0.15) (4.97, 0.08) (5.97, -0.04) (6.96, -0.18) (7.90, -0.52) (8.83, -0.89) (9.72, -1.34)
+  cos/sin and se3_exp (Eq. 9) agree to 4e-16 m
+2000 robots: facing spread ±19.2°, end y ±1.70 m, distance from the start 9.91 ± 0.08 m, x as low as 7.26 m
+  slips forgotten instead of added up: end y ±0.31 m
+  se3_exp, 10 m while turning 20°: ends at (9.80, 1.73); turning 40°: (9.21, 3.35)
+the banana, 6-D noise per step (1 cm, 0.5° roll and pitch, 6° yaw):
+  x 9.76 ± 0.28 m, y ± 1.71 m; the x-y average is 6.4 cm from the nearest robot
+  off the cloud: A (bell curve in x-y, fitted) 46.5%, B (over xi, predicted) 11.4%
+  the same draws of xi through SO(3)xR3 (Eq. 11 left): 38.1%
+  one draw: forward -0.03 m, sideways +2.24 m, yaw +34.8° -> SO(3)xR3 (9.97, 2.24), SE(3) (9.31, 2.09)
+  Eq. 10 predicts: forward ±0.032 m, sideways ±1.77 m, yaw ±19.0°
+  Monte Carlo / predicted: total 1.00, lateral 0.99, along-track 25.3
+knob, yaw noise per step -> facing doubt after 10 m -> off the cloud SO(3)xR3 / SE(3):
+   0.5° -> ± 1.6° ->  1.1% /  1.3%
+   1.0° -> ± 3.2° ->  2.1% /  1.0%
+   2.0° -> ± 6.3° ->  7.1% /  2.1%
+   6.0° -> ±19.0° -> 39.6% / 13.1%
+  10.0° -> ±31.6° -> 46.6% / 14.4%
+fuse one measurement, y = -2.7 ± 0.05 m (Eq. 12): the 40 robots there have x 9.48 m, yaw -26.9°
+  Gauss-Newton on SE(3), cost / x / y per iteration: 2916.00 / 10.00 / +0.00; 5.08 / 9.43 / -2.62; 2.48 / 9.41 / -2.70; 2.48 / 9.42 / -2.70
+  estimate x: SE(3) 9.42 m (yaw -24.5°), x-y bell curve 9.74 m, SO(3)xR3 10.00 m
+knob, measured y -> true x / SE(3) / x-y / SO(3)xR3:
+  -0.5 m -> 9.93 / 9.98 / 9.75 / 10.00
+  -1.5 m -> 9.80 / 9.82 / 9.75 / 10.00
+  -2.7 m -> 9.48 / 9.42 / 9.74 / 10.00
+  -3.5 m -> 9.16 / 9.01 / 9.73 / 10.00
 ```
 
-## See it
-
-![The same 40° turn applied on the right and on the left](results/box_perturbation.png)
-
-*The box faces world +y. On the right (body axes), the turn is about the box's own red x axis, so it rolls.
-On the left (world axes), the same numbers turn it about the world's x axis, so it pitches. The two results
-are 56.0° apart, yet Eq. 5 converts one into the other to 1.3e-15.*
-
-![Error of a nudged rotation, with and without the right Jacobian](results/jacobian_error.png)
-
-*Nudge a rotation vector $`w`$ by $`|\delta| = 0.001`$. Pretending the nudge multiplies on the right
-unchanged is wrong by 0.405 |δ| at 60° and 0.91 |δ| at 170°, comparable to the nudge itself. With $`J_r`$ the
-error is 0.00007 |δ| at 60°: what is left is second order.*
-
-*The banana (top of the page): every robot's heading wanders by about 6° per metre, so the ends spread
-along an arc of radius about 10 m. The x–y Gaussian (left) is an ellipse that ignores the bend: 47.5% of its
-samples land where no robot ended up, and its centre sits inside the bend, 3.6 cm from the nearest robot.
-The SE(3) Gaussian (right) is computed without a single sample (Eq. 10), and bends with the cloud: 12.6% off.*
-
-## Break it
-
-- **Raise the heading noise to 10° per step.** The x–y Gaussian is off for 51.3% of its samples; the SE(3)
-  one for 19.6%. The SE(3) model is better, but Eq. 10 is first order: as the uncertainty grows, the terms
-  it drops grow too.
-- **The dropped terms are visible already at 6°.** Eq. 10 predicts the total spread and the sideways spread
-  exactly (ratios 1.01 and 1.00). Along the track, though, the real spread is 26.5 times the prediction:
-  Eq. 10 predicts only the 1 cm per step of forward noise, but forward error also comes from products of
-  two errors (a heading error times a sideways error), which a first-order model drops. Higher-order
-  propagation keeps them (Barfoot & Furgale, see below).
-- **Skip $`J_r`$**, and every update that nudges a rotation vector is off by up to the size of the nudge
-  (the Jacobian figure). An optimiser converges slowly or not at all; this is why DS-MSP's solver re-bases
-  the rotation after every step, keeping $`w`$ small.
-
-> [!IMPORTANT]
-> Use the right perturbation $`R\,\mathrm{Exp}(\delta)`$ for state corrections, and Eq. 5 or Eq. 8 to switch
-> sides. Represent pose uncertainty on SE(3) when the heading uncertainty is large, as after a long
-> stretch without corrections. When a LiDAR update corrects the pose every 0.1 s, the uncertainty stays small
-> and both models agree; whether SE(3) then helps is EXP-009's question.
+The GIFs are written by `python live_box.py --gif`, `python live_walk.py --slow 1 --robots 80 --gif` and
+`python live_dots.py --part 2 --slow 2 --gif` (about 2 minutes together).
 
 ## Run it in C++
 
@@ -219,13 +575,17 @@ The same operations there:
 
 | Concept here | SE(3)-LVIO | lightning-lm |
 |---|---|---|
-| Pose correction | `core/lie.cpp` `boxplus`: `pose * SE3d::exp(delta)`, the SE(3) retraction | `src/common/nav_state.h` `NavState::boxplus`: `rot_ * SO3::exp(dx)`, translation added (SO(3)×R³) |
+| Pose correction | `core/lie.cpp` `boxplus`: `pose * SE3d::exp(delta)`, Eq. 11 right | `src/common/nav_state.h` `NavState::boxplus`: `rot_ * SO3::exp(dx)`, translation added: Eq. 11 left |
 | Which side | right | right |
-| Uncertainty of the pose | SE(3) error state: the "banana" model | rotation and position errors as separate vectors: the "x–y" model, with full cross-covariance |
+| Uncertainty of the pose | SE(3) error state: recipe B | rotation and position errors as separate vectors (SO(3)×R³), with full cross-covariance |
+| Fusing a measurement (Eq. 12) | iterated EKF update: prior from the propagated covariance, point-to-plane residuals, Gauss–Newton steps | the same, on SO(3)×R³ |
 
-The explanation page [SE(3) vs SO(3)×R³](../../../docs/explain/se3-vs-so3xr3.md) explains why both still
-estimate rotation and translation jointly. Read the code after this chapter; the names should now look familiar.
-(Code is linked, never copied: lightning-lm has no licence.)
+**So why does a filter on SO(3)×R³ work so well?** Both store the pose exactly; they differ only in how a
+change is applied. An optimiser takes many small, self-checking steps, and a LiDAR update every 0.1 s
+keeps the heading doubt in the top row of the knob table, where the two agree. SE(3) can matter when the
+doubt grows: long stretches without geometry, dropouts, bad initialisation, and whether the filter's
+covariance stays honest. The explanation page [SE(3) vs SO(3)×R³](../../../docs/explain/se3-vs-so3xr3.md)
+goes further. (Code is linked, never copied: lightning-lm has no licence.)
 
 ## Experiment hooks
 
@@ -233,17 +593,18 @@ estimate rotation and translation jointly. Read the code after this chapter; the
 
 ## Try it
 
-1. Set the roll and pitch noise in `SIGMA` to zero. Does the banana change? Predict before running.
-   <details><summary>Answer</summary>Hardly. The top view bends because of heading (yaw) noise; roll and
-   pitch errors move the robot up and down, which the top view doesn't show.</details>
-2. In `scene_box`, apply the left perturbation with $`R\,\delta`$ instead of $`\delta`$. What happens?
-   <details><summary>Answer</summary>The result equals the right perturbation exactly: this is Eq. 5. The
-   left form needs the vector expressed in world axes.</details>
-3. Drive 20 steps of 0.5 m instead of 10 of 1 m, with the same noise per step. More or less banana?
+1. In `lesson3_banana.py`, set the roll and pitch noise in `SIGMA` to zero. Does the banana change? Predict
+   before running.
+   <details><summary>Answer</summary>Hardly. The top view bends because of the yaw slips; roll and pitch
+   errors move the robot up and down, which the top view doesn't show.</details>
+2. Drive 20 steps of 0.5 m instead of 10 of 1 m, with the same noise per step. More or less banana?
    <details><summary>Answer</summary>More. Each heading error now has a shorter lever arm (the
    $`[t]_\times`$ block of Eq. 8), but there are twice as many of them, and the noise is per step: the
    heading variance doubles. Noise that is specified per step depends on the step size; that is why IMU
    noise is given per $`\sqrt{\text{Hz}}`$ (B01, Eq. 8).</details>
+3. Run `python live_box.py --axis z --turn 60`. Do the two sides differ?
+   <details><summary>Answer</summary>No. The box starts yawed about z, and a second turn about z commutes
+   with it: the body's z is the world's z.</details>
 
 ## References
 

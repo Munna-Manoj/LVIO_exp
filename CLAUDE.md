@@ -344,7 +344,7 @@ Then go through [`docs/process/DEFINITION_OF_DONE.md`](docs/process/DEFINITION_O
 
 The course is for learners first. A chapter is **one folder a person can read alone**: a README that
 teaches, and short Python that mirrors the maths. Law 0 outranks everything in this section; the
-reference chapter is [B01](course/chapters/B01-imu-propagation/README.md).
+reference chapter is [A01](course/chapters/A01-rotations-and-poses/README.md) (lessons, template 2).
 
 **One chapter = one folder** (`course/chapters/<ID>-<slug>/`)
 
@@ -404,10 +404,30 @@ Plus `tests/course/test_<ID>.py`, outside the folder so learners never have to r
   the README, and prefer 3D when the idea is 3D.
   - Don't force a visual where none helps. A table or a single number is fine for a one-number idea.
 
-**README sections, in order**
-What you will build · Intuition · The math · Build it · See it · Break it · Run it in C++ (only if the
-chapter has SAD labs) · On real data (required for bridge chapters, optional otherwise) · In the real
-systems · Experiment hooks · Try it · Next.
+**README sections, in order** (template 2; `template: 1` in the curriculum marks an older chapter to port)
+Why you should care · What you need first · What you will build · **Lesson 1 … Lesson n** · Build it ·
+Run it in C++ (only if the chapter has SAD labs) · On real data (required for bridge chapters, optional
+otherwise) · In the real systems · Experiment hooks · Try it · Next.
+- **One idea per lesson; one to three lessons per chapter.** Each `## Lesson n — <title>` climbs the same
+  ladder, in this order (`tools/check_chapters.py` checks it):
+  1. `### The question`: a plain, physical question the reader can picture, before any symbol.
+  2. `### Step by step`: **one** sample, worked by hand, with its numbers (a table or a printed example)
+     and, when there is motion, an animation (`live_<idea>.py`, a window with knobs on the command line).
+  3. `### Two ways, side by side`: the naive way and the right way, fed **the same inputs**, with a number
+     that shows the difference. Statistics ("many at once") go here or in an extra `###` before it.
+  4. `### The maths`: only now the equations, each followed by its symbols in words.
+  5. `### Turn the knob`: one parameter swept in a small table, showing **when it matters and when it
+     doesn't**, and what that means for LVIO.
+  6. `### Misconceptions`: the wrong beliefs a learner actually has, each corrected with a number. Collect
+     them from real questions; every question a reader had to ask is a missing rung.
+  7. `### Check yourself`: questions with answers in `<details>`.
+- **Simplest first:** 1-D or 2-D before 3-D, one sample before a statistic, plain `cos`/`sin` before the
+  group, then show that the group gives the same numbers. Define every word before using it ("tangent",
+  "Exp", "sample"). Say when a picture is only an analogy.
+- **Animations** are separate chapter files (`live_<idea>.py`): they reuse the lesson files and only draw;
+  `--gif` writes a small GIF into `results/` (each ≤ 2 MB) that the README shows. `main.py` never opens a window.
+- **"Why you should care"** names where the idea appears in a LiDAR-inertial filter. **"In the real
+  systems"** also answers "so why does the simpler way still work?" when the real systems use it.
 - **Written by hand,** with no generated blocks and no markers inside a chapter. Each part has a fixed content:
   - The book link is one line.
   - "Build it" walks the files in reading order.
@@ -454,8 +474,11 @@ systems · Experiment hooks · Try it · Next.
 
 **Teaching quality** (docs/process/WRITING_GUIDE.md §7)
 - **Intuition before symbols.** Every equation is followed by its symbols in words, with units.
-- **See it** has at least one figure. **Break it** shows a failure, with a number. **Try it** has at
-  least two predict-then-run exercises, with answers in `<details>`.
+- **Every lesson has at least one figure.** "Two ways, side by side" shows a failure, with a number. **Try
+  it** has at least two predict-then-run exercises, with answers in `<details>`.
+- **The first-reader test** (Definition of Done): a chapter is done when someone new to the topic can
+  answer every "Check yourself" without help. A question they had to ask goes into the chapter
+  (usually as a step, a figure or a misconception), not into a reply.
 - **Experiment hooks** link the ablations that test the idea on GrandTour; their reports link back.
 
 **Commands:** `/course-chapter <ID>` drafts or updates one chapter. `lvx lab list|run` and `lvx data check` are for maintainers.
