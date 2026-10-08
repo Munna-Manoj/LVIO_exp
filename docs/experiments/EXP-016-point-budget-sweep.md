@@ -31,7 +31,7 @@
 | `n3000` | downsample target 3000 inliers (baseline 2000) |
 | `n4000` | downsample target 4000 inliers (baseline 2000) |
 
-- **Missions:** arc-6 (`{"set": "dev"}`)
+- **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
 - **Host:** `reference` (configs/hosts/reference.yaml)
 - **Metrics:** primary `ate_rmse_cm`, secondary `ms_mean`, `ms_p95`, `rss_mb`

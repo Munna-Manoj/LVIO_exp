@@ -29,7 +29,7 @@
 | `gnc_tls` | GNC-TLS weights, μ annealed ×1.4 per iteration |
 | `gnc_tls_8it` | GNC-TLS with max_iter 8 so the schedule can finish |
 
-- **Missions:** arc-6 (`{"set": "dev"}`)
+- **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
 - **Host:** `reference` (configs/hosts/reference.yaml)
 - **Metrics:** primary `ate_rmse_cm`, secondary `ate_max_cm`, `ms_p95`

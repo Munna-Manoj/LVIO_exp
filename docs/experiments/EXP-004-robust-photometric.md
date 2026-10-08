@@ -28,7 +28,7 @@
 | `baseline` | se3lvio_S9b as is |
 | `photo_huber` | Huber on photometric residuals |
 
-- **Missions:** arc-6 (`{"set": "dev"}`)
+- **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
 - **Host:** `reference` (configs/hosts/reference.yaml)
 - **Metrics:** primary `ate_rmse_cm`, secondary `ate_max_cm`, `ms_p95`

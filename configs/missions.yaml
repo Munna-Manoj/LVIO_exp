@@ -1,24 +1,26 @@
 # The ONLY mission registry. Splits are fixed by ADR-0005; moving a mission between splits needs a new ADR.
 # imu_dt: per-mission IMU time offset (s), from se3-livom-comfort src/se3-lio/config/imu_dt.yaml.
-# gt: whether prism ground truth is public (COMFORT Validation missions). Test-set missions have no GT and are
-#     used only for qualitative maps and runtime.
-# split: dev (tune here) | test (report here) | nogt (no ground truth) | tbd (to be fixed in M0, see ROADMAP)
+# gt: whether prism ground truth is public. The six COMFORT Test missions have none (the benchmark hides it); they
+#     are used only for qualitative maps and runtime.
+# split: dev (tune here) | test (report here) | nogt (no ground truth)
 missions:
-  arc-2:  {imu_dt: -0.0073, gt: tbd, split: tbd}
-  arc-3:  {imu_dt: -0.0056, gt: tbd, split: tbd}
-  arc-6:  {imu_dt: -0.0065, gt: true, split: dev, date: 2024-11-18-17-13-09, note: "first mission, smoke near the start"}
-  arc-7:  {imu_dt: -0.0047, gt: tbd, split: tbd}
-  con-3:  {imu_dt: -0.0060, gt: tbd, split: tbd}
-  con-4:  {imu_dt: -0.0064, gt: tbd, split: tbd}
-  eig-1:  {imu_dt: -0.0057, gt: tbd, split: tbd}
-  eig-2:  {imu_dt: -0.0054, gt: tbd, split: tbd}
-  snow-2: {imu_dt: -0.0055, gt: tbd, split: tbd}
-  snow-3: {imu_dt: -0.0048, gt: tbd, split: tbd}
-  spx-1:  {imu_dt: -0.0044, gt: tbd, split: tbd}
-  spx-2:  {imu_dt: -0.0074, gt: tbd, split: tbd}
+  # The six missions with prism GT (GrandTour HuggingFace release), split by ADR-0005.
+  arc-6:  {imu_dt: -0.0065, gt: true,  split: dev,  date: 2024-11-18-17-13-09, note: "ARCHE panic smoke, indoor, 349 s"}
+  eig-2:  {imu_dt: -0.0054, gt: true,  split: dev,  date: 2024-11-03-13-59-54, note: "Eigergletscher up, outdoor mountain, stairs, 348 s"}
+  snow-3: {imu_dt: -0.0048, gt: true,  split: dev,  date: 2024-11-03-08-17-23, note: "Jungfraujoch snow, outdoor, 236 s"}
+  arc-3:  {imu_dt: -0.0056, gt: true,  split: test, date: 2024-11-18-13-48-19, note: "ARCHE multi-floor, indoor+outdoor, stairs, 713 s"}
+  con-3:  {imu_dt: -0.0060, gt: true,  split: test, date: 2024-12-09-11-28-28, note: "construction apartment, indoor+outdoor, stairs, 796 s"}
+  spx-1:  {imu_dt: -0.0044, gt: true,  split: test, date: 2024-11-02-17-10-25, note: "Jungfraujoch Sphinx, outdoor metal, stairs, 374 s"}
+  # The COMFORT Test missions: GT hidden by the benchmark. Runtime and qualitative maps only.
+  arc-2:  {imu_dt: -0.0073, gt: false, split: nogt, date: 2024-11-18-13-22-14}
+  arc-7:  {imu_dt: -0.0047, gt: false, split: nogt, date: 2024-11-18-17-31-36}
+  con-4:  {imu_dt: -0.0064, gt: false, split: nogt, date: 2024-12-09-11-53-11}
+  eig-1:  {imu_dt: -0.0057, gt: false, split: nogt, date: 2024-11-03-13-51-43}
+  snow-2: {imu_dt: -0.0055, gt: false, split: nogt, date: 2024-11-03-07-57-34}
+  spx-2:  {imu_dt: -0.0074, gt: false, split: nogt, date: 2024-11-02-17-18-32}
 
 # Named sets used by experiment specs (missions: {set: dev}).
 sets:
   smoke: [arc-6]          # single-mission sanity set, allowed only for EXP-000 and debugging
-  dev: [arc-6]            # grows to 3 GT missions in M0
-  test: []                # 3 GT missions, filled in M0, never used for tuning
+  dev: [arc-6, eig-2, snow-3]   # tune here (ADR-0005)
+  test: [arc-3, con-3, spx-1]   # report here, once per concluded P-phase; never used for tuning

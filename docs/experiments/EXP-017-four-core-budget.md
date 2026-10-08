@@ -29,7 +29,7 @@
 | `s9b` | swap baseline config to S9b |
 | `ll_indoor` | swap baseline config to lightning-lm indoor |
 
-- **Missions:** arc-6 (`{"set": "dev"}`)
+- **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
 - **Host:** `reference` (configs/hosts/reference.yaml)
 - **Metrics:** primary `ms_p95`, secondary `ms_mean`, `ms_max`, `rss_mb`, `ate_rmse_cm`
