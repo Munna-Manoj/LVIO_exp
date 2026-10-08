@@ -4,4 +4,4 @@ title: "SE(3)-LVIO · full (LVIO + backend)"
 modes: [lidar_multi, backend]
 overrides: {}
 estimate: estimate_backend_prism
-reference_result: "ARC-6 ATE 0.90 cm (pre-repo run; re-measured in EXP-000)"
+reference_result: "ARC-6 ATE 0.8989 cm (pre-repo run, recomputed with lvx.evaluate 2026-10-08)"
