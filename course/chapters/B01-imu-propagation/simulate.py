@@ -7,6 +7,8 @@ comes from the IMU or the integrator, never from this file.
 """
 import numpy as np
 
+from so3 import so3_log
+
 GRAVITY = np.array([0.0, 0.0, -9.81])  # world frame, z up (m/s^2)
 
 
@@ -20,16 +22,6 @@ def rot_y(a):
 
 def rot_z(a):
     return np.array([[np.cos(a), -np.sin(a), 0], [np.sin(a), np.cos(a), 0], [0, 0, 1]])
-
-
-def so3_log(R):
-    """Rotation matrix -> rotation vector (rad). Inverse of Exp in propagate.py."""
-    cos_th = np.clip((np.trace(R) - 1.0) / 2.0, -1.0, 1.0)
-    th = np.arccos(cos_th)
-    w = np.array([R[2, 1] - R[1, 2], R[0, 2] - R[2, 0], R[1, 0] - R[0, 1]])
-    if th < 1e-8:
-        return 0.5 * w
-    return th / (2.0 * np.sin(th)) * w
 
 
 def figure_eight(duration=20.0, rate=200.0):

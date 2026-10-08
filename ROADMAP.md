@@ -75,7 +75,7 @@ unlocks the experiments it explains. Chapter status lives in `course/curriculum.
 |---|---|---|---|---|
 | C0 | Infrastructure: chapter contract, `sync_course.py`, curriculum.yaml, `lvx lab` + `lvx data`, ADR-0007/0008 | – | ✅ | – |
 | C0.1 | Law 0 (ADR-0010): self-contained chapter folders, `check_chapters.py`, B01 rewritten as the reference, `scene` per chapter. `lvx` flattened: one `config.py` for every lookup, `runner.py` writes each command out, manifests and reports show the exact command | – | ✅ | – |
-| C1 | A01 rotations & poses, A02 Kalman filters, **B01 IMU propagation ✅** (lab verified), 🔗 I01 real IMUs & Allan variance, B02 ESKF-GINS, 🔗 I02 time offsets & extrinsics | ch2–3 | 🟨 | EXP-009, EXP-010, EXP-011 |
+| C1 | **A01 rotations & poses ✅**, A02 Kalman filters, **B01 IMU propagation ✅** (lab verified), 🔗 I01 real IMUs & Allan variance, B02 ESKF-GINS, 🔗 I02 time offsets & extrinsics | ch2–3 | 🟨 | EXP-009, EXP-010, EXP-011 |
 | C2 | B03 preintegration, B04 factor graphs, B05 robust estimation (the GNC chapter) | ch4 + | ⬜ | EXP-001–003, EXP-014, EXP-015 |
 | C3 | C01 point clouds, **C02 nearest-neighbour structures & speed**, C03 fitting, C04–C05 2D SLAM | ch5–6 | ⬜ | EXP-008, EXP-016, EXP-020 |
 | C4 | D01 ICP, D02 NDT, D03 LiDAR odometry, 🔗 I03 degeneracy, D04 loosely coupled LIO | ch7 | ⬜ | EXP-005, EXP-006 |

@@ -32,8 +32,8 @@ TAG = re.compile(r"\\qquad \((\d+)\)\s*$", re.M)   # end of a line inside a ```m
 EQ_REF = re.compile(r"\(Eq\. (\d+)\)")
 IMAGE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 STDLIB = set(getattr(sys, "stdlib_module_names", ())) or {  # Python < 3.10: the modules chapters need
-    "argparse", "bisect", "collections", "csv", "dataclasses", "functools", "glob", "heapq", "itertools", "json",
-    "math", "os", "pathlib", "random", "sys", "time", "typing"}
+    "__future__", "argparse", "bisect", "collections", "csv", "dataclasses", "functools", "glob", "heapq",
+    "itertools", "json", "math", "os", "pathlib", "random", "sys", "time", "typing"}
 
 
 def check_python(f: Path, siblings: set) -> list:

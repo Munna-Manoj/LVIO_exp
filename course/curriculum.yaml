@@ -32,8 +32,8 @@ parts:
 chapters:
   - {id: A01, slug: rotations-and-poses, title: "Rotations and poses: SO(3), SE(3), Exp/Log, boxplus, Jacobians",
      scene: "a rotating box: local vs global perturbation; the pose 'banana'",
-     part: A, sad: {chapter: 2}, builds: [so3.py, se3.py], depends_on: [], labs: [],
-     experiments: [EXP-009], status: planned}
+     part: A, sad: {chapter: 2, apps: [motion]}, builds: [so3.py, se3.py, main.py], depends_on: [], labs: [],
+     experiments: [EXP-009], status: done}
   - {id: A02, slug: kalman-filters, title: "From the Kalman filter to the error-state Kalman filter",
      scene: "a cart on a rail, then a unicycle: ±3σ band, shrinking ellipses",
      part: A, sad: {chapter: 2}, builds: [kf.py], depends_on: [A01], labs: [],
@@ -115,7 +115,7 @@ chapters:
   - {id: E01, slug: iekf-is-gauss-newton, title: "The iterated EKF is Gauss-Newton with a prior",
      scene: "one range measurement: EKF vs IEKF iterates walking to the optimum",
      part: E, sad: {chapter: 8}, builds: [iekf.py], depends_on: [A02, B04], labs: [],
-     experiments: [EXP-009], status: planned}
+     experiments: [EXP-009], status: done}
   - {id: E02, slug: tightly-coupled-lio, title: "Tightly coupled LIO with an IEKF (a mini FAST-LIO)",
      scene: "the Courtyard: map coloured by point-to-plane residual",
      part: E, sad: {chapter: 8, apps: [test_lio_iekf]}, builds: [lio_iekf.py], depends_on: [E01, D01, C01, B05],

@@ -86,6 +86,7 @@ nav:
       - experiments/index.md
   - Learn:
       - learn/README.md
+      - A01 · Rotations and poses: learn/A01-rotations-and-poses/index.md
       - B01 · IMU propagation: learn/B01-imu-propagation/index.md
   - Explanation:
       - explain/README.md

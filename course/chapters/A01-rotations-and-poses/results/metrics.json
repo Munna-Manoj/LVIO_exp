@@ -1,0 +1,22 @@
+{
+  "box": {
+    "right_vs_left_deg": 55.98178143556567,
+    "eq5_max_error": 1.304512053934559e-15
+  },
+  "jacobian": {
+    "plain_at_60deg": 0.4051333717549572,
+    "jr_at_60deg": 6.629701868487375e-05,
+    "plain_at_170deg": 0.9149914717076131,
+    "jr_max": 0.0001362858816547414
+  },
+  "banana": {
+    "off_xy": 0.475,
+    "off_se3": 0.126,
+    "mean_gap_cm": 3.567582652320743,
+    "trace_ratio": 1.0126432672631498,
+    "along_track_ratio": 26.538904120398854,
+    "lateral_ratio": 1.0045380866323967,
+    "break_10deg_off_xy": 0.513,
+    "break_10deg_off_se3": 0.1955
+  }
+}
