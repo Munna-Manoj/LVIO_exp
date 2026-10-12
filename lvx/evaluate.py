@@ -31,7 +31,7 @@ RUN_COLUMNS = [
     "config_hash", "repo_commit", "system_commit", "host",
 ]
 NOISE_K = 2.0          # an effect must exceed NOISE_K * sigma_noise (ADR-0004)
-NOISE_EXPERIMENT = "EXP-000"
+NOISE_EXPERIMENTS = ("EXP-000", "EXP-021")   # each measures the floor of its own baselines (ADR-0004, ADR-0012)
 SIGMA_MIN_CM = 0.005   # floor when runs are (near) deterministic (ADR-0004)
 
 
@@ -156,14 +156,24 @@ def copy_artifacts(exp: Experiment, keys: List[runner.RunKey]) -> None:
 
 # --- aggregation + noise floor ----------------------------------------------------------------
 
-def noise_sigma(system_baseline: str) -> Dict[str, float]:
-    """Per-mission run-to-run std of ATE for a baseline config, from EXP-000's summary."""
+def noise_source(system_baseline: str) -> Optional[str]:
+    """The noise experiment that measured this baseline's floor (EXP-000, or EXP-021 for GenZ-LIO)."""
     for e in all_experiments():
-        if e.id == NOISE_EXPERIMENT and (e.results / "summary.json").exists():
+        if e.id in NOISE_EXPERIMENTS and (e.results / "summary.json").exists():
             with open(e.results / "summary.json") as f:
-                s = json.load(f)
-            return s.get("noise_floor", {}).get(system_baseline, {})
-    return {}
+                if system_baseline in json.load(f).get("noise_floor", {}):
+                    return e.id
+    return None
+
+
+def noise_sigma(system_baseline: str) -> Dict[str, float]:
+    """Per-mission run-to-run std of ATE for a baseline config, from the noise experiment that measured it."""
+    source = noise_source(system_baseline)
+    if source is None:
+        return {}
+    e = next(x for x in all_experiments() if x.id == source)
+    with open(e.results / "summary.json") as f:
+        return json.load(f)["noise_floor"][system_baseline]
 
 
 def _stats(values: List[float]) -> Dict[str, Optional[float]]:
@@ -194,7 +204,7 @@ def summarise(exp: Experiment, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             cells.append(cell)
 
     sigma = noise_sigma(exp.spec["baseline"])
-    if exp.id == NOISE_EXPERIMENT:
+    if exp.id in NOISE_EXPERIMENTS:
         sigma = {}
     by = {(c["variant"], c["mission"]): c for c in cells}
     for c in cells:
@@ -218,15 +228,15 @@ def summarise(exp: Experiment, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         "generated": _dt.datetime.now().isoformat(timespec="seconds"),
         "primary": primary,
         "noise_k": NOISE_K,
-        "noise_source": None if exp.id == NOISE_EXPERIMENT else NOISE_EXPERIMENT,
+        "noise_source": None if exp.id in NOISE_EXPERIMENTS else noise_source(exp.spec["baseline"]),
         "complete": all(c["n_ok"] + c["n_failed"] + c["n_dirty"] >= exp.spec["repeats"] for c in cells),
         "cells": cells,
     }
-    if exp.id == NOISE_EXPERIMENT:
+    if exp.id in NOISE_EXPERIMENTS:
         floor: Dict[str, Dict[str, float]] = {}
         for c in cells:
             name = exp.spec["baseline"] if c["variant"] == "baseline" else next(
-                v.get("baseline") for v in exp.spec["variants"] if v["id"] == c["variant"])
+                v.get("baseline") for v in exp.spec["variants"] or [] if v["id"] == c["variant"])
             if c["ate_rmse_cm"]["std"] is not None:
                 floor.setdefault(name, {})[c["mission"]] = c["ate_rmse_cm"]["std"]
         summary["noise_floor"] = floor

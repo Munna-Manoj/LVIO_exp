@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from . import config
-from .evaluate import NOISE_EXPERIMENT, load_summary
+from .evaluate import NOISE_EXPERIMENTS, load_summary
 from .spec import PHASES, Experiment, all_experiments
 
 SITE_URL = "https://munna-manoj.github.io/LVIO_exp/"     # the published site (mkdocs.yml site_url)
@@ -258,7 +258,7 @@ def _headline(exp: Experiment) -> str:
     cells = [c for c in summary["cells"] if c["variant"] != "baseline" and c.get("delta") is not None]
     if not cells:
         return ""
-    if exp.id == NOISE_EXPERIMENT:                      # it measures the floor; it compares nothing
+    if exp.id in NOISE_EXPERIMENTS:                     # it measures the floor; it compares nothing
         sd = max(c[summary["primary"]]["std"] for c in summary["cells"])
         return f"noise floor: σ ≤ {sd:.4f} {summary['primary']} per cell"
     better = [c for c in cells if c.get("effect") == "better"]     # only effects beyond 2σ of noise
