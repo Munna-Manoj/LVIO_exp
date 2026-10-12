@@ -19,7 +19,7 @@
 - **Baseline config `genz_stock`:** upstream's `default/hesai.yaml` with only the platform keys changed: 4 threads, a 0.6 m blind range, and the extrinsic from `calib.json`.
   - Tuning beyond that is its own experiment, like EXP-019 for lightning-lm.
 - **Noise floor:** EXP-000 is concluded and cannot grow, so a GenZ-LIO noise experiment measures its run-to-run σ and coverage on the dev missions.
-  - That was EXP-021; it ran without the per-mission IMU time offset and was abandoned, superseded by **EXP-022** (2026-10-12).
+  - That was EXP-021. It was concluded before we found that its runs lacked the per-mission IMU time offset; it is superseded by **EXP-022** (2026-10-12), which is the noise experiment used for GenZ-LIO.
   - No other experiment may run GenZ-LIO variants before EXP-022 is concluded `adopt`.
 - **Ablations run in both forks:**
   - Every ablation experiment implements its idea in SE(3)-LVIO and, where the idea applies, in GenZ-LIO.

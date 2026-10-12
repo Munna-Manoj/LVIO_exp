@@ -96,6 +96,7 @@ def test_erratum_keeps_the_frozen_hash(tmp_path):
 def test_headline_names_a_variant_only_beyond_noise():
     from lvx import report
     assert report._headline(spec.find("EXP-000")).startswith("noise floor")      # it compares nothing
+    assert report._headline(spec.find("EXP-021")) == "superseded by EXP-022"     # its numbers are replaced
 
 
 def test_genz_config_applies_existing_keys_only():

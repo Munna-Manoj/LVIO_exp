@@ -2,7 +2,7 @@ id: EXP-021
 slug: genz-lio-baseline-and-noise-floor
 title: How large is GenZ-LIO's run-to-run noise, and does the harness run it correctly?
 phase: P0
-status: abandoned
+status: concluded
 created: '2026-10-12'
 system: genz-lio
 depends_on:
@@ -49,10 +49,6 @@ history:
 - date: '2026-10-12'
   status: analysed
 - date: '2026-10-12'
-  status: abandoned
-  reason: the GenZ-LIO runner left out the per-mission IMU time offset (configs/missions.yaml imu_dt)
-    that the protocol applies to every system; rerun as EXP-022
-  superseded_by: EXP-022
-reason: the GenZ-LIO runner left out the per-mission IMU time offset (configs/missions.yaml imu_dt) that
-  the protocol applies to every system; rerun as EXP-022
-superseded_by: EXP-022
+  status: concluded
+  verdict: adopt
+verdict: adopt

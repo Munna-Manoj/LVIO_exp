@@ -1,9 +1,12 @@
 # EXP-021 — How large is GenZ-LIO's run-to-run noise, and does the harness run it correctly?
 
-**TL;DR:** abandoned, superseded by [EXP-022](EXP-022-genz-lio-baseline-with-imu-offset.md): the runner left out the per-mission IMU time offset (−4.8 to −6.5 ms) that the protocol gives every system, so these 15 runs (all ok, deterministic, ARC-6 1.382 cm) are not comparable with EXP-000.
+**TL;DR:** adopt: all 15 GenZ-LIO runs are ok, bit-for-bit deterministic (σ = 0, so its noise floor is the 0.005 cm minimum), cover ≥ 0.9994 of the scans, and score 1.382 cm on ARC-6 (bound 3 cm), 2.506 cm on EIG-2 and 5.884 cm on SNOW-3.
+
+> [!WARNING]
+> **Superseded by [EXP-022](EXP-022-genz-lio-baseline-with-imu-offset.md) (2026-10-12).** After this experiment was concluded we found that its runs lacked the per-mission IMU time offset (`configs/missions.yaml` `imu_dt`, −4.8 to −6.5 ms), which the protocol gives every system (CLAUDE.md §3). The verdict below stands as recorded, but these numbers are not comparable with EXP-000's. GenZ-LIO's baseline and noise floor come from EXP-022.
 
 <!-- lvx:begin status -->
-**Status:** ⛔ abandoned · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `genz-lio` · **Depends on:** EXP-000
+**Status:** ✅ concluded · verdict **🟢 adopt** · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -58,25 +61,34 @@ Map rebuilt from the baseline's repeat-1 estimate, all repeat-1 trajectories, in
 [![snow-3: map and trajectories](../assets/experiments/EXP-021/viewer/snow-3_map.png)](https://munna-manoj.github.io/LVIO_exp/viewer/?exp=EXP-021&mission=snow-3)
 <!-- lvx:end results -->
 
-- **All 15 runs ok and deterministic:** σ = 0.000 cm per mission; the five `estimate.tum` files of each mission have the same md5.
-- **Without the IMU offset:** ARC-6 1.382 cm, EIG-2 2.506 cm, SNOW-3 5.884 cm (Results table); lowest pose_coverage 0.9994.
-- These numbers are kept as the record of what was run. They are not GenZ-LIO's baseline: EXP-022 measures it under the full protocol.
+- **Runs repeat exactly.** σ = 0.000 cm on all three missions (Results table); the five `estimate.tum` files of each mission have the same md5.
+- **ARC-6 at 1.382 cm,** inside the pre-registered 3 cm bound. For orientation, on the same mission EXP-000 measured SE(3)-LVIO S8 at 0.805 cm and lightning-lm at 1.407 (indoor) and 1.639 cm (stock).
+- **The field missions are tracked.** 2.506 cm on EIG-2, close to S8's 2.489 cm, where lightning-lm drifted to 294–465 cm in EXP-000; 5.884 cm on SNOW-3, about 4.7 × S8's 1.265 cm (Results table; EXP-000 for the other systems).
+- **Coverage.** Every run keeps ≥ 0.9994 of the scans in the IMU span; every run skips exactly one scan at the start, which GenZ-LIO reports as not valid yet (runner `summary.json`: `skipped: 1`), and the first valid scan initialises the filter (0 ms in `timing.csv`).
+- **Cost on 4 cores.** ms p95 37.8 (arc-6), 70.6 (eig-2), 66.7 (snow-3); RSS 0.46, 2.6 and 1.4 GB (pareto.png, `summary.json`). ARC-6 per-scan time is close to S8's (ms_mean 32.0 vs 27.4 in EXP-000).
 
 ## Discussion
 
-The protocol gives every system the per-mission IMU time offset `imu_dt` from `configs/missions.yaml` (CLAUDE.md §3): SE(3)-LVIO's run script applies it, and the lightning-lm bags were written with it (their first IMU stamp is 6.5 ms before `imu.txt`'s on ARC-6, that mission's `imu_dt`). The GenZ-LIO runner written for this experiment read `imu.txt` unshifted, and `lvx` did not pass the offset. The gap was found while writing the GenZ-LIO arm of EXP-011 (online time offset), after the runs. A 5–6.5 ms misalignment between IMU and LiDAR biases the motion prediction and deskewing in fast turns, so the numbers above may be slightly off from what GenZ-LIO achieves under the protocol.
+Determinism, as for SE(3)-LVIO in EXP-000: the input is replayed offline in the same order every time, and GenZ-LIO's worker threads (correspondence search and map updates, 4 here) evidently combine their results in a fixed order, so every run computes the same floating-point numbers. We have not traced how. The consequence (ADR-0004, ADR-0012) is that GenZ-LIO variants are judged against the 0.005 cm floor: a change of more than 0.01 cm counts as an effect, so later reports should also ask whether an effect is consistent across missions.
+
+GenZ-LIO keeps tracking on the glacier (EIG-2) where lightning-lm lost it. GenZ-LIO's paper motivates its two main ideas by such scenes: open spaces with few planes, where it falls back on point-to-point residuals, and a point budget that adapts the voxel size to the scene scale. Which idea carries it there is a question for the ablations (M0.8), not for this experiment. Why it is 4.7 × worse than SE(3)-LVIO on SNOW-3 is also open; the coupled SE(3) state, the probabilistic plane map and the second LiDAR are all candidates (EXP-009 for the state; background in [SE(3) vs SO(3)×R³](../explain/se3-vs-so3xr3.md)).
 
 ## Verdict
 
-**None: abandoned.** By its numbers the frozen rule would have passed (15/15 ok, coverage ≥ 0.9994, ARC-6 1.382 < 3 cm), but the runs did not follow the evaluation protocol, so no verdict is drawn from them. The fix is in the fork (pin 0936d34, `--imu-dt`) and in `lvx/runner.py`; EXP-022 repeats the same plan with it.
+**Adopt: GenZ-LIO runs correctly in the harness.** The frozen rule asks for all 15 runs ok with pose_coverage ≥ 0.99 and an ARC-6 mean ATE below 3 cm. All 15 are ok, the lowest coverage is 0.9994, and ARC-6 is 1.382 cm. The σ per mission (0 everywhere, so the 0.005 cm floor) is now GenZ-LIO's noise floor; `lvx eval` takes it from this experiment for every `genz_stock` baseline (`noise_floor` in summary.json).
 
 ## Threats to validity
 
-- The point of abandoning is to avoid publishing GenZ-LIO numbers produced under a different protocol than the other systems'. If the offset turns out to change nothing (EXP-022 equal to EXP-021), the abandonment cost one rerun and nothing else.
+- **The 3 cm bound was informed by a scratch run.** One smoke run while integrating gave 1.382 cm on ARC-6, and the spec says so. The bound was set at about twice that, so the pass is not in doubt, but it is not a blind prediction. The result equals the smoke run exactly, as determinism implies.
+- **Stock, not tuned.** `genz_stock` is upstream's Hesai template with only platform keys changed; upstream tuned per sequence for its own benchmarks. The SNOW-3 gap may shrink with tuning on dev; that is a fairness experiment (like EXP-019), not this one.
+- **Our runner, not upstream's CLI.** The runner reads `comfort_offline/` itself. It uses upstream's own `_ScanBuffer` for the scan–IMU pairing, passes Hesai per-point times relative to the scan start (upstream's convention for this LiDAR type) and reorders the IMU columns to upstream's order. A wrong convention would bend trajectories; ARC-6 at 1.4 cm and EIG-2 at 2.5 cm make that unlikely but do not prove each step.
+- **One LiDAR.** GenZ-LIO uses the Hesai only, SE(3)-LVIO S8 too (S9a adds the Livox). Cross-system comparisons should pair like with like.
+- **Three dev missions, one host,** as in EXP-000.
+- **Protocol deviation (found after concluding).** The runner read `imu.txt` without the per-mission `imu_dt` that SE(3)-LVIO's script and the lightning-lm bags apply. A 5–6.5 ms IMU–LiDAR misalignment biases motion prediction and deskewing in fast turns, so the numbers here may differ from GenZ-LIO's under the protocol. Fixed in the fork (pin 0936d34) and `lvx/runner.py`; rerun as EXP-022.
 
 ## Failures
 
-No run failed or was dirty. The whole experiment is set aside for the protocol deviation above (IMU time offset not applied).
+None: 15 of 15 runs `ok`, none dirty (repo fbfe869, system 82328f5, both clean). None of our other jobs ran on the host during the run.
 
 ## Reproduce
 
