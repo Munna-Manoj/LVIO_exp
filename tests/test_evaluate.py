@@ -57,3 +57,10 @@ def test_usable_scans_count_only_scans_inside_the_imu_span(tmp_path):
         (tmp_path / "lidar" / f"{t}.bin").touch()
     (tmp_path / "imu.txt").write_text("150 0 0 0 0 0 9.8\n250 0 0 0 0 0 9.8\n420 0 0 0 0 0 9.8\n")
     assert evaluate.usable_scans(tmp_path) == 3                 # 200, 300, 400; the IMU stopped at 420
+
+
+def test_each_baseline_takes_its_floor_from_the_experiment_that_measured_it():
+    from lvx import evaluate
+    assert evaluate.noise_source("se3lvio_S8") == "EXP-000"
+    assert evaluate.noise_source("lightning_stock") == "EXP-000"
+    assert evaluate.noise_source("not_a_baseline") is None
