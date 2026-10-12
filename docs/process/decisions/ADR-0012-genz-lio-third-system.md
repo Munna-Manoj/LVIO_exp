@@ -37,3 +37,23 @@
 ## Alternatives considered
 - **Pinned pip wheel (`genz-lio==0.1.0`):** simpler, but not tied to a source commit, and there is nowhere to add ablation flags.
 - **GenZ-LIO as a reference only, like lightning-lm:** cheaper, but the owner wants the ideas tested in GenZ-LIO too, and its licence allows it.
+
+## Addendum (2026-10-12): two-system ablations
+
+- **Pairing.** A GenZ-LIO arm runs `baseline: genz_stock` and names its **`reference`**: a plain swap arm `genz` in the same spec (GenZ-LIO stock, compared with `baseline` like EXP-000's cross-system rows).
+  - Against its reference, a GenZ-LIO arm changes one thing (law 4); `lvx/spec.py` checks this.
+  - `lvx eval` computes Δ against the reference, and takes σ from the arm's own baseline config (EXP-022 for `genz_stock`).
+- **Flags in the GenZ-LIO fork** go in a config section `lvio_exp:` of `lvio_exp/grandtour_xt32.yaml`, each defaulting to upstream behaviour. Overrides are written `lvio_exp.<flag>`. A flag is added to the fork before its experiment is frozen.
+- **Verdict.** The frozen decision rule is applied to each system separately, against its own reference and noise floor.
+  - The experiment's verdict is `adopt` if the rule adopts for both systems, `reject` if it rejects for both, and `inconclusive` otherwise.
+  - The TL;DR always gives the outcome per system.
+- **Where GenZ-LIO does not apply:**
+  - EXP-004, EXP-012 and EXP-013 change the photometric camera update, and GenZ-LIO is LiDAR-only.
+  - EXP-014 and EXP-015 work on the backend, and GenZ-LIO has none.
+  - EXP-020 is about SE(3)-LVIO's own map internals.
+  - These stay `system: se3-lvio`.
+- **GenZ-LIO's ideas in SE(3)-LVIO.** Each idea is tested in both systems: added to SE(3)-LVIO, and switched off in GenZ-LIO.
+  - EXP-023: PID-adapted voxel size.
+  - EXP-024: point-to-point residuals beside point-to-plane.
+  - EXP-025: voxel-pruned correspondence search.
+- **GenZ-LIO tuning fairness:** EXP-026, alongside EXP-019 for lightning-lm.

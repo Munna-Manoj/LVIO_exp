@@ -40,7 +40,11 @@ def render_status(exp: Experiment) -> str:
     deps = ", ".join(s.get("depends_on") or []) or "none"
     verdict = f" · verdict **{VERDICT_BADGE[s['verdict']]}**" if s.get("verdict") else ""
     return (f"**Status:** {STATUS_BADGE[s['status']]}{verdict} · **Phase:** {s['phase']} "
-            f"({PHASES[s['phase']]}) · **System:** `{s['system']}` · **Depends on:** {deps}\n")
+            f"({PHASES[s['phase']]}) · **System:** {_systems(s['system'])} · **Depends on:** {deps}\n")
+
+
+def _systems(value) -> str:
+    return " + ".join(f"`{x}`" for x in value) if isinstance(value, list) else f"`{value}`"
 
 
 def render_hypothesis(exp: Experiment) -> str:
@@ -106,6 +110,8 @@ def render_results(exp: Experiment) -> str:
         effect = {"better": "🟢 better", "worse": "🔴 worse", "none": "⚪ within noise",
                   "no-noise-floor": "❔ no noise floor", None: ""}[c.get("effect")]
         delta = "" if c["variant"] == "baseline" else (f"{c['delta']:+.3f}" if c.get("delta") is not None else "–")
+        if c.get("reference", "baseline") != "baseline" and c.get("delta") is not None:
+            delta += f" vs `{c['reference']}`"
         lines.append(f"| {c['mission']} | `{c['variant']}` | {_fmt(p['mean'], 3)} ± {_fmt(p['std'], 3)} | {delta} | "
                      f"{effect} | {_fmt(c.get('ms_p95', {}).get('mean'), 1)} | {c['n_ok']} / {c['n_failed']} |")
     if not summary["complete"]:

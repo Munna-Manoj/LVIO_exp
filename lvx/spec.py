@@ -217,8 +217,11 @@ def validate(exp: Experiment, strict_todo: bool = False) -> List[str]:
         err.append(f"phase '{s['phase']}' not in {sorted(PHASES)}")
     if s["status"] not in STATUSES:
         err.append(f"status '{s['status']}' not in {STATUSES}")
-    if s["system"] not in list(config.systems()) + ["both", "all"]:
-        err.append(f"system '{s['system']}' unknown")
+    known = list(config.systems())
+    names = s["system"] if isinstance(s["system"], list) else [s["system"]]
+    if not names or any(n not in known + ["both", "all"] for n in names) or (len(names) > 1 and
+                                                                         {"both", "all"} & set(names)):
+        err.append(f"system '{s['system']}' unknown: one of {known}, a list of them, `both` or `all`")
     try:
         config.baseline(s["baseline"])
     except ValueError as e:
@@ -250,6 +253,7 @@ def validate(exp: Experiment, strict_todo: bool = False) -> List[str]:
         if x not in METRICS:
             err.append(f"metrics.secondary '{x}' unknown")
     seen = set()
+    arms = {v.get("id"): v for v in s["variants"] or []}
     for v in s["variants"] or []:
         vid = v.get("id", "")
         if not VARIANT_RE.match(vid) or vid == "baseline":
@@ -261,6 +265,20 @@ def validate(exp: Experiment, strict_todo: bool = False) -> List[str]:
             err.append(f"variant '{vid}' needs a one-line `change`")
         n_changes = len(v.get("overrides") or {}) + len(v.get("modes_add") or []) + len(v.get("modes_remove") or [])
         n_changes += 1 if v.get("baseline") else 0
+        ref = v.get("reference", "baseline")
+        if ref != "baseline":                 # paired against another arm (ADR-0012): count changes against it
+            r = arms.get(ref)
+            if r is None or ref == vid:
+                err.append(f"variant '{vid}': reference '{ref}' is not another variant of this spec")
+            elif (r.get("overrides") or r.get("modes_add") or r.get("modes_remove")
+                  or r.get("reference", "baseline") != "baseline"):
+                err.append(f"variant '{vid}': reference '{ref}' must be a plain baseline swap")
+            elif v.get("baseline") != r.get("baseline"):
+                err.append(f"variant '{vid}' must run the same baseline config as its reference '{ref}'")
+            else:
+                n_changes -= 1                # the swap is the reference's, not this variant's
+        elif v.get("baseline") and n_changes > 1 and not v.get("single_change_reason"):
+            err.append(f"variant '{vid}' swaps the baseline and changes it; pair it with a plain swap via `reference`")
         if n_changes == 0:
             err.append(f"variant '{vid}' changes nothing")
         if n_changes > 1 and not v.get("single_change_reason"):
