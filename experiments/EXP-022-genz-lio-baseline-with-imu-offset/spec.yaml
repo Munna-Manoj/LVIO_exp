@@ -1,0 +1,45 @@
+id: EXP-022
+slug: genz-lio-baseline-with-imu-offset
+title: How large is GenZ-LIO's run-to-run noise, with the protocol's IMU time offset?
+phase: P0
+status: planned
+created: '2026-10-12'
+system: genz-lio
+depends_on:
+- EXP-000
+supersedes: EXP-021
+host: reference
+question: How much does ATE vary between identical runs of GenZ-LIO stock on the dev missions, and does
+  the harness run it without dropping scans or mis-placing the LiDAR?
+hypothesis: GenZ-LIO's worker threads (correspondence search and map updates, runtime.max_threads 4) combine
+  their results in a fixed order on an offline replay, as SE(3)-LVIO's frontend does (EXP-000), so its
+  runs are deterministic or nearly so. With upstream's Hesai template and the GrandTour extrinsic it tracks
+  every dev mission at centimetre level.
+prediction: σ(ATE) per mission below 0.05 cm. Every run has pose_coverage ≥ 0.99. ATE on ARC-6 below 3
+  cm. EXP-021 ran the same config without the IMU offset and got 1.382 (arc-6), 2.506 (eig-2) and 5.884
+  cm (snow-3); with the offset we expect each within ±20 % of those, since the offset is 5-6.5 ms and
+  the IMU prior is only one input to each scan's update.
+falsified_if: any run has pose_coverage below 0.99, any run fails, or ARC-6 ATE is 3 cm or more. Each
+  means the harness or the config is wrong for GenZ-LIO (frame, extrinsic, timestamps, or core budget).
+baseline: genz_stock
+variants: []
+code_change: none to upstream code; the fork's runner now applies the per-mission IMU time offset (--imu-dt,
+  configs/missions.yaml), which EXP-021 left out (pin 0936d34)
+missions:
+  set: dev
+repeats: 5
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_median_cm
+  - ate_max_cm
+  - ms_mean
+  - ms_p95
+  - rss_mb
+  - pose_coverage
+stress: null
+decision_rule: pass (verdict adopt = GenZ-LIO runs correctly in the harness, under the full protocol)
+  if all 15 runs are ok with pose_coverage ≥ 0.99 and the ARC-6 mean ATE is below 3 cm; otherwise reject
+  and fix the runner or config before any experiment uses GenZ-LIO. The σ per mission from this experiment
+  is GenZ-LIO's noise floor for all later experiments (ADR-0004, ADR-0012).
+learn_links: []

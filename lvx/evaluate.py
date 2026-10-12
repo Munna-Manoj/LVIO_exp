@@ -31,7 +31,7 @@ RUN_COLUMNS = [
     "config_hash", "repo_commit", "system_commit", "host",
 ]
 NOISE_K = 2.0          # an effect must exceed NOISE_K * sigma_noise (ADR-0004)
-NOISE_EXPERIMENTS = ("EXP-000", "EXP-021")   # each measures the floor of its own baselines (ADR-0004, ADR-0012)
+NOISE_EXPERIMENTS = ("EXP-000", "EXP-022")   # each measures the floor of its own baselines (ADR-0004, ADR-0012)
 SIGMA_MIN_CM = 0.005   # floor when runs are (near) deterministic (ADR-0004)
 
 
@@ -157,9 +157,9 @@ def copy_artifacts(exp: Experiment, keys: List[runner.RunKey]) -> None:
 # --- aggregation + noise floor ----------------------------------------------------------------
 
 def noise_source(system_baseline: str) -> Optional[str]:
-    """The noise experiment that measured this baseline's floor (EXP-000, or EXP-021 for GenZ-LIO)."""
+    """The noise experiment that measured this baseline's floor (EXP-000, or EXP-022 for GenZ-LIO)."""
     for e in all_experiments():
-        if e.id in NOISE_EXPERIMENTS and (e.results / "summary.json").exists():
+        if e.id in NOISE_EXPERIMENTS and e.status != "abandoned" and (e.results / "summary.json").exists():
             with open(e.results / "summary.json") as f:
                 if system_baseline in json.load(f).get("noise_floor", {}):
                     return e.id

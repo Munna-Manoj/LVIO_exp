@@ -18,8 +18,9 @@
   - The image is built from the submodule at its pin.
 - **Baseline config `genz_stock`:** upstream's `default/hesai.yaml` with only the platform keys changed: 4 threads, a 0.6 m blind range, and the extrinsic from `calib.json`.
   - Tuning beyond that is its own experiment, like EXP-019 for lightning-lm.
-- **Noise floor:** EXP-000 is concluded and cannot grow, so **EXP-021** measures GenZ-LIO's run-to-run σ and coverage on the dev missions.
-  - No other experiment may run GenZ-LIO variants before EXP-021 is concluded `adopt`.
+- **Noise floor:** EXP-000 is concluded and cannot grow, so a GenZ-LIO noise experiment measures its run-to-run σ and coverage on the dev missions.
+  - That was EXP-021; it ran without the per-mission IMU time offset and was abandoned, superseded by **EXP-022** (2026-10-12).
+  - No other experiment may run GenZ-LIO variants before EXP-022 is concluded `adopt`.
 - **Ablations run in both forks:**
   - Every ablation experiment implements its idea in SE(3)-LVIO and, where the idea applies, in GenZ-LIO.
   - Each system gets its own variant against its own baseline (e.g. `gate_se3`, `gate_genz`), so a variant still differs from its baseline in one change (law 4).
@@ -31,7 +32,7 @@
 - The planned specs EXP-001 … EXP-020 are reworked to add GenZ-LIO variants before they are frozen. They are not frozen yet, so this breaks no lock.
 - Host time per ablation experiment roughly doubles (GenZ-LIO takes about 2 min per ARC-6 run on 4 cores).
 - Course chapters name GenZ-LIO in "In the real systems" wherever it does the thing the chapter teaches.
-- A pin change of GenZ-LIO is its own commit and reruns EXP-021, as a pin change of the others reruns EXP-000.
+- A pin change of GenZ-LIO is its own commit and reruns its noise experiment (now EXP-022), as a pin change of the others reruns EXP-000.
 
 ## Alternatives considered
 - **Pinned pip wheel (`genz-lio==0.1.0`):** simpler, but not tied to a source commit, and there is nowhere to add ablation flags.
