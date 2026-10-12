@@ -2,3 +2,7 @@
 	path = systems/se3-lvio
 	url = https://github.com/Munna-Manoj/se3-livom-comfort.git
 	branch = lvio-exp
+[submodule "systems/genz-lio"]
+	path = systems/genz-lio
+	url = https://github.com/Munna-Manoj/genz-lio.git
+	branch = lvio-exp

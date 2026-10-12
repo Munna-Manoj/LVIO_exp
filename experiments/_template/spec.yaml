@@ -6,7 +6,7 @@ title: "TODO the question as a title, e.g. How wide should the point-to-plane ga
 phase: P1                    # P0..P7, PX (see lvx/spec.py PHASES)
 status: planned              # changed only by lvx
 created: 1970-01-01
-system: se3-lvio             # se3-lvio | lightning-lm | both
+system: se3-lvio             # se3-lvio | lightning-lm | genz-lio | both | all (ADR-0012)
 depends_on: [EXP-000]        # experiments that must be concluded first
 supersedes: null
 host: reference              # configs/hosts/<profile>.yaml (hardware); reach it via lvx.local.yaml

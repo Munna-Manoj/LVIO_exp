@@ -96,3 +96,18 @@ def test_erratum_keeps_the_frozen_hash(tmp_path):
 def test_headline_names_a_variant_only_beyond_noise():
     from lvx import report
     assert report._headline(spec.find("EXP-000")).startswith("noise floor")      # it compares nothing
+
+
+def test_genz_config_applies_existing_keys_only():
+    fork = runner.config.ROOT / "systems" / "genz-lio"
+    if not (fork / runner.GENZ_BASE_CONFIG).exists():
+        pytest.skip("submodule systems/genz-lio not checked out")
+    tree = runner.genz_config({"overrides": {"hybrid_metric.enable": False}}, fork)
+    assert tree["hybrid_metric"]["enable"] is False and tree["runtime"]["max_threads"] == 4
+    with pytest.raises(KeyError):
+        runner.genz_config({"overrides": {"hybrid_metric.enabel": False}}, fork)        # a typo is refused
+
+
+def test_genz_command_is_pinned_and_self_explaining():
+    cmd = runner.genz_command("arc-6", "0-3")
+    assert "taskset -c 0-3" in cmd and '"$MISSION"' in cmd and "/home/" not in cmd

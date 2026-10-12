@@ -151,6 +151,39 @@ def lightning_config(cfg: Dict[str, Any], upstream_dir: Path) -> Dict[str, Any]:
     return tree
 
 
+GENZ_BASE_CONFIG = "lvio_exp/grandtour_xt32.yaml"     # in the systems/genz-lio fork
+
+
+def genz_command(mission: str, cpus: str) -> str:
+    """The fork's headless runner (systems/genz-lio/lvio_exp/run_comfort.py) in the GenZ-LIO image, reading the
+    mission's comfort_offline folder directly, with the config lvx wrote to $OUT/config.yaml; then the same
+    IMU -> prism conversion SE(3)-LVIO uses. Run from the repo root."""
+    inner = (f"taskset -c {cpus} python3 lvio_exp/run_comfort.py /mission/comfort_offline /out/config.yaml /out "
+             f"--name {mission}")
+    return ('podman run --rm -v "$MISSION":/mission:ro -v "$OUT":/out "$IMAGE" '
+            f'bash -c {shlex.quote(inner)} > "$OUT/run.log" 2>&1 && '
+            'python3 systems/se3-lvio/tools/to_prism.py "$MISSION/comfort_offline/calib.json" '
+            f'"$OUT/{mission}_imu.tum" "$OUT/estimate.tum"')
+
+
+def genz_config(cfg: Dict[str, Any], fork_dir: Path) -> Dict[str, Any]:
+    """The fork's GrandTour config + the variant's overrides (dotted keys, e.g. `hybrid_metric.enable`).
+    An override must name a key that already exists, so a typo cannot silently add a new one."""
+    with open(fork_dir / GENZ_BASE_CONFIG) as f:
+        tree = yaml.safe_load(f)
+    for key, value in (cfg["overrides"] or {}).items():
+        *parents, leaf = key.split(".")
+        node = tree
+        for p in parents:
+            if p not in node:
+                raise KeyError(f"genz-lio override '{key}': no section '{p}' in {GENZ_BASE_CONFIG}")
+            node = node[p]
+        if leaf not in node:
+            raise KeyError(f"genz-lio override '{key}' does not exist in {GENZ_BASE_CONFIG}")
+        node[leaf] = value
+    return tree
+
+
 def _fmt(value: Any) -> str:
     if isinstance(value, (list, tuple)):
         return ",".join(str(x) for x in value)
@@ -206,6 +239,9 @@ def execute(exp: Experiment, key: RunKey, host_name: str, allow_dirty: bool = Fa
     if system == "se3-lvio":
         command = se3lvio_command(cfg, key.mission, run_tag=f"{exp.id}-{key.run_id}", cpus=cpus)
         cwd = "systems/se3-lvio"
+    elif system == "genz-lio":
+        command = genz_command(key.mission, cpus)
+        cwd = "."
     else:
         workspace = config.system_root("lightning-lm") / f"lightning-lm-{pin}"
         if not (workspace / "src" / "lightning-lm" / "bin" / "run_lio_tum").exists():
@@ -230,6 +266,8 @@ def execute(exp: Experiment, key: RunKey, host_name: str, allow_dirty: bool = Fa
     if system == "lightning-lm":
         upstream = Path(env["LIGHTNING_WS"]) / "src" / "lightning-lm"
         (out / "config.yaml").write_text(yaml.safe_dump(lightning_config(cfg, upstream), sort_keys=False))
+    if system == "genz-lio":
+        (out / "config.yaml").write_text(yaml.safe_dump(genz_config(cfg, sys_dir), sort_keys=False))
     if exp.status == "approved":
         set_status(exp, "running")
     manifest["started"] = _dt.datetime.now().isoformat(timespec="seconds")

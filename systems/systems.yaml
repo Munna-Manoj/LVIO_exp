@@ -26,6 +26,18 @@ lightning-lm:
   # How it is run: lvx/runner.py lightning_command() + lightning_config() (upstream config/default_robosense.yaml
   # + overrides/<name>.yaml, dotted keys). The exact command is recorded in every manifest.
 
+genz-lio:
+  title: GenZ-LIO
+  upstream: https://github.com/cocel-postech/genz-lio
+  fork: https://github.com/Munna-Manoj/genz-lio      # branch lvio-exp: our runner + GrandTour config + ablation flags
+  branch: lvio-exp
+  pinned_commit: 82328f5937d7b7a248ab9f8f14542c6f535865ba  # fork lvio-exp: upstream master 2026-10-07 (c6c464d) + lvio_exp/
+  licence: GPL-2.0
+  checkout: submodule                # systems/genz-lio
+  image: lvx/genz-lio:py310         # built from the submodule: podman build -f lvio_exp/Containerfile; local tag in lvx.local.yaml
+  # How it is run: lvx/runner.py genz_command() + genz_config() (the fork's lvio_exp/grandtour_xt32.yaml + the
+  # variant's overrides, dotted keys). The exact command is recorded in every manifest.
+
 sad:
   title: SLAM in Autonomous Driving (book code, reference implementations for course parts B-F)
   upstream: https://github.com/gaoxiang12/slam_in_autonomous_driving

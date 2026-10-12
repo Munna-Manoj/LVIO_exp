@@ -29,11 +29,11 @@
   - then point clouds, LiDAR odometry and LIO;
   - then mapping and loop closure;
   - beyond the book to the camera (LVIO);
-  - and a **capstone** on lightning-lm and SE(3)-LVIO.
+  - and a **capstone** on SE(3)-LVIO, lightning-lm and GenZ-LIO.
 
   Every chapter has a Python track that runs without data, a C++ lab on the book's official code and
   datasets, and links to the ablations.
-- **The study:** pre-registered ablations of SE(3)-LVIO and lightning-lm on real GrandTour data.
+- **The study:** pre-registered ablations of SE(3)-LVIO, lightning-lm and GenZ-LIO on real GrandTour data.
 
 ```mermaid
 flowchart LR
@@ -48,7 +48,7 @@ flowchart LR
 
 ## Why this repository exists
 
-- **One protocol, two systems.** Both systems run on the same missions, cores, frame conversion and ATE code.
+- **One protocol, three systems.** Every system runs on the same missions, cores, frame conversion and ATE code.
 - **Every experiment is written before its data.** Question, hypothesis, prediction and decision rule are
   hashed (`spec.lock`) before the first run. Negative results stay.
 - **Effects must beat noise.** A change counts only if it moves ATE by more than 2σ of run-to-run noise
@@ -57,7 +57,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  spec[pre-registered spec] --> run[lvx run<br/>both systems, pinned cores]
+  spec[pre-registered spec] --> run[lvx run<br/>three systems, pinned cores]
   run --> eval[lvx eval<br/>COMFORT ATE, prism frame]
   eval --> noise{beats 2σ noise?}
   noise --> report[generated report<br/>+ figures + 3D viewer]
@@ -89,17 +89,20 @@ flowchart LR
 | [EXP-018](docs/experiments/EXP-018-stress-suite.md) | Which design choices matter when the data gets worse? | P6 | 🗒️ planned |  |  |
 | [EXP-019](docs/experiments/EXP-019-lightning-tuning-fairness.md) | Is lightning-lm tuned fairly? | PX | 🗒️ planned |  |  |
 | [EXP-020](docs/experiments/EXP-020-map-structure-speed.md) | Does the map data structure set the speed of SE(3)-LVIO? | P3 | 🗒️ planned |  |  |
+| [EXP-021](docs/experiments/EXP-021-genz-lio-baseline-and-noise-floor.md) | How large is GenZ-LIO's run-to-run noise, and does the harness run it correctly? | P0 | 🔒 approved (pre-registered) |  |  |
 <!-- lvx:end index -->
 
-## The two systems
+## The three systems
 
-| | SE(3)-LVIO | lightning-lm (LIO frontend) |
-|---|---|---|
-| Filter | iterated ESKF, SE(3) pose retraction, 17-dim error state | iterated ESKF, SO(3)×R³, 12-dim (accel bias + gravity fixed) |
-| Map | probabilistic voxel planes (VoxelMap) | iVox, 5-NN plane fit |
-| Residual weight | point + plane covariance, 3σ gate | constant weight, degeneracy projection |
-| Sensors | 2 LiDARs + IMU + camera (photometric) | 1 LiDAR + IMU |
-| Backend | plane BA (HBA) + iSAM2 | loop closure + pose graph (not used here) |
+| | SE(3)-LVIO | lightning-lm (LIO frontend) | GenZ-LIO |
+|---|---|---|---|
+| Filter | iterated ESKF, SE(3) pose retraction, 17-dim error state | iterated ESKF, SO(3)×R³, 12-dim (accel bias + gravity fixed) | iterated ESKF, SO(3)×R³ (IKFoM, as FAST-LIO) |
+| Map | probabilistic voxel planes (VoxelMap) | iVox, 5-NN plane fit | octree voxel planes + point candidates, voxel-pruned search |
+| Residual weight | point + plane covariance, 3σ gate | constant weight, degeneracy projection | point-to-plane + point-to-point, each covariance-weighted and gated |
+| Downsampling | fixed voxel | fixed voxel | voxel size set by a PID controller on the point count |
+| Sensors | 2 LiDARs + IMU + camera (photometric) | 1 LiDAR + IMU | 1 LiDAR + IMU |
+| Backend | plane BA (HBA) + iSAM2 | loop closure + pose graph (not used here) | none |
+| Included as | fork, submodule; ablations in it | fetched at build time; reference only (no licence) | fork, submodule; ablations in it ([ADR-0012](docs/process/decisions/ADR-0012-genz-lio-third-system.md)) |
 
 ## Explore
 
@@ -121,7 +124,7 @@ pip install -e ".[dev]"
 lvx init --data-root ~/datasets/lvx --run-root ~/lvx_runs   # this machine only (git-ignored lvx.local.yaml)
 lvx data check                     # which datasets are ready, and which chapters use them
 lvx exp list                       # the experiment plan
-python tools/check_experiments.py  # check_experiments: OK (20 experiments)
+python tools/check_experiments.py  # check_experiments: OK (22 experiments)
 ```
 
 Running experiments needs the GrandTour data and the compute host: see [Set up](docs/how-to/setup.md).

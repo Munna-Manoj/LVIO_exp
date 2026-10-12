@@ -27,4 +27,5 @@ Every experiment, its status and its verdict. Each row links its report. Generat
 | [EXP-018](EXP-018-stress-suite.md) | Which design choices matter when the data gets worse? | P6 | 🗒️ planned |  |  |
 | [EXP-019](EXP-019-lightning-tuning-fairness.md) | Is lightning-lm tuned fairly? | PX | 🗒️ planned |  |  |
 | [EXP-020](EXP-020-map-structure-speed.md) | Does the map data structure set the speed of SE(3)-LVIO? | P3 | 🗒️ planned |  |  |
+| [EXP-021](EXP-021-genz-lio-baseline-and-noise-floor.md) | How large is GenZ-LIO's run-to-run noise, and does the harness run it correctly? | P0 | 🔒 approved (pre-registered) |  |  |
 <!-- lvx:end index -->
