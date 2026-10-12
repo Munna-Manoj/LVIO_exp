@@ -1,6 +1,6 @@
 # EXP-000 — How large is run-to-run noise, and do the pre-repo baselines reproduce?
 
-**TL;DR:** adopt: all six baselines reproduce their pre-repo ARC-6 ATE exactly (S8 0.8055 cm … lightning stock 1.6391 cm), every run has pose_coverage ≥ 0.9987, and 16 of 18 cells are bit-for-bit deterministic, so the noise floor is the 0.005 cm minimum everywhere except S9c on EIG-2 (σ 0.0014 cm) and SNOW-3 (σ 0.0059 cm).
+**TL;DR:** adopt: all six baselines reproduce their pre-repo ARC-6 ATE exactly (S8 0.8055 cm … lightning stock 1.6391 cm), every run has pose_coverage ≥ 0.9987, and 16 of 18 cells are bit-for-bit deterministic, so the noise floor is the 0.005 cm minimum in every cell except S9c on SNOW-3 (σ 0.0053 cm).
 
 <!-- lvx:begin status -->
 **Status:** ✅ concluded · verdict **🟢 adopt** · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `both` · **Depends on:** none
@@ -18,6 +18,8 @@
 | **Decision rule** | pass (verdict adopt = the harness is trusted) if every baseline reproduces on ARC-6 within 3σ and every run has pose_coverage ≥ 0.99; otherwise reject and fix the harness before any other experiment runs. The σ per (baseline, mission) from this experiment is the noise floor for all later ones (ADR-0004). |
 
 <sub>Fields above are pre-registered (`spec.lock`).</sub>
+
+> **Erratum (2026-10-12):** prediction says “S9c 0.8989”; it should say “S9c 0.8998”. Source: the pre-repo run log on the reference host gives S9c ARC-6 ate_rmse_cm 0.8998005 (recomputed with lvx.evaluate on 2026-10-08); the digits were swapped when the number was copied, and EXP-000 measured 0.8998. The frozen text is kept as approved.
 <!-- lvx:end hypothesis -->
 
 ## Setup
@@ -104,7 +106,7 @@ lightning-lm's large errors on eig-2 and snow-3 are a property of the baseline, 
 
 ## Threats to validity
 
-- **The spec's S9c number has a typo.** The prediction lists S9c as 0.8989 cm; the pre-repo log on the reference host (`se3_smoke.log`, recomputed with lvx.evaluate on 2026-10-08) says 0.8998005 cm, which is what EXP-000 measured. The frozen spec is not edited. Read literally, 0.8989 is still inside the 3σ band (|0.8998 − 0.8989| = 0.0009 cm < 3 × 0.005 cm), so the verdict does not depend on it. `configs/baselines/se3lvio_S9c.yaml` carries the same typo and should be corrected in a separate change.
+- **The spec's S9c number had a typo.** The prediction lists S9c as 0.8989 cm; the pre-repo run log on the reference host says 0.8998005 cm, which is what EXP-000 measured. It is recorded as an erratum under the pre-registered fields (`lvx exp erratum`); the frozen text and `spec.lock` are unchanged, and `configs/baselines/se3lvio_S9c.yaml` now says 0.8998. Read literally, 0.8989 would still be inside the 3σ band (|0.8998 − 0.8989| = 0.0009 cm < 3 × 0.005 cm), so the verdict does not depend on it.
 - **Reproduction means the same code on the same host.** The pre-repo runs and EXP-000 both ran on the reference host with the same system commits. This shows the harness does not change the system; it does not show the numbers carry over to another machine or core count (EXP-017 covers the core budget).
 - **Three dev missions only.** Determinism and the noise floor were measured on arc-6, eig-2 and snow-3. A mission with more loop closures could make the backend noisier than snow-3.
 - **lightning-lm's input was converted by us.** Its ROS 2 bags come from `offline_to_ros2bag.py`. ARC-6 reproduces, so the conversion is right there; a mission-specific problem (time offset, IMU rate) on eig-2 or snow-3 could inflate its error and would look the same in this table.
@@ -114,7 +116,17 @@ lightning-lm's large errors on eig-2 and snow-3 are a property of the baseline, 
 
 None failed or dirty: 90 of 90 runs `ok` (Results table).
 
-One timing caveat: `baseline` arc-6 r3 (started 11:11:47 on 2026-10-08) overlapped an unpinned `lvx viewer` test of ours from about 11:12 to 11:13 on the same host. Its ATE is identical to the other repeats (same estimate md5), its ms_mean 27.68 is inside the range of r1, r2, r4 and r5 (26.94–27.78), but its tail is slower: ms_p95 38.8 against 33.2–36.8, and ms_max 77.8 against 54.2–58.7. The run is kept (runs are append-only); timing claims on this cell should use the median of the repeats. Later runs keep every other job off cores 0–3.
+One timing caveat: `baseline` arc-6 r3 (started 11:11:47 on 2026-10-08) overlapped an unpinned `lvx viewer` test of ours on the same host, from about 11:12 to 11:13. Because these runs are deterministic, every repeat does the same work on every scan, so r3 can be compared with the other four scan by scan (each repeat against the per-scan median of the other four, from the runs' `timing.csv`):
+
+| Repeat | ms_mean | ms_p95 | ms_max | excess over the others, whole run | excess, last quarter |
+|---|---|---|---|---|---|
+| r1 | 27.41 | 36.48 | 54.4 | +0.70 ms | +0.25 ms |
+| r2 | 26.94 | 33.21 | 55.8 | +0.15 ms | −0.07 ms |
+| **r3** | 27.68 | 38.84 | 77.8 | +0.99 ms | **+2.65 ms** |
+| r4 | 27.78 | 35.07 | 54.2 | +1.22 ms | +0.20 ms |
+| r5 | 27.39 | 36.77 | 58.7 | +0.70 ms | +0.33 ms |
+
+Over the whole run r3 is no slower than r4; the interference shows only in its last quarter (about 11:13:17 to 11:13:47), which is where its slow tail (p95, max) comes from. ATE is unaffected (same estimate md5 as the other repeats). The run is kept: runs are append-only, and a rerun to remove an inconvenient run is not allowed (CLAUDE.md law 5). Timing claims on this cell should use the median over repeats (`ms_mean` 27.41, `ms_p95` 36.48 in summary.json). Since then every other job on the host stays off cores 0–3.
 
 ## Reproduce
 

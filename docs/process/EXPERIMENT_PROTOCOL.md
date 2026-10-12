@@ -40,6 +40,8 @@ stateDiagram-v2
 - **Pre-registration.** `lvx exp freeze` hashes these fields into `spec.lock`: question, hypothesis,
   prediction, falsified_if, baseline, variants, missions, repeats, metrics, decision_rule, stress and host.
   `tools/check_experiments.py` fails if any of them changes later.
+- **A typo in a frozen field.** `lvx exp erratum` records the correction and its evidence next to the frozen
+  text, which stays as approved. It is for transcription errors only; a different plan needs a new experiment.
 - **Changing your mind.** Run `lvx exp new <slug> --phase Pn --supersedes EXP-NNN`. Then abandon the
   old experiment with `--superseded-by`. The history stays visible.
 
