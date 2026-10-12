@@ -2,7 +2,7 @@ id: EXP-022
 slug: genz-lio-baseline-with-imu-offset
 title: How large is GenZ-LIO's run-to-run noise, with the protocol's IMU time offset?
 phase: P0
-status: approved
+status: concluded
 created: '2026-10-12'
 system: genz-lio
 depends_on:
@@ -46,3 +46,11 @@ learn_links: []
 history:
 - date: '2026-10-12'
   status: approved
+- date: '2026-10-12'
+  status: running
+- date: '2026-10-12'
+  status: analysed
+- date: '2026-10-12'
+  status: concluded
+  verdict: adopt
+verdict: adopt

@@ -1,0 +1,44 @@
+{
+  "lvx_version": "0.1.0",
+  "experiment": "EXP-022",
+  "run_id": "baseline__snow-3__r5",
+  "variant": "baseline",
+  "mission": "snow-3",
+  "repeat": 5,
+  "system": "genz-lio",
+  "config": {
+    "baseline": "genz_stock",
+    "system": "genz-lio",
+    "modes": [],
+    "overrides": {},
+    "overrides_file": null,
+    "estimate": "estimate_prism",
+    "stress": null,
+    "config_hash": "0659c7eaaedb"
+  },
+  "command": "podman run --rm -v \"$MISSION\":/mission:ro -v \"$OUT\":/out \"$IMAGE\" bash -c 'taskset -c 0-3 python3 lvio_exp/run_comfort.py /mission/comfort_offline /out/config.yaml /out --name snow-3 --imu-dt -0.0048' > \"$OUT/run.log\" 2>&1 && python3 systems/se3-lvio/tools/to_prism.py \"$MISSION/comfort_offline/calib.json\" \"$OUT/snow-3_imu.tum\" \"$OUT/estimate.tum\"",
+  "cwd": ".",
+  "env": {
+    "OUT": "this run's directory: <run_root>/<EXP>/<variant>/<mission>/r<k>",
+    "GRANDTOUR": "dataset `grandtour` (configs/datasets.yaml)",
+    "MISSION": "the mission folder inside $GRANDTOUR",
+    "IMAGE": "the system's container image (systems/systems.yaml; local tag in lvx.local.yaml)",
+    "PATH": "the caller's PATH, after the machine's own tool folders (lvx.local.yaml `path`, e.g. a docker shim)"
+  },
+  "repo": {
+    "commit": "3417882e7cde817bb3aae49ff7223d4ae964c096",
+    "dirty": false
+  },
+  "system_git": {
+    "commit": "0936d34b61eb89a4ed32f0bdb03c5a39fa497dec",
+    "dirty": false
+  },
+  "image_digest": "c87c1806f3e1f9288f379c5fb08ea2107c112864d0de47f92e00dbce1e397380",
+  "host": "reference",
+  "cpus": "0-3",
+  "status": "ok",
+  "started": "2026-10-12T17:19:52",
+  "ended": "2026-10-12T17:22:04",
+  "wall_s": 132.1,
+  "exit_code": 0
+}
