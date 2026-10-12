@@ -1,0 +1,17 @@
+id: EXP-021
+frozen_at: '2026-10-12'
+approved_by: Munna-Manoj
+sha256: c66632d8338f7f4afe93e980e8af2cdeab0b7a9b251b7841703ee0133124d06a
+fields:
+- question
+- hypothesis
+- prediction
+- falsified_if
+- baseline
+- variants
+- missions
+- repeats
+- metrics
+- decision_rule
+- stress
+- host
