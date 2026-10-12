@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from . import config
-from .evaluate import load_summary
+from .evaluate import NOISE_EXPERIMENT, load_summary
 from .spec import PHASES, Experiment, all_experiments
 
 SITE_URL = "https://munna-manoj.github.io/LVIO_exp/"     # the published site (mkdocs.yml site_url)
@@ -54,6 +54,9 @@ def render_hypothesis(exp: Experiment) -> str:
         f"| **Falsified if** | {s['falsified_if'].strip()} |\n"
         f"| **Decision rule** | {s['decision_rule'].strip()} |\n\n"
         f"<sub>Fields above are {lock} (`spec.lock`).</sub>\n"
+        + "".join(f"\n> **Erratum ({x['date']}):** {x['field']} says “{x['says']}”; it should say "
+                  f"“{x['should_say']}”. Source: {x['source']}. The frozen text is kept as approved.\n"
+                  for x in s.get("errata") or [])
     )
 
 
@@ -255,7 +258,13 @@ def _headline(exp: Experiment) -> str:
     cells = [c for c in summary["cells"] if c["variant"] != "baseline" and c.get("delta") is not None]
     if not cells:
         return ""
-    best = min(cells, key=lambda c: c["delta"])
+    if exp.id == NOISE_EXPERIMENT:                      # it measures the floor; it compares nothing
+        sd = max(c[summary["primary"]]["std"] for c in summary["cells"])
+        return f"noise floor: σ ≤ {sd:.4f} {summary['primary']} per cell"
+    better = [c for c in cells if c.get("effect") == "better"]     # only effects beyond 2σ of noise
+    if not better:
+        return "no variant beats the baseline beyond noise"
+    best = min(better, key=lambda c: c["delta"])
     return f"best `{best['variant']}`: {best['delta']:+.3f} {summary['primary']} on {best['mission']}"
 
 

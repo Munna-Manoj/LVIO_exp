@@ -175,6 +175,18 @@ def set_status(exp: Experiment, new: str, **fields: Any) -> None:
     exp.save()
 
 
+def add_erratum(exp: Experiment, field: str, says: str, should_say: str, source: str) -> None:
+    """Record a typo in a frozen field without editing it: the frozen text and its hash stay as approved,
+    and the report prints the correction under the pre-registered fields (`errata` is not frozen)."""
+    if field not in FROZEN:
+        raise SystemExit(f"errata are for frozen fields only; '{field}' is not one of {FROZEN}")
+    if says not in str(exp.spec.get(field, "")):
+        raise SystemExit(f"{exp.id}: '{says}' does not appear in {field}")
+    exp.spec.setdefault("errata", []).append({"date": _dt.date.today().isoformat(), "field": field, "says": says,
+                                              "should_say": should_say, "source": source})
+    exp.save()
+
+
 # --- validation --------------------------------------------------------------------------------
 
 def _has_todo(value: Any) -> bool:
@@ -224,6 +236,11 @@ def validate(exp: Experiment, strict_todo: bool = False) -> List[str]:
     for link in s.get("learn_links") or []:
         if not (config.ROOT / link).exists():
             err.append(f"learn_links '{link}' does not exist")
+    for x in s.get("errata") or []:
+        if not isinstance(x, dict) or set(x) != {"date", "field", "says", "should_say", "source"}:
+            err.append("each erratum needs date, field, says, should_say and source (lvx exp erratum)")
+        elif x["field"] not in FROZEN or x["says"] not in str(s.get(x["field"], "")):
+            err.append(f"erratum on '{x['field']}': '{x['says']}' is not in that frozen field")
     if not isinstance(s["repeats"], int) or s["repeats"] < 1:
         err.append("repeats must be a positive integer")
     m = s["metrics"] or {}
