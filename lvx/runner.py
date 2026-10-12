@@ -156,10 +156,12 @@ GENZ_BASE_CONFIG = "lvio_exp/grandtour_xt32.yaml"     # in the systems/genz-lio 
 
 def genz_command(mission: str, cpus: str) -> str:
     """The fork's headless runner (systems/genz-lio/lvio_exp/run_comfort.py) in the GenZ-LIO image, reading the
-    mission's comfort_offline folder directly, with the config lvx wrote to $OUT/config.yaml; then the same
-    IMU -> prism conversion SE(3)-LVIO uses. Run from the repo root."""
+    mission's comfort_offline folder directly, with the config lvx wrote to $OUT/config.yaml and the mission's IMU
+    time offset (configs/missions.yaml imu_dt, the protocol's offset for every system); then the same IMU -> prism
+    conversion SE(3)-LVIO uses. Run from the repo root."""
+    imu_dt = config.missions()[mission]["imu_dt"]
     inner = (f"taskset -c {cpus} python3 lvio_exp/run_comfort.py /mission/comfort_offline /out/config.yaml /out "
-             f"--name {mission}")
+             f"--name {mission} --imu-dt {imu_dt}")
     return ('podman run --rm -v "$MISSION":/mission:ro -v "$OUT":/out "$IMAGE" '
             f'bash -c {shlex.quote(inner)} > "$OUT/run.log" 2>&1 && '
             'python3 systems/se3-lvio/tools/to_prism.py "$MISSION/comfort_offline/calib.json" '

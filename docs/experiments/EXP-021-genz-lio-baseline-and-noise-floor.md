@@ -2,6 +2,9 @@
 
 **TL;DR:** adopt: all 15 GenZ-LIO runs are ok, bit-for-bit deterministic (σ = 0, so its noise floor is the 0.005 cm minimum), cover ≥ 0.9994 of the scans, and score 1.382 cm on ARC-6 (bound 3 cm), 2.506 cm on EIG-2 and 5.884 cm on SNOW-3.
 
+> [!WARNING]
+> **Superseded by [EXP-022](EXP-022-genz-lio-baseline-with-imu-offset.md) (2026-10-12).** After this experiment was concluded we found that its runs lacked the per-mission IMU time offset (`configs/missions.yaml` `imu_dt`, −4.8 to −6.5 ms), which the protocol gives every system (CLAUDE.md §3). The verdict below stands as recorded, but these numbers are not comparable with EXP-000's. GenZ-LIO's baseline and noise floor come from EXP-022.
+
 <!-- lvx:begin status -->
 **Status:** ✅ concluded · verdict **🟢 adopt** · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
@@ -81,6 +84,7 @@ GenZ-LIO keeps tracking on the glacier (EIG-2) where lightning-lm lost it. GenZ-
 - **Our runner, not upstream's CLI.** The runner reads `comfort_offline/` itself. It uses upstream's own `_ScanBuffer` for the scan–IMU pairing, passes Hesai per-point times relative to the scan start (upstream's convention for this LiDAR type) and reorders the IMU columns to upstream's order. A wrong convention would bend trajectories; ARC-6 at 1.4 cm and EIG-2 at 2.5 cm make that unlikely but do not prove each step.
 - **One LiDAR.** GenZ-LIO uses the Hesai only, SE(3)-LVIO S8 too (S9a adds the Livox). Cross-system comparisons should pair like with like.
 - **Three dev missions, one host,** as in EXP-000.
+- **Protocol deviation (found after concluding).** The runner read `imu.txt` without the per-mission `imu_dt` that SE(3)-LVIO's script and the lightning-lm bags apply. A 5–6.5 ms IMU–LiDAR misalignment biases motion prediction and deskewing in fast turns, so the numbers here may differ from GenZ-LIO's under the protocol. Fixed in the fork (pin 0936d34) and `lvx/runner.py`; rerun as EXP-022.
 
 ## Failures
 

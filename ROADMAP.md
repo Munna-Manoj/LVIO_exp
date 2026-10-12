@@ -40,8 +40,8 @@ flowchart LR
 | M0.4 | Build lightning-lm via `scripts/build_lightning.sh` (pinned 1325fed + our runner with `--timing`) | ✅ | `bin/run_lio_tum` exists, timing.csv written |
 | M0.5 | Fix the mission split: confirm the six missions with public GT, download 5 more, convert to the offline layout + lightning bags | ✅ | `configs/missions.yaml` has `dev` (3) and `test` (3) with GT, ADR-0005 updated |
 | M0.6 | EXP-000: baselines + noise floor | ✅ | EXP-000 concluded `adopt` |
-| M0.7 | GenZ-LIO as the third system (ADR-0012): fork + submodule `systems/genz-lio`, runner, `genz_stock`, image | ✅ | `lvx run --dry-run` prints a GenZ-LIO manifest; image built from the pin |
-| M0.8 | EXP-021: GenZ-LIO baseline + noise floor on dev; planned specs EXP-001 … 020 get GenZ-LIO variants | 🟨 EXP-021 concluded `adopt`; specs next | EXP-021 concluded `adopt` |
+| M0.7 | GenZ-LIO as the third system (ADR-0012): fork + submodule `systems/genz-lio`, runner, `genz_stock`, image | 🟨 integrated; runner fixed to apply imu_dt (pin 0936d34) | `lvx run --dry-run` prints a GenZ-LIO manifest; image built from the pin |
+| M0.8 | EXP-022: GenZ-LIO baseline + noise floor on dev (supersedes EXP-021); planned specs EXP-001 … 020 get GenZ-LIO variants | ⬜ | EXP-022 concluded `adopt` |
 
 ### M1 — First results (one complete phase, publishable)
 
@@ -133,7 +133,8 @@ Specs are drafted (`planned`). Each needs user approval + `lvx exp freeze` befor
 | EXP-018 | Stress suite, both systems | P6 | EXP-000 |
 | EXP-019 | Fair tuning budget for lightning-lm | PX | EXP-000 |
 | EXP-020 | Does the map data structure set the speed? (VoxelMap vs iVox inside SE(3)-LVIO) | P3 | EXP-000, EXP-016 |
-| EXP-021 | GenZ-LIO run-to-run noise and baseline | P0 | EXP-000 |
+| EXP-021 | GenZ-LIO run-to-run noise and baseline (concluded, but ran without the IMU time offset; superseded by EXP-022) | P0 | EXP-000 |
+| EXP-022 | GenZ-LIO run-to-run noise and baseline, with the IMU time offset (supersedes EXP-021) | P0 | EXP-000 |
 
 ## Backlog (not planned yet; needs a spec before work)
 

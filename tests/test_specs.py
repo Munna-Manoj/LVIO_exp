@@ -96,7 +96,7 @@ def test_erratum_keeps_the_frozen_hash(tmp_path):
 def test_headline_names_a_variant_only_beyond_noise():
     from lvx import report
     assert report._headline(spec.find("EXP-000")).startswith("noise floor")      # it compares nothing
-    assert report._headline(spec.find("EXP-021")).startswith("noise floor")      # no variants at all
+    assert report._headline(spec.find("EXP-021")) == "superseded by EXP-022"     # its numbers are replaced
 
 
 def test_genz_config_applies_existing_keys_only():
@@ -112,3 +112,4 @@ def test_genz_config_applies_existing_keys_only():
 def test_genz_command_is_pinned_and_self_explaining():
     cmd = runner.genz_command("arc-6", "0-3")
     assert "taskset -c 0-3" in cmd and '"$MISSION"' in cmd and "/home/" not in cmd
+    assert "--imu-dt -0.0065" in cmd                     # the protocol's per-mission offset (configs/missions.yaml)

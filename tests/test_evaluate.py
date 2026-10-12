@@ -64,3 +64,4 @@ def test_each_baseline_takes_its_floor_from_the_experiment_that_measured_it():
     assert evaluate.noise_source("se3lvio_S8") == "EXP-000"
     assert evaluate.noise_source("lightning_stock") == "EXP-000"
     assert evaluate.noise_source("not_a_baseline") is None
+    assert evaluate.noise_source("genz_stock") is None              # EXP-021 is superseded; EXP-022 not run yet

@@ -255,6 +255,9 @@ def _headline(exp: Experiment) -> str:
     summary = load_summary(exp)
     if not summary or exp.status != "concluded":
         return ""
+    later = sorted(e.id for e in all_experiments() if e.spec.get("supersedes") == exp.id)
+    if later:                                           # a newer experiment replaces this one's numbers
+        return f"superseded by {', '.join(later)}"
     if exp.id in NOISE_EXPERIMENTS:                     # it measures the floor; it compares nothing
         sd = max(c[summary["primary"]]["std"] for c in summary["cells"])
         return f"noise floor: σ ≤ {sd:.4f} {summary['primary']} per cell"
