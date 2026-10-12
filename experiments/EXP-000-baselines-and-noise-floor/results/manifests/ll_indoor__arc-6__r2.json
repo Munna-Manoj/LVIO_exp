@@ -1,0 +1,46 @@
+{
+  "lvx_version": "0.1.0",
+  "experiment": "EXP-000",
+  "run_id": "ll_indoor__arc-6__r2",
+  "variant": "ll_indoor",
+  "mission": "arc-6",
+  "repeat": 2,
+  "system": "lightning-lm",
+  "config": {
+    "baseline": "lightning_indoor",
+    "system": "lightning-lm",
+    "modes": [],
+    "overrides": {},
+    "overrides_file": "systems/lightning-lm/overrides/arc6_indoor.yaml",
+    "estimate": "estimate_prism",
+    "stress": null,
+    "config_hash": "95748270363a"
+  },
+  "command": "podman run --rm -v \"$LIGHTNING_WS\":/ws -v \"$BAG\":/bag:ro -v \"$OUT\":/out -w /ws/src/lightning-lm \"$IMAGE\" bash -c 'source /opt/ros/humble/setup.bash && source /ws/install/setup.bash && taskset -c 0-3 ./bin/run_lio_tum --input_bag /bag --config /out/config.yaml --output /out/arc-6_imu.tum --timing /out/timing.csv --log_dir /out' > \"$OUT/run.log\" 2>&1 && python3 systems/se3-lvio/tools/to_prism.py \"$MISSION/comfort_offline/calib.json\" \"$OUT/arc-6_imu.tum\" \"$OUT/estimate.tum\"",
+  "cwd": ".",
+  "env": {
+    "OUT": "this run's directory: <run_root>/<EXP>/<variant>/<mission>/r<k>",
+    "GRANDTOUR": "dataset `grandtour` (configs/datasets.yaml)",
+    "MISSION": "the mission folder inside $GRANDTOUR",
+    "IMAGE": "the system's container image (systems/systems.yaml; local tag in lvx.local.yaml)",
+    "PATH": "the caller's PATH, after the machine's own tool folders (lvx.local.yaml `path`, e.g. a docker shim)",
+    "LIGHTNING_WS": "the lightning-lm colcon workspace built by scripts/build_lightning.sh",
+    "BAG": "the mission as a ROS 2 bag: <run_root>/derived/lightning-bags/<mission>"
+  },
+  "repo": {
+    "commit": "fb04f8769c360267313926682318756f6586f56a",
+    "dirty": false
+  },
+  "system_git": {
+    "commit": "1325fed",
+    "dirty": false
+  },
+  "image_digest": "a7162e3aaa1c46aeb0a9a37386211365ec16daa9afa60b62a9b687080625879d",
+  "host": "reference",
+  "cpus": "0-3",
+  "status": "ok",
+  "started": "2026-10-08T14:42:39",
+  "ended": "2026-10-08T14:44:03",
+  "wall_s": 84.0,
+  "exit_code": 0
+}
