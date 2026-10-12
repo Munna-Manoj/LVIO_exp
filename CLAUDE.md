@@ -147,6 +147,8 @@ planned ──approve+freeze──▶ approved ──first run──▶ running 
   every commit.
 - **A failed or crashed run counts as data.** Record it in the report under
   "Failures"; never rerun until it passes.
+- **A typo in a frozen field** (a copied number, not a change of plan): `lvx exp erratum EXP-NNN --field … --says … --should-say … --source …`.
+  The frozen text and `spec.lock` stay as approved; the report prints the correction under them.
 - **To change the plan after freezing**, run `lvx exp new <slug> --supersedes EXP-NNN`. The old
   experiment is concluded `inconclusive` or abandoned, with a pointer to the new one.
 

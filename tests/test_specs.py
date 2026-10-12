@@ -78,3 +78,21 @@ def test_baseline_swap_variant_resolves_other_system():
     cfg = runner.resolve_config(e, "ll_stock")
     assert cfg["system"] == "lightning-lm"
     assert cfg["config_hash"] != runner.resolve_config(e, "baseline")["config_hash"]
+
+
+def test_erratum_keeps_the_frozen_hash(tmp_path):
+    e = spec.find("EXP-000")
+    tmp = spec.Experiment(tmp_path, copy.deepcopy(e.spec))
+    h = spec.frozen_hash(tmp.spec)
+    spec.add_erratum(tmp, "prediction", "S9c 0.8989", "S9c 0.8998", "test")
+    assert spec.frozen_hash(tmp.spec) == h
+    assert "S9c 0.8989" in tmp.spec["prediction"]                 # the frozen text is not touched
+    with pytest.raises(SystemExit):
+        spec.add_erratum(tmp, "prediction", "not in the field", "x", "test")
+    with pytest.raises(SystemExit):
+        spec.add_erratum(tmp, "title", "How", "Why", "test")         # not a frozen field
+
+
+def test_headline_names_a_variant_only_beyond_noise():
+    from lvx import report
+    assert report._headline(spec.find("EXP-000")).startswith("noise floor")      # it compares nothing

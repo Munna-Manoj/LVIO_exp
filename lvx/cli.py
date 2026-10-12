@@ -56,6 +56,13 @@ def cmd_exp_conclude(a: argparse.Namespace) -> None:
     report.write_index()
 
 
+def cmd_exp_erratum(a: argparse.Namespace) -> None:
+    e = spec.find(a.exp)
+    spec.add_erratum(e, a.field, a.says, a.should_say, a.source)
+    report.write_report(e)
+    print(f"{e.id}: erratum on {a.field} recorded; the frozen text and spec.lock are unchanged")
+
+
 def cmd_exp_abandon(a: argparse.Namespace) -> None:
     e = spec.find(a.exp)
     spec.set_status(e, "abandoned", reason=a.reason, **({"superseded_by": a.superseded_by} if a.superseded_by else {}))
@@ -236,6 +243,13 @@ def build_parser() -> argparse.ArgumentParser:
     x.add_argument("exp")
     x.add_argument("--verdict", required=True, choices=spec.VERDICTS)
     x.set_defaults(fn=cmd_exp_conclude)
+    x = exp.add_parser("erratum", help="record a typo in a frozen field (the field itself stays as frozen)")
+    x.add_argument("exp")
+    x.add_argument("--field", required=True)
+    x.add_argument("--says", required=True, help="the wrong text, exactly as it appears in the field")
+    x.add_argument("--should-say", required=True)
+    x.add_argument("--source", required=True, help="the evidence for the correction")
+    x.set_defaults(fn=cmd_exp_erratum)
     x = exp.add_parser("abandon")
     x.add_argument("exp")
     x.add_argument("--reason", required=True)
