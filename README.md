@@ -90,7 +90,7 @@ flowchart LR
 | [EXP-019](docs/experiments/EXP-019-lightning-tuning-fairness.md) | Is lightning-lm tuned fairly? | PX | 🗒️ planned |  |  |
 | [EXP-020](docs/experiments/EXP-020-map-structure-speed.md) | Does the map data structure set the speed of SE(3)-LVIO? | P3 | 🗒️ planned |  |  |
 | [EXP-021](docs/experiments/EXP-021-genz-lio-baseline-and-noise-floor.md) | How large is GenZ-LIO's run-to-run noise, and does the harness run it correctly? | P0 | ✅ concluded | 🟢 adopt | superseded by EXP-022 |
-| [EXP-022](docs/experiments/EXP-022-genz-lio-baseline-with-imu-offset.md) | How large is GenZ-LIO's run-to-run noise, with the protocol's IMU time offset? | P0 | 🗒️ planned |  |  |
+| [EXP-022](docs/experiments/EXP-022-genz-lio-baseline-with-imu-offset.md) | How large is GenZ-LIO's run-to-run noise, with the protocol's IMU time offset? | P0 | 🔒 approved (pre-registered) |  |  |
 <!-- lvx:end index -->
 
 ## The three systems

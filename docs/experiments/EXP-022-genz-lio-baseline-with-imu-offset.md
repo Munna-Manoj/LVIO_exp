@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `genz-lio` · **Depends on:** EXP-000
+**Status:** 🔒 approved (pre-registered) · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -17,7 +17,7 @@
 | **Falsified if** | any run has pose_coverage below 0.99, any run fails, or ARC-6 ATE is 3 cm or more. Each means the harness or the config is wrong for GenZ-LIO (frame, extrinsic, timestamps, or core budget). |
 | **Decision rule** | pass (verdict adopt = GenZ-LIO runs correctly in the harness, under the full protocol) if all 15 runs are ok with pose_coverage ≥ 0.99 and the ARC-6 mean ATE is below 3 cm; otherwise reject and fix the runner or config before any experiment uses GenZ-LIO. The σ per mission from this experiment is GenZ-LIO's noise floor for all later experiments (ADR-0004, ADR-0012). |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>Fields above are pre-registered (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
@@ -38,7 +38,7 @@
 
 <!-- lvx:begin results -->
 > [!NOTE]
-> Not run yet (status `planned`). Numbers appear here after `lvx eval EXP-022`.
+> Not run yet (status `approved`). Numbers appear here after `lvx eval EXP-022`.
 <!-- lvx:end results -->
 
 TODO up to 5 observations, each pointing at a table cell or figure.
