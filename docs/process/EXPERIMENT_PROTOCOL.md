@@ -58,7 +58,7 @@ stateDiagram-v2
 
 ## 4. Measurement
 
-- **ATE:** COMFORT/Codabench rule in the prism frame, the same code for both systems (ADR-0002).
+- **ATE:** COMFORT/Codabench rule in the prism frame, the same code for every system (ADR-0002).
 - **Timing:** each system's per-scan `timing.csv` with columns `stamp, ms, rss_mb`, cores pinned
   with `taskset`.
 - **Noise floor:** EXP-000, at least 5 repeats per baseline and mission (ADR-0004). An effect counts

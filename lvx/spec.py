@@ -217,7 +217,7 @@ def validate(exp: Experiment, strict_todo: bool = False) -> List[str]:
         err.append(f"phase '{s['phase']}' not in {sorted(PHASES)}")
     if s["status"] not in STATUSES:
         err.append(f"status '{s['status']}' not in {STATUSES}")
-    if s["system"] not in list(config.systems()) + ["both"]:
+    if s["system"] not in list(config.systems()) + ["both", "all"]:
         err.append(f"system '{s['system']}' unknown")
     try:
         config.baseline(s["baseline"])

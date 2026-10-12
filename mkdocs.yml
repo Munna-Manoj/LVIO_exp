@@ -1,5 +1,5 @@
 site_name: LVIO_exp
-site_description: A pre-registered ablation study of LiDAR-inertial-visual odometry (SE(3)-LVIO vs lightning-lm).
+site_description: A pre-registered ablation study of LiDAR-inertial-visual odometry (SE(3)-LVIO, lightning-lm and GenZ-LIO).
 site_url: https://munna-manoj.github.io/LVIO_exp/
 repo_url: https://github.com/Munna-Manoj/LVIO_exp
 repo_name: Munna-Manoj/LVIO_exp

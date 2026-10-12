@@ -1,0 +1,5 @@
+# GenZ-LIO, upstream's Hesai template with only the platform keys changed (fork: lvio_exp/grandtour_xt32.yaml).
+system: genz-lio
+title: "GenZ-LIO · LIO stock"
+overrides: {}
+reference_result: "not measured yet (EXP-021)"

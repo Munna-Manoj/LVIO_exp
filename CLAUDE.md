@@ -160,7 +160,7 @@ planned ──approve+freeze──▶ approved ──first run──▶ running 
   - COMFORT/Codabench ATE (evo `point_distance`, rigid alignment, no scale, scorer `t_max` rule), in the **prism frame**.
   - Prism transform: `T_imu_prism` from `/tf_static`, plus the fixed lever-arm correction.
   - Per-mission IMU time offsets from `configs/missions.yaml`.
-  - Both systems go through the same conversion and the same `lvx eval`.
+  - Every system goes through the same conversion and the same `lvx eval`.
 - **Mission split:** tune on `dev`, report on `test` (ADR-0005). Never pick a variant by looking at
   `test` numbers. ARC-6 is in `dev`.
 - **Noise floor first.** EXP-000 measures run-to-run spread per system and mission (≥5 repeats).
