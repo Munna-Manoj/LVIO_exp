@@ -1,0 +1,47 @@
+{
+  "lvx_version": "0.1.0",
+  "experiment": "EXP-000",
+  "run_id": "s9a__arc-6__r4",
+  "variant": "s9a",
+  "mission": "arc-6",
+  "repeat": 4,
+  "system": "se3-lvio",
+  "config": {
+    "baseline": "se3lvio_S9a",
+    "system": "se3-lvio",
+    "modes": [
+      "lio_only",
+      "lidar_multi"
+    ],
+    "overrides": {},
+    "overrides_file": null,
+    "estimate": "estimate_prism",
+    "stress": null,
+    "config_hash": "b6e1384f54f5"
+  },
+  "command": "DATA=\"$GRANDTOUR\" CPUSET=0-3 IMAGE=\"$IMAGE\" bash scripts/run_se3lio.sh arc-6 --tag EXP-000-s9a__arc-6__r4 --lio-only --lidar multi",
+  "cwd": "systems/se3-lvio",
+  "env": {
+    "OUT": "this run's directory: <run_root>/<EXP>/<variant>/<mission>/r<k>",
+    "GRANDTOUR": "dataset `grandtour` (configs/datasets.yaml)",
+    "MISSION": "the mission folder inside $GRANDTOUR",
+    "IMAGE": "the system's container image (systems/systems.yaml; local tag in lvx.local.yaml)",
+    "PATH": "the caller's PATH, after the machine's own tool folders (lvx.local.yaml `path`, e.g. a docker shim)"
+  },
+  "repo": {
+    "commit": "fb04f8769c360267313926682318756f6586f56a",
+    "dirty": false
+  },
+  "system_git": {
+    "commit": "9bba0e4e06d8662d3c0198e239da12967f687069",
+    "dirty": false
+  },
+  "image_digest": "8cd9b6c6d42ab3365143f6e23d0550deacdde21edc9f1c7c5551714e5e8ce5eb",
+  "host": "reference",
+  "cpus": "0-3",
+  "status": "ok",
+  "started": "2026-10-08T11:47:51",
+  "ended": "2026-10-08T11:50:27",
+  "wall_s": 155.9,
+  "exit_code": 0
+}
