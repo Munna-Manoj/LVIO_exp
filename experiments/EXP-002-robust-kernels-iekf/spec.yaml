@@ -1,51 +1,72 @@
 id: EXP-002
 slug: robust-kernels-iekf
-title: Does a robust kernel in the IEKF update beat hard gating alone?
+title: Does a robust kernel in the scan update beat a hard limit alone?
 phase: P1
 status: planned
 created: '2026-10-07'
 system:
 - se3-lvio
 - genz-lio
+- lightning-lm
 depends_on:
 - EXP-001
 supersedes: null
 host: reference
-question: Does down-weighting residuals with Huber or Cauchy inside each IEKF iteration (IRLS) reduce
-  ATE compared with gating alone?
-hypothesis: Residuals near the gate (partial occlusion, smoke edges, thin structure) are not fully wrong;
-  smooth weights keep their information without letting them pull the estimate.
-prediction: 'Small gains (< 0.05 cm) on clean missions, larger on ARC-6 near smoke; Cauchy ≥ Huber. GenZ-LIO:
-  within noise; its two gates (plane and point-to-point) already reject most outliers.'
-falsified_if: neither kernel changes ATE beyond noise on any mission, or both make it worse.
+question: Does down-weighting points with large residuals (a robust kernel) improve ATE compared with
+  a hard limit alone?
+hypothesis: The hard limit treats a point just inside it like a perfect match. A robust kernel gives such
+  a point a smaller weight, so smoke and clutter that pass the limit pull the pose less.
+prediction: 'SE(3)-LVIO: Huber and Cauchy weights change ATE by less than the noise floor on EIG-2 and
+  SNOW-3, and improve ATE on ARC-6 (smoke). GenZ-LIO: ATE changes by less than the noise floor, because
+  GenZ-LIO already has two limits (point-to-plane and point-to-point). lightning-lm, on ARC-6: better,
+  because lightning-lm gives every residual the same weight 1.0.'
+falsified_if: A kernel is worse than its system's stock config by more than the noise floor on ARC-6.
 baseline: se3lvio_S8
 variants:
 - id: huber
-  change: Huber IRLS weight, k = 1.345σ
+  change: 'SE(3)-LVIO: Huber weight, k = 1.345σ'
   overrides:
     lio.robust_kernel: huber
 - id: cauchy
-  change: Cauchy IRLS weight, c = 2.385σ
+  change: 'SE(3)-LVIO: Cauchy weight, c = 2.385σ'
   overrides:
     lio.robust_kernel: cauchy
 - id: genz
-  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  change: GenZ-LIO's stock config. The GenZ-LIO variants are compared with this one.
   baseline: genz_stock
 - id: genz_huber
-  change: GenZ-LIO Huber IRLS weight, k = 1.345σ
+  change: 'GenZ-LIO: Huber weight, k = 1.345σ'
   baseline: genz_stock
   reference: genz
   overrides:
     lvio_exp.robust_kernel: huber
 - id: genz_cauchy
-  change: GenZ-LIO Cauchy IRLS weight, c = 2.385σ
+  change: 'GenZ-LIO: Cauchy weight, c = 2.385σ'
   baseline: genz_stock
   reference: genz
   overrides:
     lvio_exp.robust_kernel: cauchy
-code_change: 'new flag robust_kernel {none,huber,cauchy} (default none) applied to R_(i) in measurementModel
-  each iteration; GenZ-LIO: the same flag as `lvio_exp.robust_kernel` in the fork (default off = upstream),
-  added before freezing'
+- id: lightning
+  change: lightning-lm's indoor config. The lightning-lm variants are compared with this one.
+  baseline: lightning_indoor
+- id: lightning_huber
+  change: 'lightning-lm: Huber weight, k = 1.345 s'
+  baseline: lightning_indoor
+  reference: lightning
+  overrides:
+    lvio_exp.robust_kernel: huber
+- id: lightning_cauchy
+  change: 'lightning-lm: Cauchy weight, c = 2.385 s'
+  baseline: lightning_indoor
+  reference: lightning
+  overrides:
+    lvio_exp.robust_kernel: cauchy
+code_change: 'SE(3)-LVIO: new flag `robust_kernel` {none, huber, cauchy} (default none), applied to each
+  residual''s weight in measurementModel. GenZ-LIO: new flag `robust_kernel` in its fork, the same values,
+  applied to both residual types. lightning-lm: new flag `robust_kernel` in its fork, the same values;
+  the scale s is the scan''s robust residual spread (1.4826 × the median absolute residual), because lightning-lm
+  has no per-point σ. The flag is added to the fork before this experiment is frozen; its default reproduces
+  the stock behaviour.'
 missions:
   set: dev
 repeats: 3
@@ -55,11 +76,62 @@ metrics:
   - ate_max_cm
   - ms_p95
 stress: null
-decision_rule: 'adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
-  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
-  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system
-  separately: SE(3)-LVIO''s arms against `baseline`, GenZ-LIO''s against `genz`, each with its own noise
-  floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects
-  for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum).'
+decision_rule: 'Each system is run with and without a robust kernel (SE(3)-LVIO: `huber or cauchy` with
+  it, `baseline` without it; GenZ-LIO: `genz_huber or genz_cauchy` with it, `genz` without it; lightning-lm:
+  `lightning_huber or lightning_cauchy` with it, `lightning` without it). On each mission, the side with
+  a robust kernel is better if its ATE is lower by more than the noise floor, and worse if its ATE is
+  higher by more than the noise floor. A robust kernel helps a system if the side with it is better on
+  at least two of the three dev missions, worse on none, and its ms_p95 is less than 10 % higher. A robust
+  kernel hurts a system if the side with it is worse on any mission. For lightning-lm only ARC-6 is judged:
+  a robust kernel helps lightning-lm if the side with it is better on ARC-6 with less than 10 % more ms_p95,
+  and hurts lightning-lm if it is worse on ARC-6. Verdict: adopt if a robust kernel helps every system
+  that takes part, reject if it hurts every one, and inconclusive otherwise. The summary at the top of
+  the page gives the result for each system. A system''s better kernel (lower mean ATE) stands for that
+  system.'
 learn_links:
 - docs/explain/outliers-in-an-iekf.md
+terms:
+- term: ATE
+  meaning: 'Absolute trajectory error: the root-mean-square distance between the estimated trajectory
+    and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better.'
+- term: scan time (ms_p95)
+  meaning: 'The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile
+    over a mission: 95 % of the scans take less than this.'
+- term: noise floor
+  meaning: 'The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation
+    of ATE between identical runs of that system''s stock config (EXP-000 for SE(3)-LVIO and lightning-lm,
+    EXP-022 for GenZ-LIO). It is never less than 0.01 cm.'
+- term: variant
+  meaning: One configuration that is run. Each variant differs from the variant it is compared with in
+    exactly one change.
+- term: dev missions
+  meaning: 'The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier
+    climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports.'
+- term: '`baseline` (S8)'
+  meaning: 'SE(3)-LVIO''s stock config `se3lvio_S8`: one LiDAR (the Hesai XT32) and the IMU, no camera,
+    no backend.'
+- term: '`genz`'
+  meaning: 'GenZ-LIO''s stock config `genz_stock`: upstream''s Hesai settings, with only the sensor calibration
+    and the 4-core limit set.'
+- term: '`lightning`'
+  meaning: 'lightning-lm''s config `lightning_indoor`: upstream''s settings with 0.2 m grids. It is the
+    better of lightning-lm''s two configs on ARC-6 in EXP-000 (1.41 cm against 1.64 cm).'
+- term: lightning-lm on the field missions
+  meaning: 'Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning`: 294 cm and
+    41 cm). A lightning-lm variant is therefore judged on ARC-6 only. Its EIG-2 and SNOW-3 numbers are
+    still reported.'
+- term: robust kernel
+  meaning: A weight that shrinks as a residual grows. Huber keeps full weight up to k and then falls as
+    k / |r|. Cauchy falls smoothly as 1 / (1 + (r / c)²).
+- term: residual (r)
+  meaning: The distance between a scan point and its matched plane (or point) in the map.
+participation:
+- system: se3-lvio
+  takes_part: true
+  how: Huber and Cauchy weights, scaled by each point's σ.
+- system: genz-lio
+  takes_part: true
+  how: Huber and Cauchy weights, scaled by each point's σ.
+- system: lightning-lm
+  takes_part: true
+  how: Huber and Cauchy weights, scaled by the scan's robust residual spread.

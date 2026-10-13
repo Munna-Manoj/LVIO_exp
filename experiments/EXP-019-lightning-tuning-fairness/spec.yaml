@@ -9,26 +9,27 @@ depends_on:
 - EXP-000
 supersedes: null
 host: reference
-question: With the same dev-split tuning budget SE(3)-LVIO had, how close does lightning-lm get?
-hypothesis: Most of the 0.6-0.8 cm ARC-6 gap comes from map representation and residual weighting, not
-  from tuning; tuning closes at most a third of it.
-prediction: Best lightning-lm variant within 0.3 cm of its indoor baseline.
-falsified_if: a tuned lightning-lm matches SE(3)-LVIO S8 within noise.
+question: With the same tuning budget on the dev missions that SE(3)-LVIO had, how close does lightning-lm
+  get to SE(3)-LVIO?
+hypothesis: Most of the ARC-6 gap between lightning-lm (1.41 cm) and SE(3)-LVIO S8 (0.81 cm) comes from
+  the map and the residual weights, not from tuning. Tuning closes at most a third of the gap.
+prediction: The best tuned variant is within 0.3 cm of lightning-lm's indoor config on ARC-6.
+falsified_if: A tuned lightning-lm matches SE(3)-LVIO S8's ARC-6 ATE within the noise floor.
 baseline: lightning_indoor
 variants:
 - id: grid_0p1
-  change: 0.1 m scan/map/iVox grid
+  change: 'lightning-lm: iVox grid 0.1 m (indoor config 0.2 m)'
   overrides:
     fasterlio.ivox_grid_resolution: 0.1
 - id: icp_w_1000
-  change: plane_icp_weight 1000
+  change: 'lightning-lm: plane_icp_weight 1000 (indoor config 300)'
   overrides:
     fasterlio.plane_icp_weight: 1000.0
 - id: filter_1
-  change: point_filter_num 1
+  change: 'lightning-lm: keep every point before downsampling (point_filter_num 1, indoor config 2)'
   overrides:
     fasterlio.point_filter_num: 1
-code_change: none (config only)
+code_change: None (config only).
 missions:
   set: dev
 repeats: 3
@@ -38,7 +39,45 @@ metrics:
   - ate_max_cm
   - ms_p95
 stress: null
-decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
-  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
-  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+decision_rule: Only ARC-6 is judged. Adopt the tuned variant with the lowest ARC-6 ATE as lightning-lm's
+  tuned config if it is better than the indoor config by more than the noise floor with less than 10 %
+  more ms_p95. Reject (the indoor config stays) if every variant is worse on ARC-6. Otherwise inconclusive.
+  A variant that brings EIG-2 or SNOW-3 below 10 cm is reported as a finding.
 learn_links: []
+terms:
+- term: ATE
+  meaning: 'Absolute trajectory error: the root-mean-square distance between the estimated trajectory
+    and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better.'
+- term: scan time (ms_p95)
+  meaning: 'The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile
+    over a mission: 95 % of the scans take less than this.'
+- term: noise floor
+  meaning: 'The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation
+    of ATE between identical runs of that system''s stock config (EXP-000 for SE(3)-LVIO and lightning-lm,
+    EXP-022 for GenZ-LIO). It is never less than 0.01 cm.'
+- term: variant
+  meaning: One configuration that is run. Each variant differs from the variant it is compared with in
+    exactly one change.
+- term: dev missions
+  meaning: 'The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier
+    climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports.'
+- term: lightning-lm on the field missions
+  meaning: 'Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning`: 294 cm and
+    41 cm). A lightning-lm variant is therefore judged on ARC-6 only. Its EIG-2 and SNOW-3 numbers are
+    still reported.'
+- term: '`baseline` (lightning)'
+  meaning: 'lightning-lm''s config `lightning_indoor`: upstream''s settings with 0.2 m grids.'
+- term: iVox grid
+  meaning: The cell size of lightning-lm's hashed voxel map, used to find a point's 5 nearest map points.
+- term: plane_icp_weight
+  meaning: A factor on the weight of all point-to-plane residuals in lightning-lm's scan update.
+participation:
+- system: se3-lvio
+  takes_part: false
+  how: SE(3)-LVIO's stock config was tuned by its authors on these sensors; it is the comparison point.
+- system: genz-lio
+  takes_part: false
+  how: GenZ-LIO's tuning fairness is EXP-026.
+- system: lightning-lm
+  takes_part: true
+  how: Three config changes, one at a time.

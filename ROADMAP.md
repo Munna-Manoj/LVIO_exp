@@ -113,31 +113,31 @@ Specs are drafted (`planned`). Each needs user approval + `lvx exp freeze` befor
 | ID | Question | Phase | Depends on |
 |---|---|---|---|
 | EXP-000 | Run-to-run noise and baseline reproduction | P0 | – |
-| EXP-001 | Width of the point-to-plane gate | P1 | EXP-000 |
-| EXP-002 | Huber / Cauchy IRLS inside the IEKF | P1 | EXP-001 |
-| EXP-003 | GNC-TLS annealed over IEKF iterations | P1 | EXP-002 |
-| EXP-004 | Robust photometric residuals | P5 | EXP-000 |
-| EXP-005 | Degeneracy projection (from lightning-lm) | P2 | EXP-000 |
-| EXP-006 | Step limits + covariance hygiene (from lightning-lm) | P2 | EXP-000 |
-| EXP-007 | Smoke filter (intensity + range) | P3 | EXP-000 |
-| EXP-008 | Keyframe-only map insertion (from lightning-lm) | P3 | EXP-000 |
-| EXP-009 | SE(3) vs SO(3)×R³ retraction | P4 | EXP-000 |
-| EXP-010 | 17-dim vs 12-dim state | P4 | EXP-000 |
-| EXP-011 | Online IMU time offset | P4 | EXP-000 |
-| EXP-012 | Image quality gate | P5 | EXP-004 |
-| EXP-013 | Affine brightness compensation | P5 | EXP-004 |
-| EXP-014 | Drift check + loop closure in the backend | P5 | EXP-000 |
-| EXP-015 | GNC pose graph under injected false loops | P6 | EXP-014 |
-| EXP-016 | Point budget: accuracy vs time | P7 | EXP-000 |
-| EXP-017 | Four-core real-time budget, all three systems | P7 | EXP-016 |
-| EXP-018 | Stress suite, all three systems | P6 | EXP-000 |
+| EXP-001 | Width of the residual limit (all three systems) | P1 | EXP-000 |
+| EXP-002 | Huber and Cauchy weights in the scan update (all three systems) | P1 | EXP-001 |
+| EXP-003 | GNC-TLS weights over the update iterations (all three systems) | P1 | EXP-002 |
+| EXP-004 | Robust weights on camera residuals (SE(3)-LVIO only: the others have no camera) | P5 | EXP-000 |
+| EXP-005 | Skipping poorly constrained directions, lightning-lm's projection (all three systems) | P2 | EXP-000 |
+| EXP-006 | lightning-lm's update safeguards: step limit and covariance hygiene (all three systems) | P2 | EXP-000 |
+| EXP-007 | Smoke filter: weak returns close to the robot (all three systems) | P3 | EXP-000 |
+| EXP-008 | Keyframe-only map updates, as in lightning-lm (all three systems) | P3 | EXP-000 |
+| EXP-009 | SE(3) against SO(3)×R³ pose update (all three systems) | P4 | EXP-000 |
+| EXP-010 | Estimating accelerometer bias and gravity online (all three systems) | P4 | EXP-000 |
+| EXP-011 | Online IMU time offset (all three systems) | P4 | EXP-000 |
+| EXP-012 | Skipping bad camera frames (SE(3)-LVIO only) | P5 | EXP-004 |
+| EXP-013 | Camera brightness compensation (SE(3)-LVIO only) | P5 | EXP-004 |
+| EXP-014 | Drift check and loop closure (SE(3)-LVIO and lightning-lm; GenZ-LIO has no backend) | P5 | EXP-000 |
+| EXP-015 | GNC pose graph under injected false loops (SE(3)-LVIO) | P6 | EXP-014 |
+| EXP-016 | Point budget: accuracy against scan time (all three systems) | P7 | EXP-000 |
+| EXP-017 | Four-core real-time budget (all three systems) | P7 | EXP-016 |
+| EXP-018 | Stress suite (all three systems) | P6 | EXP-000 |
 | EXP-019 | Fair tuning budget for lightning-lm | PX | EXP-000 |
-| EXP-020 | Does the map data structure set the speed? (VoxelMap vs iVox inside SE(3)-LVIO) | P3 | EXP-000, EXP-016 |
+| EXP-020 | Map data structure: VoxelMap against iVox (SE(3)-LVIO and lightning-lm swap maps) | P3 | EXP-000, EXP-016 |
 | EXP-021 | GenZ-LIO run-to-run noise and baseline (concluded, but ran without the IMU time offset; superseded by EXP-022) | P0 | EXP-000 |
 | EXP-022 | GenZ-LIO run-to-run noise and baseline, with the IMU time offset (supersedes EXP-021) | P0 | EXP-000 |
-| EXP-023 | Scale-aware point budget (GenZ-LIO's idea), in SE(3)-LVIO and GenZ-LIO | P7 | EXP-000, EXP-022 |
-| EXP-024 | Point-to-point residuals for points without a plane (GenZ-LIO's hybrid metric), in both | P3 | EXP-000, EXP-022 |
-| EXP-025 | Thinning of GenZ-LIO's point-to-point candidates | P3 | EXP-022 |
+| EXP-023 | Point budget that grows with the scene's size, GenZ-LIO's idea (all three systems) | P7 | EXP-000, EXP-022 |
+| EXP-024 | Point-to-point residuals for points without a plane, GenZ-LIO's idea (all three systems) | P3 | EXP-000, EXP-022 |
+| EXP-025 | Thinning of GenZ-LIO's point-to-point candidates (GenZ-LIO only) | P3 | EXP-022 |
 | EXP-026 | Fair tuning budget for GenZ-LIO | PX | EXP-022 |
 
 ## Backlog (not planned yet; needs a spec before work)

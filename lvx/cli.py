@@ -171,7 +171,8 @@ def cmd_config(a: argparse.Namespace) -> None:
         print(yaml.safe_dump({k: v for k, v in config.load().items() if k != 'private_tokens'}, sort_keys=False))
         return
     getters = {"data-root": lambda n: config.data_root(), "run-root": lambda n: config.run_root(),
-               "dataset": config.dataset_dir, "system-root": config.system_root, "image": config.image}
+               "dataset": config.dataset_dir, "system-root": config.system_root, "image": config.image,
+               "source": config.source}
     print(getters[a.key](a.name))
 
 
@@ -296,7 +297,7 @@ def build_parser() -> argparse.ArgumentParser:
     x.set_defaults(fn=cmd_init)
     x = sub.add_parser("config", help="show the resolved machine configuration")
     x.add_argument("action", choices=["show", "get"])
-    x.add_argument("key", nargs="?", choices=["data-root", "run-root", "dataset", "system-root", "image"])
+    x.add_argument("key", nargs="?", choices=["data-root", "run-root", "dataset", "system-root", "image", "source"])
     x.add_argument("name", nargs="?")
     x.set_defaults(fn=cmd_config)
 

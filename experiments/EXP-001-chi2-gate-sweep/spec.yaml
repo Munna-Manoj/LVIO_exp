@@ -1,70 +1,105 @@
 id: EXP-001
 slug: chi2-gate-sweep
-title: How wide should the point-to-plane residual gate be?
+title: How wide should the residual gate be?
 phase: P1
 status: planned
 created: '2026-10-07'
 system:
 - se3-lvio
 - genz-lio
+- lightning-lm
 depends_on:
 - EXP-000
 supersedes: null
 host: reference
-question: Is the hard 3σ point-to-plane gate the right width, or does a tighter/looser gate change ATE?
-hypothesis: The IMU prior is good enough that 3σ already separates inliers; tighter gates lose good constraints,
-  looser gates admit smoke and clutter.
-prediction: '2.5σ-4σ within noise of 3σ; 2σ worse (fewer inliers), 5σ slightly worse on smoky ARC-6. GenZ-LIO:
-  2.5σ-4σ within noise of 3σ too; 2σ hurts less than in SE(3)-LVIO, because a point the plane gate rejects
-  falls through to GenZ-LIO''s point-to-point residual instead of being lost.'
-falsified_if: a gate other than 3σ improves ATE beyond 2σ noise on most missions.
+question: Each system drops a LiDAR point from the scan update when the point is too far from its matched
+  plane. Does a tighter or a looser limit than the stock one change ATE?
+hypothesis: The IMU predicts the pose well enough that the stock limit already separates good matches
+  from bad ones. A tighter limit drops good matches, so ATE gets worse. A looser limit lets in points
+  on smoke and clutter, so ATE gets slightly worse on ARC-6.
+prediction: 'SE(3)-LVIO and GenZ-LIO: ATE changes by less than the noise floor at 2.5σ and 4σ. ATE is
+  worse at 2σ, and slightly worse at 5σ on ARC-6. GenZ-LIO loses less at 2σ than SE(3)-LVIO, because GenZ-LIO
+  gives a point that fails the plane limit a point-to-point residual instead of dropping it. lightning-lm,
+  on ARC-6: the same pattern, with the bound scaled by the same factors.'
+falsified_if: In SE(3)-LVIO or GenZ-LIO, a limit other than the stock one improves ATE by more than the
+  noise floor on at least two of the three dev missions.
 baseline: se3lvio_S8
 variants:
 - id: gate_2p0
-  change: residual gate 2.0σ (baseline 3.0σ)
+  change: 'SE(3)-LVIO: limit 2.0σ (stock 3.0σ)'
   overrides:
     lio.residual_gate_sigma: 2.0
 - id: gate_2p5
-  change: residual gate 2.5σ (baseline 3.0σ)
+  change: 'SE(3)-LVIO: limit 2.5σ (stock 3.0σ)'
   overrides:
     lio.residual_gate_sigma: 2.5
 - id: gate_4p0
-  change: residual gate 4.0σ (baseline 3.0σ)
+  change: 'SE(3)-LVIO: limit 4.0σ (stock 3.0σ)'
   overrides:
     lio.residual_gate_sigma: 4.0
 - id: gate_5p0
-  change: residual gate 5.0σ (baseline 3.0σ)
+  change: 'SE(3)-LVIO: limit 5.0σ (stock 3.0σ)'
   overrides:
     lio.residual_gate_sigma: 5.0
 - id: genz
-  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  change: GenZ-LIO's stock config. The GenZ-LIO variants are compared with this one.
   baseline: genz_stock
 - id: genz_gate_2p0
-  change: GenZ-LIO point-to-plane gate 2.0σ (stock 3.0σ)
+  change: 'GenZ-LIO: plane limit 2.0σ (stock 3.0σ)'
   baseline: genz_stock
   reference: genz
   overrides:
     mapping.sigma_num: 2.0
 - id: genz_gate_2p5
-  change: GenZ-LIO point-to-plane gate 2.5σ (stock 3.0σ)
+  change: 'GenZ-LIO: plane limit 2.5σ (stock 3.0σ)'
   baseline: genz_stock
   reference: genz
   overrides:
     mapping.sigma_num: 2.5
 - id: genz_gate_4p0
-  change: GenZ-LIO point-to-plane gate 4.0σ (stock 3.0σ)
+  change: 'GenZ-LIO: plane limit 4.0σ (stock 3.0σ)'
   baseline: genz_stock
   reference: genz
   overrides:
     mapping.sigma_num: 4.0
 - id: genz_gate_5p0
-  change: GenZ-LIO point-to-plane gate 5.0σ (stock 3.0σ)
+  change: 'GenZ-LIO: plane limit 5.0σ (stock 3.0σ)'
   baseline: genz_stock
   reference: genz
   overrides:
     mapping.sigma_num: 5.0
-code_change: 'new flag residual_gate_sigma (default 3.0, previously hard-coded in core/state_update.cpp
-  BuildResidualListOMP); GenZ-LIO: none (existing key mapping.sigma_num)'
+- id: lightning
+  change: lightning-lm's indoor config. The lightning-lm variants are compared with this one.
+  baseline: lightning_indoor
+- id: lightning_bound_0p67
+  change: 'lightning-lm: residual bound × 0.67 (the same ratio as 2σσ against 3σ)'
+  baseline: lightning_indoor
+  reference: lightning
+  overrides:
+    lvio_exp.residual_bound_scale: 0.6667
+- id: lightning_bound_0p83
+  change: 'lightning-lm: residual bound × 0.83 (the same ratio as 2.5σσ against 3σ)'
+  baseline: lightning_indoor
+  reference: lightning
+  overrides:
+    lvio_exp.residual_bound_scale: 0.8333
+- id: lightning_bound_1p33
+  change: 'lightning-lm: residual bound × 1.33 (the same ratio as 4σσ against 3σ)'
+  baseline: lightning_indoor
+  reference: lightning
+  overrides:
+    lvio_exp.residual_bound_scale: 1.3333
+- id: lightning_bound_1p67
+  change: 'lightning-lm: residual bound × 1.67 (the same ratio as 5σσ against 3σ)'
+  baseline: lightning_indoor
+  reference: lightning
+  overrides:
+    lvio_exp.residual_bound_scale: 1.6667
+code_change: 'SE(3)-LVIO: new flag `residual_gate_sigma` (default 3.0; the 3σ was hard-coded in core/state_update.cpp
+  BuildResidualListOMP). GenZ-LIO: none, the existing key `mapping.sigma_num`. lightning-lm: new flag
+  `residual_bound_scale` in its fork, a factor on its fixed bound |residual| < √range / 9 (laser_mapping.cc),
+  default 1.0. The flag is added to the fork before this experiment is frozen; its default reproduces
+  the stock behaviour.'
 missions:
   set: dev
 repeats: 3
@@ -75,11 +110,59 @@ metrics:
   - inliers_mean
   - ms_p95
 stress: null
-decision_rule: 'adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
-  noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
-  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system
-  separately: SE(3)-LVIO''s arms against `baseline`, GenZ-LIO''s against `genz`, each with its own noise
-  floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects
-  for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum).'
+decision_rule: 'For each system separately, compare every limit with the stock limit, mission by mission.
+  A limit qualifies if it is better than the stock limit (ATE lower by more than the noise floor) on at
+  least two of the three dev missions, worse on none, and its ms_p95 is less than 10 % higher. For lightning-lm
+  only ARC-6 is judged, so a lightning-lm limit qualifies if it is better on ARC-6. A system adopts the
+  qualifying limit with the lowest mean ATE. A system keeps its stock limit (reject) if every other limit
+  is worse on at least one judged mission; otherwise the result for that system is inconclusive. Verdict:
+  adopt if every system adopts a new limit, reject if every system keeps its stock limit, and inconclusive
+  otherwise.'
 learn_links:
 - docs/explain/outliers-in-an-iekf.md
+terms:
+- term: ATE
+  meaning: 'Absolute trajectory error: the root-mean-square distance between the estimated trajectory
+    and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better.'
+- term: scan time (ms_p95)
+  meaning: 'The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile
+    over a mission: 95 % of the scans take less than this.'
+- term: noise floor
+  meaning: 'The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation
+    of ATE between identical runs of that system''s stock config (EXP-000 for SE(3)-LVIO and lightning-lm,
+    EXP-022 for GenZ-LIO). It is never less than 0.01 cm.'
+- term: variant
+  meaning: One configuration that is run. Each variant differs from the variant it is compared with in
+    exactly one change.
+- term: dev missions
+  meaning: 'The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier
+    climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports.'
+- term: '`baseline` (S8)'
+  meaning: 'SE(3)-LVIO''s stock config `se3lvio_S8`: one LiDAR (the Hesai XT32) and the IMU, no camera,
+    no backend.'
+- term: '`genz`'
+  meaning: 'GenZ-LIO''s stock config `genz_stock`: upstream''s Hesai settings, with only the sensor calibration
+    and the 4-core limit set.'
+- term: '`lightning`'
+  meaning: 'lightning-lm''s config `lightning_indoor`: upstream''s settings with 0.2 m grids. It is the
+    better of lightning-lm''s two configs on ARC-6 in EXP-000 (1.41 cm against 1.64 cm).'
+- term: lightning-lm on the field missions
+  meaning: 'Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning`: 294 cm and
+    41 cm). A lightning-lm variant is therefore judged on ARC-6 only. Its EIG-2 and SNOW-3 numbers are
+    still reported.'
+- term: σ (in a limit)
+  meaning: The expected spread of a point's distance to its plane, computed from the point's and the plane's
+    uncertainty. A 3σ limit drops a point more than 3 such spreads from its plane.
+- term: lightning-lm's bound
+  meaning: lightning-lm has no σ. It drops a point whose distance to the plane is more than √(range) /
+    9, with the range in metres. Its variants scale that bound.
+participation:
+- system: se3-lvio
+  takes_part: true
+  how: 'Its 3σ point-to-plane limit is swept: 2σ, 2.5σ, 4σ, 5σ.'
+- system: genz-lio
+  takes_part: true
+  how: Its point-to-plane limit `mapping.sigma_num` is swept with the same values.
+- system: lightning-lm
+  takes_part: true
+  how: Its fixed bound is scaled by the same ratios (0.67, 0.83, 1.33, 1.67).

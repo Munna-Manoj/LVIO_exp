@@ -9,10 +9,11 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from . import config
-from .evaluate import NOISE_EXPERIMENTS, load_summary
+from .config import baseline as baseline_config
+from .evaluate import NOISE_EXPERIMENTS, SIGMA_MIN_CM, load_summary
 from .spec import PHASES, Experiment, all_experiments
 
 SITE_URL = "https://munna-manoj.github.io/LVIO_exp/"     # the published site (mkdocs.yml site_url)
@@ -47,17 +48,40 @@ def _systems(value) -> str:
     return " + ".join(f"`{x}`" for x in value) if isinstance(value, list) else f"`{value}`"
 
 
+SYSTEM_NAMES = {"se3-lvio": "SE(3)-LVIO", "lightning-lm": "lightning-lm", "genz-lio": "GenZ-LIO", "sad": "SAD"}
+
+
+def _terms(s: Dict[str, Any]) -> str:
+    """The page's glossary (spec `terms`, not frozen): every word a reader needs, defined once."""
+    if not s.get("terms"):
+        return ""
+    rows = "".join(f"| **{x['term']}** | {x['meaning'].strip()} |\n" for x in s["terms"])
+    return "**Terms used on this page**\n\n| Term | Meaning |\n|---|---|\n" + rows + "\n"
+
+
+def _participation(s: Dict[str, Any]) -> str:
+    """Which of the systems take part and why (spec `participation`, not frozen)."""
+    if not s.get("participation"):
+        return ""
+    rows = "".join(f"| {SYSTEM_NAMES.get(x['system'], x['system'])} | {'yes' if x['takes_part'] else 'no'} | "
+                   f"{x['how'].strip()} |\n" for x in s["participation"])
+    return "**Which systems take part**\n\n| System | Takes part | How, or why not |\n|---|---|---|\n" + rows + "\n"
+
+
 def render_hypothesis(exp: Experiment) -> str:
     s = exp.spec
-    lock = "pre-registered" if exp.lock_path.exists() else "draft, not frozen yet"
+    lock = ("were locked when the experiment was approved (pre-registered in `spec.lock`) and cannot change"
+            if exp.lock_path.exists() else
+            "are a draft; they are locked when the experiment is approved (`spec.lock`)")
     return (
+        _terms(s) + _participation(s) +
         f"| | |\n|---|---|\n"
         f"| **Question** | {s['question'].strip()} |\n"
         f"| **Hypothesis** | {s['hypothesis'].strip()} |\n"
         f"| **Prediction** | {s['prediction'].strip()} |\n"
         f"| **Falsified if** | {s['falsified_if'].strip()} |\n"
         f"| **Decision rule** | {s['decision_rule'].strip()} |\n\n"
-        f"<sub>Fields above are {lock} (`spec.lock`).</sub>\n"
+        f"<sub>The five fields in this table {lock}.</sub>\n"
         + "".join(f"\n> **Erratum ({x['date']}):** {x['field']} says “{x['says']}”; it should say "
                   f"“{x['should_say']}”. Source: {x['source']}. The frozen text is kept as approved.\n"
                   for x in s.get("errata") or [])
@@ -77,15 +101,23 @@ def _manifest_commits(exp: Experiment) -> Dict[str, List[str]]:
 
 def render_setup(exp: Experiment) -> str:
     s = exp.spec
-    rows = [f"| `baseline` | {s['baseline']} as is |"]
+    def system_of(config_name: str) -> str:
+        return SYSTEM_NAMES.get(baseline_config(config_name)["system"], "?")
+
+    rows = [f"| `baseline` | {system_of(s['baseline'])} | – | the stock config `{s['baseline']}`, unchanged |"]
     for v in s["variants"] or []:
-        rows.append(f"| `{v['id']}` | {v['change']} |")
+        compared = v.get("reference") or ("–" if v.get("baseline") and not v.get("overrides") else "baseline")
+        compared = "–" if compared == "–" else f"`{compared}`"
+        rows.append(f"| `{v['id']}` | {system_of(v.get('baseline', s['baseline']))} | {compared} | {v['change']} |")
     commits = _manifest_commits(exp)
     run_info = (f"- **Commits:** repo {', '.join(commits['repo'])} · system {', '.join(commits['system'])}\n"
                 if commits["repo"] else "- **Commits:** recorded per run once runs exist\n")
     stress = f"- **Stress profile:** `{s['stress']}`\n" if s.get("stress") else ""
     return (
-        "| Variant | The one change |\n|---|---|\n" + "\n".join(rows) + "\n\n"
+        "Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs "
+        "another system's stock config, and the variants of that system are compared with it.\n\n"
+        "| Variant | System | Compared with | What this variant changes |\n|---|---|---|---|\n"
+        + "\n".join(rows) + "\n\n"
         f"- **Missions:** {', '.join(exp.missions())} (`{json.dumps(s['missions'])}`)\n"
         f"- **Repeats:** {s['repeats']} per variant × mission\n"
         f"- **Host:** `{s['host']}` (configs/hosts/{s['host']}.yaml)\n"
@@ -100,9 +132,11 @@ def render_results(exp: Experiment) -> str:
     if summary is None:
         return f"> [!NOTE]\n> Not run yet (status `{exp.status}`). Numbers appear here after `lvx eval {exp.id}`.\n"
     primary = summary["primary"]
-    lines = [f"Primary metric `{primary}`: mean ± std over repeats. Δ is against `baseline` on the same mission; "
-             f"the effect is called only when |Δ| > {summary['noise_k']:g}σ of run-to-run noise "
-             f"(σ from {summary['noise_source'] or 'this experiment'}).\n",
+    lines = [f"Each cell shows `{primary}` as the mean ± standard deviation over the repeats. Δ is the variant's "
+             f"mean minus the mean of the variant it is compared with, on the same mission. An effect counts only "
+             f"when |Δ| is larger than {summary['noise_k']:g} × the run-to-run standard deviation σ of that system's "
+             f"stock config (σ from {summary['noise_source'] or 'this experiment'}; never below "
+             f"{SIGMA_MIN_CM} cm).\n",
              "| Mission | Variant | " + primary + " | Δ | Effect | ms p95 | runs ok / failed |",
              "|---|---|---|---|---|---|---|"]
     for c in summary["cells"]:

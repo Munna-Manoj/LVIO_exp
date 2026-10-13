@@ -52,3 +52,41 @@ history:
   status: concluded
   verdict: adopt
 verdict: adopt
+terms:
+- term: ATE
+  meaning: 'Absolute trajectory error: the root-mean-square distance between the estimated trajectory
+    and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better.'
+- term: scan time (ms_p95)
+  meaning: 'The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile
+    over a mission: 95 % of the scans take less than this.'
+- term: noise floor
+  meaning: 'The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation
+    of ATE between identical runs of that system''s stock config (EXP-000 for SE(3)-LVIO and lightning-lm,
+    EXP-022 for GenZ-LIO). It is never less than 0.01 cm.'
+- term: variant
+  meaning: One configuration that is run. Each variant differs from the variant it is compared with in
+    exactly one change.
+- term: dev missions
+  meaning: 'The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier
+    climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports.'
+- term: '`baseline` (genz_stock)'
+  meaning: 'GenZ-LIO''s stock config: upstream''s Hesai settings, with only the sensor calibration and
+    the 4-core limit set.'
+- term: IMU time offset
+  meaning: The delay between the IMU clock and the LiDAR clock, fitted once per mission (configs/missions.yaml
+    `imu_dt`). The protocol applies it to every system.
+- term: pose_coverage
+  meaning: The share of the scans in the IMU's time span for which the system produced a pose. 1.0 means
+    one pose per scan.
+- term: deterministic
+  meaning: Identical runs give bit-for-bit identical trajectories (σ = 0).
+participation:
+- system: genz-lio
+  takes_part: true
+  how: Its stock config, 5 repeats per mission.
+- system: se3-lvio
+  takes_part: false
+  how: Its noise floor comes from EXP-000; its numbers are quoted for comparison.
+- system: lightning-lm
+  takes_part: false
+  how: Its noise floor comes from EXP-000; its numbers are quoted for comparison.

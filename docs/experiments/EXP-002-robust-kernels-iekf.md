@@ -1,36 +1,65 @@
-# EXP-002 — Does a robust kernel in the IEKF update beat hard gating alone?
+# EXP-002 — Does a robust kernel in the scan update beat a hard limit alone?
 
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P1 (Outliers and robustness) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-001
+**Status:** 🗒️ planned · **Phase:** P1 (Outliers and robustness) · **System:** `se3-lvio` + `genz-lio` + `lightning-lm` · **Depends on:** EXP-001
 <!-- lvx:end status -->
 
 ## Question & hypothesis
 
 <!-- lvx:begin hypothesis -->
+**Terms used on this page**
+
+| Term | Meaning |
+|---|---|
+| **ATE** | Absolute trajectory error: the root-mean-square distance between the estimated trajectory and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better. |
+| **scan time (ms_p95)** | The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile over a mission: 95 % of the scans take less than this. |
+| **noise floor** | The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation of ATE between identical runs of that system's stock config (EXP-000 for SE(3)-LVIO and lightning-lm, EXP-022 for GenZ-LIO). It is never less than 0.01 cm. |
+| **variant** | One configuration that is run. Each variant differs from the variant it is compared with in exactly one change. |
+| **dev missions** | The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports. |
+| **`baseline` (S8)** | SE(3)-LVIO's stock config `se3lvio_S8`: one LiDAR (the Hesai XT32) and the IMU, no camera, no backend. |
+| **`genz`** | GenZ-LIO's stock config `genz_stock`: upstream's Hesai settings, with only the sensor calibration and the 4-core limit set. |
+| **`lightning`** | lightning-lm's config `lightning_indoor`: upstream's settings with 0.2 m grids. It is the better of lightning-lm's two configs on ARC-6 in EXP-000 (1.41 cm against 1.64 cm). |
+| **lightning-lm on the field missions** | Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning`: 294 cm and 41 cm). A lightning-lm variant is therefore judged on ARC-6 only. Its EIG-2 and SNOW-3 numbers are still reported. |
+| **robust kernel** | A weight that shrinks as a residual grows. Huber keeps full weight up to k and then falls as k / |r|. Cauchy falls smoothly as 1 / (1 + (r / c)²). |
+| **residual (r)** | The distance between a scan point and its matched plane (or point) in the map. |
+
+**Which systems take part**
+
+| System | Takes part | How, or why not |
+|---|---|---|
+| SE(3)-LVIO | yes | Huber and Cauchy weights, scaled by each point's σ. |
+| GenZ-LIO | yes | Huber and Cauchy weights, scaled by each point's σ. |
+| lightning-lm | yes | Huber and Cauchy weights, scaled by the scan's robust residual spread. |
+
 | | |
 |---|---|
-| **Question** | Does down-weighting residuals with Huber or Cauchy inside each IEKF iteration (IRLS) reduce ATE compared with gating alone? |
-| **Hypothesis** | Residuals near the gate (partial occlusion, smoke edges, thin structure) are not fully wrong; smooth weights keep their information without letting them pull the estimate. |
-| **Prediction** | Small gains (< 0.05 cm) on clean missions, larger on ARC-6 near smoke; Cauchy ≥ Huber. GenZ-LIO: within noise; its two gates (plane and point-to-point) already reject most outliers. |
-| **Falsified if** | neither kernel changes ATE beyond noise on any mission, or both make it worse. |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
+| **Question** | Does down-weighting points with large residuals (a robust kernel) improve ATE compared with a hard limit alone? |
+| **Hypothesis** | The hard limit treats a point just inside it like a perfect match. A robust kernel gives such a point a smaller weight, so smoke and clutter that pass the limit pull the pose less. |
+| **Prediction** | SE(3)-LVIO: Huber and Cauchy weights change ATE by less than the noise floor on EIG-2 and SNOW-3, and improve ATE on ARC-6 (smoke). GenZ-LIO: ATE changes by less than the noise floor, because GenZ-LIO already has two limits (point-to-plane and point-to-point). lightning-lm, on ARC-6: better, because lightning-lm gives every residual the same weight 1.0. |
+| **Falsified if** | A kernel is worse than its system's stock config by more than the noise floor on ARC-6. |
+| **Decision rule** | Each system is run with and without a robust kernel (SE(3)-LVIO: `huber or cauchy` with it, `baseline` without it; GenZ-LIO: `genz_huber or genz_cauchy` with it, `genz` without it; lightning-lm: `lightning_huber or lightning_cauchy` with it, `lightning` without it). On each mission, the side with a robust kernel is better if its ATE is lower by more than the noise floor, and worse if its ATE is higher by more than the noise floor. A robust kernel helps a system if the side with it is better on at least two of the three dev missions, worse on none, and its ms_p95 is less than 10 % higher. A robust kernel hurts a system if the side with it is worse on any mission. For lightning-lm only ARC-6 is judged: a robust kernel helps lightning-lm if the side with it is better on ARC-6 with less than 10 % more ms_p95, and hurts lightning-lm if it is worse on ARC-6. Verdict: adopt if a robust kernel helps every system that takes part, reject if it hurts every one, and inconclusive otherwise. The summary at the top of the page gives the result for each system. A system's better kernel (lower mean ATE) stands for that system. |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `huber` | Huber IRLS weight, k = 1.345σ |
-| `cauchy` | Cauchy IRLS weight, c = 2.385σ |
-| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_huber` | GenZ-LIO Huber IRLS weight, k = 1.345σ |
-| `genz_cauchy` | GenZ-LIO Cauchy IRLS weight, c = 2.385σ |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `huber` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: Huber weight, k = 1.345σ |
+| `cauchy` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: Cauchy weight, c = 2.385σ |
+| `genz` | GenZ-LIO | – | GenZ-LIO's stock config. The GenZ-LIO variants are compared with this one. |
+| `genz_huber` | GenZ-LIO | `genz` | GenZ-LIO: Huber weight, k = 1.345σ |
+| `genz_cauchy` | GenZ-LIO | `genz` | GenZ-LIO: Cauchy weight, c = 2.385σ |
+| `lightning` | lightning-lm | – | lightning-lm's indoor config. The lightning-lm variants are compared with this one. |
+| `lightning_huber` | lightning-lm | `lightning` | lightning-lm: Huber weight, k = 1.345 s |
+| `lightning_cauchy` | lightning-lm | `lightning` | lightning-lm: Cauchy weight, c = 2.385 s |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

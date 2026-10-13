@@ -141,6 +141,12 @@ def system_root(name: str) -> Path:
     return _path(root) if root else run_root() / "systems" / name
 
 
+def source(name: str) -> str:
+    """Where a system's code is cloned from: a local mirror in lvx.local.yaml, else `fork` in systems/systems.yaml."""
+    local = ((load().get("systems") or {}).get(name) or {}).get("source")
+    return str(_path(local)) if local and "://" not in local else (local or systems()[name]["fork"])
+
+
 def image(name: str) -> str:
     """The container image for a system: local tag override, else the neutral tag in systems/systems.yaml."""
     local = ((load().get("systems") or {}).get(name) or {}).get("image")

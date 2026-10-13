@@ -1,34 +1,61 @@
-# EXP-011 — Can online estimation replace hand-fitted calibration?
+# EXP-011 — Can online estimation replace the hand-fitted IMU time offset?
 
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` + `genz-lio` + `lightning-lm` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
 
 <!-- lvx:begin hypothesis -->
+**Terms used on this page**
+
+| Term | Meaning |
+|---|---|
+| **ATE** | Absolute trajectory error: the root-mean-square distance between the estimated trajectory and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better. |
+| **scan time (ms_p95)** | The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile over a mission: 95 % of the scans take less than this. |
+| **noise floor** | The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation of ATE between identical runs of that system's stock config (EXP-000 for SE(3)-LVIO and lightning-lm, EXP-022 for GenZ-LIO). It is never less than 0.01 cm. |
+| **variant** | One configuration that is run. Each variant differs from the variant it is compared with in exactly one change. |
+| **dev missions** | The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports. |
+| **`baseline` (S8)** | SE(3)-LVIO's stock config `se3lvio_S8`: one LiDAR (the Hesai XT32) and the IMU, no camera, no backend. |
+| **`genz`** | GenZ-LIO's stock config `genz_stock`: upstream's Hesai settings, with only the sensor calibration and the 4-core limit set. |
+| **`lightning`** | lightning-lm's config `lightning_indoor`: upstream's settings with 0.2 m grids. It is the better of lightning-lm's two configs on ARC-6 in EXP-000 (1.41 cm against 1.64 cm). |
+| **lightning-lm on the field missions** | Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning`: 294 cm and 41 cm). A lightning-lm variant is therefore judged on ARC-6 only. Its EIG-2 and SNOW-3 numbers are still reported. |
+| **IMU time offset** | The delay between the IMU clock and the LiDAR clock (configs/missions.yaml `imu_dt`, −4.4 to −7.4 ms). It was fitted once per mission by matching the gyroscope against the trajectory's rotation. |
+
+**Which systems take part**
+
+| System | Takes part | How, or why not |
+|---|---|---|
+| SE(3)-LVIO | yes | Online estimation of the offset is added. |
+| GenZ-LIO | yes | Online estimation of the offset is added. |
+| lightning-lm | yes | Online estimation of the offset is added. |
+
 | | |
 |---|---|
-| **Question** | Does estimating the IMU time offset online match the hand-fitted per-mission imu_dt? |
-| **Hypothesis** | The time offset is observable from rotation; online estimation removes a manual fitting step without losing accuracy. |
-| **Prediction** | Within noise of the hand-fitted imu_dt; converged offset within 1 ms of the fitted value. GenZ-LIO: the same converged offset (it is a property of the sensors, not of the estimator); ATE within noise of `genz`. |
-| **Falsified if** | worse beyond noise, or the estimate does not converge within 30 s. |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
+| **Question** | Every system now gets each mission's IMU time offset from configs/missions.yaml. Does estimating the offset during the run, starting from 0, give the same ATE? |
+| **Hypothesis** | The time offset is observable from rotation, because the gyroscope and the scan see the same turns. Online estimation would remove the per-mission fitting step without losing accuracy. |
+| **Prediction** | All three systems: ATE changes by less than the noise floor compared with the hand-fitted offset, and the estimated offset ends within 1 ms of the hand-fitted value. The offset is a property of the sensors, so all three systems should converge to the same value. |
+| **Falsified if** | In any system, online estimation is worse by more than the noise floor, or the estimate does not settle within 1 ms of the hand-fitted value within 30 s. |
+| **Decision rule** | Each system is run with and without online estimation (SE(3)-LVIO: `td_online` with it, `baseline` without it; GenZ-LIO: `genz_td_online` with it, `genz` without it; lightning-lm: `lightning_td_online` with it, `lightning` without it). On each mission, the side with online estimation is better if its ATE is lower by more than the noise floor, and worse if its ATE is higher by more than the noise floor. Online estimation helps a system if the side with it is better on at least two of the three dev missions, worse on none, and its ms_p95 is less than 10 % higher. Online estimation hurts a system if the side with it is worse on any mission. For lightning-lm only ARC-6 is judged: online estimation helps lightning-lm if the side with it is better on ARC-6 with less than 10 % more ms_p95, and hurts lightning-lm if it is worse on ARC-6. Verdict: adopt if online estimation helps every system that takes part, reject if it hurts every one, and inconclusive otherwise. The summary at the top of the page gives the result for each system. Online estimation can replace the hand-fitted offset in a system even without helping, if the comparison is within the noise floor on every judged mission and the estimate settles within 1 ms. |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `td_online` | estimate IMU time offset in the state, start at 0 |
-| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_td_online` | GenZ-LIO: estimate the IMU time offset in the state, start at 0 |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `td_online` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: estimate the IMU time offset online, starting from 0 |
+| `genz` | GenZ-LIO | – | GenZ-LIO's stock config. The GenZ-LIO variants are compared with this one. |
+| `genz_td_online` | GenZ-LIO | `genz` | GenZ-LIO: estimate the IMU time offset online, starting from 0 |
+| `lightning` | lightning-lm | – | lightning-lm's indoor config. The lightning-lm variants are compared with this one. |
+| `lightning_td_online` | lightning-lm | `lightning` | lightning-lm: estimate the IMU time offset online, starting from 0 |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

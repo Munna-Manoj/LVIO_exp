@@ -12,7 +12,8 @@ datasets:                        # optional: a dataset somewhere else (absolute,
 systems:                         # optional: where a system is built and its local container tag
   # sad: {root: ~/src/slam_in_autonomous_driving, image: sad:v1}
   # se3-lvio: {image: my-se3lvio:latest}
-  # lightning-lm: {root: ~/lvx_runs/systems/lightning-lm, image: lightning:humble}
+  # lightning-lm: {root: ~/lvx_runs/systems/lightning-lm, image: lightning:humble,
+  #                source: ~/mirrors/lightning-lm-lvio.git}   # source: a local mirror of the private fork
 
 path: []                         # optional: folders put first on PATH when a system runs, e.g. a shim that
                                  # maps `docker` to rootless podman: [~/bin/docker-shim]

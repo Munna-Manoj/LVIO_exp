@@ -1,6 +1,6 @@
 # ADR-0012 — GenZ-LIO as the third system, with ablations in both forks
 
-- **Status:** Accepted (2026-10-12)
+- **Status:** Accepted (2026-10-12). "lightning-lm stays reference-only" is superseded by [ADR-0013](ADR-0013-lightning-lm-private-fork.md) (2026-10-13).
 
 ## Context
 - The owner wants every study to cover three systems: SE(3)-LVIO, lightning-lm and GenZ-LIO.
