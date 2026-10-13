@@ -4,7 +4,9 @@ title: Does a robust kernel in the IEKF update beat hard gating alone?
 phase: P1
 status: planned
 created: '2026-10-07'
-system: se3-lvio
+system:
+- se3-lvio
+- genz-lio
 depends_on:
 - EXP-001
 supersedes: null
@@ -13,7 +15,8 @@ question: Does down-weighting residuals with Huber or Cauchy inside each IEKF it
   ATE compared with gating alone?
 hypothesis: Residuals near the gate (partial occlusion, smoke edges, thin structure) are not fully wrong;
   smooth weights keep their information without letting them pull the estimate.
-prediction: Small gains (< 0.05 cm) on clean missions, larger on ARC-6 near smoke; Cauchy ≥ Huber.
+prediction: 'Small gains (< 0.05 cm) on clean missions, larger on ARC-6 near smoke; Cauchy ≥ Huber. GenZ-LIO:
+  within noise; its two gates (plane and point-to-point) already reject most outliers.'
 falsified_if: neither kernel changes ATE beyond noise on any mission, or both make it worse.
 baseline: se3lvio_S8
 variants:
@@ -25,8 +28,24 @@ variants:
   change: Cauchy IRLS weight, c = 2.385σ
   overrides:
     lio.robust_kernel: cauchy
-code_change: new flag robust_kernel {none,huber,cauchy} (default none) applied to R_(i) in measurementModel
-  each iteration
+- id: genz
+  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  baseline: genz_stock
+- id: genz_huber
+  change: GenZ-LIO Huber IRLS weight, k = 1.345σ
+  baseline: genz_stock
+  reference: genz
+  overrides:
+    lvio_exp.robust_kernel: huber
+- id: genz_cauchy
+  change: GenZ-LIO Cauchy IRLS weight, c = 2.385σ
+  baseline: genz_stock
+  reference: genz
+  overrides:
+    lvio_exp.robust_kernel: cauchy
+code_change: 'new flag robust_kernel {none,huber,cauchy} (default none) applied to R_(i) in measurementModel
+  each iteration; GenZ-LIO: the same flag as `lvio_exp.robust_kernel` in the fork (default off = upstream),
+  added before freezing'
 missions:
   set: dev
 repeats: 3
@@ -36,8 +55,11 @@ metrics:
   - ate_max_cm
   - ms_p95
 stress: null
-decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+decision_rule: 'adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
   noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
-  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system
+  separately: SE(3)-LVIO''s arms against `baseline`, GenZ-LIO''s against `genz`, each with its own noise
+  floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects
+  for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum).'
 learn_links:
 - docs/explain/outliers-in-an-iekf.md

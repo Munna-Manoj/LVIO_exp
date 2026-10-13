@@ -4,7 +4,9 @@ title: Does projecting out degenerate directions help SE(3)-LVIO?
 phase: P2
 status: planned
 created: '2026-10-07'
-system: se3-lvio
+system:
+- se3-lvio
+- genz-lio
 depends_on:
 - EXP-000
 supersedes: null
@@ -13,7 +15,9 @@ question: Does lightning-lm-style degeneracy handling (eigen-analysis of HᵀH, 
   directions) improve ATE?
 hypothesis: In corridors and open areas some pose directions are weakly constrained; updating them only
   adds noise. The IMU prior already damps them, so gains should be small and local.
-prediction: Within noise on indoor missions; better on missions with long corridors or open terrain.
+prediction: 'Within noise on indoor missions; better on missions with long corridors or open terrain.
+  GenZ-LIO: within noise on ARC-6; if anything better on the open EIG-2 and SNOW-3, where its point-to-point
+  residuals constrain fewer directions than planes would.'
 falsified_if: worse beyond noise on any mission (projection throws away real information).
 baseline: se3lvio_S8
 variants:
@@ -21,7 +25,18 @@ variants:
   change: project the update onto eigen-directions with λ > λ_min
   overrides:
     lio.degeneracy_eig_min: 100.0
-code_change: new flag degeneracy_eig_min (default 0 = off)
+- id: genz
+  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  baseline: genz_stock
+- id: genz_degen_proj
+  change: 'GenZ-LIO: project the update onto eigen-directions with λ > λ_min'
+  baseline: genz_stock
+  reference: genz
+  overrides:
+    lvio_exp.degeneracy_eig_min: 100.0
+code_change: 'new flag degeneracy_eig_min (default 0 = off); GenZ-LIO: the same flag as `lvio_exp.degeneracy_eig_min`
+  in the fork (default off = upstream), added before freezing; λ is taken of the same information matrix
+  HᵀR⁻¹H in both systems'
 missions:
   set: dev
 repeats: 3
@@ -31,7 +46,10 @@ metrics:
   - ate_max_cm
   - ms_p95
 stress: null
-decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+decision_rule: 'adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
   noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
-  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system
+  separately: SE(3)-LVIO''s arms against `baseline`, GenZ-LIO''s against `genz`, each with its own noise
+  floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects
+  for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum).'
 learn_links: []

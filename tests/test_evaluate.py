@@ -1,4 +1,5 @@
 """Noise-floor verdicts and timing parsing, on synthetic rows (no data, no evo needed)."""
+import copy
 import json
 
 from lvx import evaluate, spec
@@ -65,3 +66,45 @@ def test_each_baseline_takes_its_floor_from_the_experiment_that_measured_it():
     assert evaluate.noise_source("lightning_stock") == "EXP-000"
     assert evaluate.noise_source("not_a_baseline") is None
     assert evaluate.noise_source("genz_stock") == "EXP-022"         # not EXP-021, which is superseded
+
+
+
+def _two_system_spec():
+    s = copy.deepcopy(spec.find("EXP-001").spec)
+    s["variants"] = [
+        {"id": "gate_2p0", "change": "gate 2.0σ", "overrides": {"lio.residual_gate_sigma": 2.0}},
+        {"id": "genz", "change": "GenZ-LIO stock", "baseline": "genz_stock"},
+        {"id": "genz_gate_2p0", "change": "GenZ-LIO plane gate 2.0σ", "baseline": "genz_stock",
+         "reference": "genz", "overrides": {"mapping.sigma_num": 2.0}},
+    ]
+    return s
+
+
+def test_a_variant_is_paired_with_its_reference_and_its_own_noise_floor(tmp_path, monkeypatch):
+    from lvx import evaluate
+    measured = evaluate.noise_sigma
+    monkeypatch.setattr(evaluate, "noise_sigma",                          # a fixed floor, not the repo's
+                        lambda b: {m: 0.0 for m in ("arc-6", "eig-2", "snow-3")} if b == "genz_stock" else measured(b))
+    d = tmp_path / "EXP-001-chi2-gate-sweep"
+    d.mkdir()
+    e = spec.Experiment(d, _two_system_spec())
+    assert spec.validate(e) == []
+    rows = []
+    for v, ate in [("baseline", 1.0), ("gate_2p0", 0.9), ("genz", 2.0), ("genz_gate_2p0", 2.004)]:
+        for m in e.missions():
+            for _ in range(3):
+                rows.append({"variant": v, "mission": m, "status": "ok", "ate_rmse_cm": ate, "ms_p95": 30.0})
+    cells = {(c["variant"], c["mission"]): c for c in evaluate.summarise(e, rows)["cells"]}
+    c = cells[("genz_gate_2p0", "arc-6")]
+    assert c["reference"] == "genz" and abs(c["delta"] - 0.004) < 1e-9     # against GenZ-LIO stock, not S8
+    assert c["sigma_noise"] == evaluate.SIGMA_MIN_CM and c["effect"] == "none"   # GenZ-LIO's floor: 0.004 < 2 x 0.005
+    assert cells[("genz", "arc-6")]["reference"] == "baseline"             # the cross-system row stays as before
+
+
+def test_reference_must_be_a_plain_swap_of_the_same_config(tmp_path):
+    s = _two_system_spec()
+    s["variants"][2]["baseline"] = "se3lvio_S9a"                         # not the reference's config
+    assert any("same baseline config" in x for x in spec.validate(spec.Experiment(tmp_path, s)))
+    s = _two_system_spec()
+    del s["variants"][2]["reference"]                                    # swap + change against S8: two changes
+    assert any("pair it with a plain swap" in x for x in spec.validate(spec.Experiment(tmp_path, s)))

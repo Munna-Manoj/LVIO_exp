@@ -4,7 +4,9 @@ title: Should the map be updated every scan or only at keyframes?
 phase: P3
 status: planned
 created: '2026-10-07'
-system: se3-lvio
+system:
+- se3-lvio
+- genz-lio
 depends_on:
 - EXP-000
 supersedes: null
@@ -12,7 +14,8 @@ host: reference
 question: Does lightning-lm-style keyframe-only map insertion (1 m / 10°) change ATE and runtime for SE(3)-LVIO?
 hypothesis: Per-scan insertion gives a denser reference but also inserts transient objects and costs time;
   keyframe insertion trades density for speed.
-prediction: Slightly worse ATE (sparser planes), lower ms_p95.
+prediction: 'Slightly worse ATE (sparser planes), lower ms_p95. GenZ-LIO: the same direction as SE(3)-LVIO,
+  with a larger ms_p95 saving, since its map update also refreshes the point-to-point candidates.'
 falsified_if: better ATE beyond noise (would mean per-scan insertion pollutes the map).
 baseline: se3lvio_S8
 variants:
@@ -20,7 +23,17 @@ variants:
   change: insert scans into the voxel map only at keyframes (1 m / 10°)
   overrides:
     lio.map_insert_policy: keyframe
-code_change: new flag map_insert_policy {scan,keyframe} (default scan)
+- id: genz
+  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  baseline: genz_stock
+- id: genz_kf_insert
+  change: 'GenZ-LIO: insert scans into the voxel map only at keyframes (1 m / 10°)'
+  baseline: genz_stock
+  reference: genz
+  overrides:
+    lvio_exp.map_insert_policy: keyframe
+code_change: 'new flag map_insert_policy {scan,keyframe} (default scan); GenZ-LIO: the same flag as `lvio_exp.map_insert_policy`
+  in the fork (default off = upstream), added before freezing'
 missions:
   set: dev
 repeats: 3
@@ -31,7 +44,10 @@ metrics:
   - ms_p95
   - rss_mb
 stress: null
-decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+decision_rule: 'adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
   noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
-  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system
+  separately: SE(3)-LVIO''s arms against `baseline`, GenZ-LIO''s against `genz`, each with its own noise
+  floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects
+  for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum).'
 learn_links: []

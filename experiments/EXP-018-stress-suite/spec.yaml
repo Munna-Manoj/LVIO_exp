@@ -4,24 +4,32 @@ title: Which design choices matter when the data gets worse?
 phase: P6
 status: planned
 created: '2026-10-07'
-system: both
+system:
+- se3-lvio
+- lightning-lm
+- genz-lio
 depends_on:
 - EXP-000
 supersedes: null
 host: reference
 question: Under controlled degradation (drop Livox, drop 10-30 % of scans, 4× point thinning, ±5 ms IMU
-  time shift), how do both systems degrade?
+  time shift), how do the three systems degrade?
 hypothesis: SE(3)-LVIO is tuned for clean data and degrades faster under scan drops; lightning-lm's guards
   make it degrade gracefully.
 prediction: lightning-lm degrades less in relative terms under scan drops; SE(3)-LVIO remains more accurate
-  in absolute terms.
+  in absolute terms. GenZ-LIO degrades less than SE(3)-LVIO under 4× thinning (its point budget adapts
+  the voxel size to keep the points it needs); the drop-Livox profile does not apply to it (Hesai only).
 falsified_if: SE(3)-LVIO degrades less in relative terms under every profile.
 baseline: se3lvio_S8
 variants:
 - id: ll_indoor
   change: swap baseline config to lightning-lm indoor
   baseline: lightning_indoor
-code_change: stress profiles implemented in lvx (data-side, no system change)
+- id: genz
+  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  baseline: genz_stock
+code_change: stress profiles implemented in lvx (data-side, no system change); the GenZ-LIO runner reads
+  the stressed comfort_offline like the others
 missions:
   set: dev
 repeats: 3

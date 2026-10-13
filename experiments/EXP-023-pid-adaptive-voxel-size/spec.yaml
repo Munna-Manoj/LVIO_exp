@@ -1,0 +1,59 @@
+id: EXP-023
+slug: pid-adaptive-voxel-size
+title: Should the point budget grow with the scene's scale?
+phase: P7
+status: planned
+created: '2026-10-13'
+system:
+- se3-lvio
+- genz-lio
+depends_on:
+- EXP-000
+- EXP-022
+supersedes: null
+host: reference
+question: Does GenZ-LIO's scale-aware point budget (a setpoint rising from 1000 points in confined scenes
+  to 4000 in open ones, tracked by a PID on the voxel size) beat a fixed budget of 2000, in both systems?
+hypothesis: Confined scenes have many near planes, so fewer points constrain the pose; open scenes have
+  few, far ones and need more. A fixed budget over-samples indoors (time) and under-samples outdoors (accuracy).
+prediction: 'SE(3)-LVIO: within noise on ARC-6 with lower ms_p95, better on EIG-2 and SNOW-3. GenZ-LIO
+  with a fixed 2000: within noise on ARC-6, worse on EIG-2 and SNOW-3.'
+falsified_if: the scale-aware budget is not better on either open mission in either system.
+baseline: se3lvio_S8
+variants:
+- id: scale_aware
+  change: 'SE(3)-LVIO: inlier target scale-aware 1000→4000 (baseline fixed 2000)'
+  overrides:
+    lio.downsample_target: scale_aware
+- id: genz
+  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  baseline: genz_stock
+- id: genz_fixed_2000
+  change: 'GenZ-LIO: fixed setpoint 2000 points (N_min = N_max = 2000; stock 1000→4000)'
+  baseline: genz_stock
+  reference: genz
+  overrides:
+    adaptive_voxelization.min_points: 2000
+    adaptive_voxelization.max_points: 2000
+  single_change_reason: a fixed setpoint is N_min = N_max; the two keys are one setting
+code_change: 'SE(3)-LVIO: new flag downsample_target {fixed,scale_aware} (default fixed); scale_aware
+  uses GenZ-LIO''s scale indicator and setpoint law (N_w 5, τ_m 30 m, p 2, 1000→4000) on its existing
+  leaf-size controller, reimplemented from the paper (GPL code is not copied into SE(3)-LVIO); GenZ-LIO:
+  none (existing keys)'
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - ms_p95
+  - ms_mean
+stress: null
+decision_rule: 'Per system, against its own reference and noise floor (EXP-000, EXP-022): the scale-aware
+  budget helps if, on at least 2/3 of the missions, the side with it beats the side without it by more
+  than 2σ (SE(3)-LVIO: `scale_aware` better than `baseline`; GenZ-LIO: `genz_fixed_2000` worse than `genz`)
+  and no mission goes the other way beyond 2σ; it hurts if any mission goes the other way beyond 2σ. Verdict
+  adopt (add it to SE(3)-LVIO) if it helps in both systems and SE(3)-LVIO''s ms_p95 grows by less than
+  10 %; reject if it hurts in either; otherwise inconclusive. The TL;DR gives both systems (ADR-0012 addendum).'
+learn_links: []

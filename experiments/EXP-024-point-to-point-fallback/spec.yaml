@@ -1,0 +1,55 @@
+id: EXP-024
+slug: point-to-point-fallback
+title: Should points without a plane get a point-to-point residual?
+phase: P3
+status: planned
+created: '2026-10-13'
+system:
+- se3-lvio
+- genz-lio
+depends_on:
+- EXP-000
+- EXP-022
+supersedes: null
+host: reference
+question: Does GenZ-LIO's hybrid-metric update (a point that fits no plane gets a point-to-point residual,
+  weighted by λ_po) improve ATE, in both systems?
+hypothesis: In open scenes many points fall in voxels with no plane; they carry information that point-to-plane
+  alone throws away. In confined scenes almost every point has a plane, so the fallback rarely fires.
+prediction: 'SE(3)-LVIO: within noise on ARC-6, better on EIG-2 and SNOW-3. GenZ-LIO without it: within
+  noise on ARC-6, worse on EIG-2 and SNOW-3.'
+falsified_if: the side with point-to-point residuals is not better on either open mission in either system.
+baseline: se3lvio_S8
+variants:
+- id: p2p_fallback
+  change: 'SE(3)-LVIO: point-to-point residual for points without a plane, λ_po 0.05'
+  overrides:
+    lio.point_to_point_fallback: true
+- id: genz
+  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  baseline: genz_stock
+- id: genz_no_hybrid
+  change: 'GenZ-LIO: point-to-plane only (hybrid_metric.enable false)'
+  baseline: genz_stock
+  reference: genz
+  overrides:
+    hybrid_metric.enable: false
+code_change: 'SE(3)-LVIO: new flag point_to_point_fallback (default false), reimplemented from the paper
+  (Sec. V-E, eq. 30; GPL code is not copied); GenZ-LIO: none (existing key)'
+missions:
+  set: dev
+repeats: 3
+metrics:
+  primary: ate_rmse_cm
+  secondary:
+  - ate_max_cm
+  - inliers_mean
+  - ms_p95
+stress: null
+decision_rule: 'Per system, against its own reference and noise floor (EXP-000, EXP-022): the point-to-point
+  fallback helps if, on at least 2/3 of the missions, the side with it beats the side without it by more
+  than 2σ (SE(3)-LVIO: `p2p_fallback` better than `baseline`; GenZ-LIO: `genz_no_hybrid` worse than `genz`)
+  and no mission goes the other way beyond 2σ; it hurts if any mission goes the other way beyond 2σ. Verdict
+  adopt (add it to SE(3)-LVIO) if it helps in both systems and SE(3)-LVIO''s ms_p95 grows by less than
+  10 %; reject if it hurts in either; otherwise inconclusive. The TL;DR gives both systems (ADR-0012 addendum).'
+learn_links: []

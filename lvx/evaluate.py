@@ -203,12 +203,24 @@ def summarise(exp: Experiment, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
                 cell[k] = _stats([float(r[k]) for r in ok if r.get(k) not in (None, "")])
             cells.append(cell)
 
-    sigma = noise_sigma(exp.spec["baseline"])
-    if exp.id in NOISE_EXPERIMENTS:
-        sigma = {}
+    arms = {v["id"]: v for v in exp.spec.get("variants") or []}
+    def ref_of(variant: str) -> str:
+        return arms.get(variant, {}).get("reference", "baseline")
+
+    def config_of(variant: str) -> str:                     # the baseline config whose noise floor applies
+        if variant == "baseline" or ref_of(variant) == "baseline":
+            return exp.spec["baseline"]
+        return arms[variant].get("baseline", exp.spec["baseline"])
+
+    floors: Dict[str, Dict[str, float]] = {}
     by = {(c["variant"], c["mission"]): c for c in cells}
     for c in cells:
-        base = by[("baseline", c["mission"])][primary]["mean"]
+        name = config_of(c["variant"])
+        if exp.id not in NOISE_EXPERIMENTS and name not in floors:
+            floors[name] = noise_sigma(name)
+        sigma = floors.get(name, {})
+        c["reference"] = ref_of(c["variant"])
+        base = by[(c["reference"], c["mission"])][primary]["mean"]
         val = c[primary]["mean"]
         s = sigma.get(c["mission"])
         s = None if s is None else max(s, SIGMA_MIN_CM)
@@ -229,6 +241,9 @@ def summarise(exp: Experiment, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         "primary": primary,
         "noise_k": NOISE_K,
         "noise_source": None if exp.id in NOISE_EXPERIMENTS else noise_source(exp.spec["baseline"]),
+        "noise_sources": {} if exp.id in NOISE_EXPERIMENTS else {
+            n: noise_source(n) for n in sorted({exp.spec["baseline"]} | {v.get("baseline") for v in
+                                                exp.spec.get("variants") or [] if v.get("reference")})},
         "complete": all(c["n_ok"] + c["n_failed"] + c["n_dirty"] >= exp.spec["repeats"] for c in cells),
         "cells": cells,
     }

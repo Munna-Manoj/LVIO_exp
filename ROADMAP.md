@@ -21,7 +21,7 @@ flowchart LR
   E0 --> P4[P4 state<br/>EXP-009, 010, 011]
   E0 --> P5[P5 camera + backend<br/>EXP-004→012, 013 · EXP-014→015]
   E0 --> P7[P7 embedded<br/>EXP-016→017]
-  E0 --> PX[PX fairness<br/>EXP-019]
+  E0 --> PX[PX fairness<br/>EXP-019, EXP-026]
   M3[M3 stress harness] --> P6[P6 stress<br/>EXP-018, EXP-015]
   M2[M2 site + viewer] --> PUB[public release]
   C[Course C0-C9<br/>SAD parts A-F, G, capstone X] -. explains .-> P1 & P3 & P4 & P5
@@ -41,7 +41,7 @@ flowchart LR
 | M0.5 | Fix the mission split: confirm the six missions with public GT, download 5 more, convert to the offline layout + lightning bags | ✅ | `configs/missions.yaml` has `dev` (3) and `test` (3) with GT, ADR-0005 updated |
 | M0.6 | EXP-000: baselines + noise floor | ✅ | EXP-000 concluded `adopt` |
 | M0.7 | GenZ-LIO as the third system (ADR-0012): fork + submodule `systems/genz-lio`, runner, `genz_stock`, image | ✅ integrated; runner applies imu_dt (pin 0936d34), EXP-022 adopt | `lvx run --dry-run` prints a GenZ-LIO manifest; image built from the pin |
-| M0.8 | EXP-022: GenZ-LIO baseline + noise floor on dev (supersedes EXP-021); planned specs EXP-001 … 020 get GenZ-LIO variants | 🟨 EXP-022 ✅ adopt (2026-10-12); spec rework next | EXP-022 concluded `adopt` |
+| M0.8 | EXP-022: GenZ-LIO baseline + noise floor on dev (supersedes EXP-021); planned specs EXP-001 … 020 get GenZ-LIO variants | 🟨 EXP-022 ✅ adopt (2026-10-12); GenZ-LIO arms drafted in EXP-001…011, 016…018 and EXP-023…026 (awaiting approval; fork flags before freezing) | EXP-022 concluded `adopt` |
 
 ### M1 — First results (one complete phase, publishable)
 
@@ -103,7 +103,7 @@ Suggested interleaving with the study:
 | M4.4 | P5 camera + backend: EXP-004, EXP-012, EXP-013, EXP-014, EXP-015 | ⬜ |
 | M4.5 | P6 stress: EXP-018 | ⬜ |
 | M4.6 | P7 embedded: EXP-016, EXP-017 (+ real Pi 5 run if hardware is available) | ⬜ |
-| M4.7 | PX fairness: EXP-019 | ⬜ |
+| M4.7 | PX fairness: EXP-019, EXP-026 | ⬜ |
 | M4.8 | Final write-up page: what mattered, what didn't, the combined best configuration on `test` | ⬜ |
 
 ## Experiment catalogue
@@ -129,12 +129,16 @@ Specs are drafted (`planned`). Each needs user approval + `lvx exp freeze` befor
 | EXP-014 | Drift check + loop closure in the backend | P5 | EXP-000 |
 | EXP-015 | GNC pose graph under injected false loops | P6 | EXP-014 |
 | EXP-016 | Point budget: accuracy vs time | P7 | EXP-000 |
-| EXP-017 | Four-core real-time budget, both systems | P7 | EXP-016 |
-| EXP-018 | Stress suite, both systems | P6 | EXP-000 |
+| EXP-017 | Four-core real-time budget, all three systems | P7 | EXP-016 |
+| EXP-018 | Stress suite, all three systems | P6 | EXP-000 |
 | EXP-019 | Fair tuning budget for lightning-lm | PX | EXP-000 |
 | EXP-020 | Does the map data structure set the speed? (VoxelMap vs iVox inside SE(3)-LVIO) | P3 | EXP-000, EXP-016 |
 | EXP-021 | GenZ-LIO run-to-run noise and baseline (concluded, but ran without the IMU time offset; superseded by EXP-022) | P0 | EXP-000 |
 | EXP-022 | GenZ-LIO run-to-run noise and baseline, with the IMU time offset (supersedes EXP-021) | P0 | EXP-000 |
+| EXP-023 | Scale-aware point budget (GenZ-LIO's idea), in SE(3)-LVIO and GenZ-LIO | P7 | EXP-000, EXP-022 |
+| EXP-024 | Point-to-point residuals for points without a plane (GenZ-LIO's hybrid metric), in both | P3 | EXP-000, EXP-022 |
+| EXP-025 | Thinning of GenZ-LIO's point-to-point candidates | P3 | EXP-022 |
+| EXP-026 | Fair tuning budget for GenZ-LIO | PX | EXP-022 |
 
 ## Backlog (not planned yet; needs a spec before work)
 

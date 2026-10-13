@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P1 (Outliers and robustness) · **System:** `se3-lvio` · **Depends on:** EXP-002
+**Status:** 🗒️ planned · **Phase:** P1 (Outliers and robustness) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-002
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Does graduated non-convexity with a truncated-least-squares cost, annealed over the 4-6 IEKF iterations, beat a fixed gate and a fixed robust kernel? |
 | **Hypothesis** | GNC helps when outliers are many and the start is poor; with a good IMU prior it should match the gate on clean data and only help where outliers are dense. |
-| **Prediction** | Within noise of the best of EXP-002 on clean missions; better only under the P6 dynamic-clutter stress profile. |
+| **Prediction** | Within noise of the best of EXP-002 on clean missions; better only under the P6 dynamic-clutter stress profile. GenZ-LIO: the same as SE(3)-LVIO. |
 | **Falsified if** | GNC-TLS is worse beyond noise on clean missions (annealing too slow for 5 iterations) AND not better under stress. |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -28,6 +28,9 @@
 | `baseline` | se3lvio_S8 as is |
 | `gnc_tls` | GNC-TLS weights, μ annealed ×1.4 per iteration |
 | `gnc_tls_8it` | GNC-TLS with max_iter 8 so the schedule can finish |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_gnc_tls` | GenZ-LIO GNC-TLS weights, μ annealed ×1.4 per iteration |
+| `genz_gnc_tls_8it` | GenZ-LIO GNC-TLS with max_iteration 8 so the schedule can finish |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

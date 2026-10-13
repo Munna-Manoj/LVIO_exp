@@ -1,18 +1,23 @@
 id: EXP-017
 slug: four-core-budget
-title: Do both systems hold 10 Hz and 20 Hz on four cores?
+title: Do all three systems hold 10 Hz and 20 Hz on four cores?
 phase: P7
 status: planned
 created: '2026-10-07'
-system: both
+system:
+- se3-lvio
+- lightning-lm
+- genz-lio
 depends_on:
 - EXP-016
 supersedes: null
 host: reference
-question: With 4 pinned cores, what are ms/scan p95 and max for SE(3)-LVIO (S8, S9b) and lightning-lm?
+question: With 4 pinned cores, what are ms/scan p95 and max for SE(3)-LVIO (S8, S9b), lightning-lm and
+  GenZ-LIO?
 hypothesis: Both fit 10 Hz on 4 server cores; lightning-lm has more headroom for 20 Hz. Pi 5 cores are
   ~2-3× slower, so the server margin must be large.
-prediction: S8 p95 < 50 ms; lightning p95 < 30 ms; S9b over 50 ms.
+prediction: 'S8 p95 < 50 ms; lightning p95 < 30 ms; S9b over 50 ms. GenZ-LIO p95 below 100 ms on every
+  dev mission but above 50 ms on EIG-2 and SNOW-3 (EXP-022: 38, 66 and 61 ms).'
 falsified_if: S8 p95 > 100 ms on 4 cores (not real time even on server cores).
 baseline: se3lvio_S8
 variants:
@@ -22,6 +27,9 @@ variants:
 - id: ll_indoor
   change: swap baseline config to lightning-lm indoor
   baseline: lightning_indoor
+- id: genz
+  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  baseline: genz_stock
 code_change: none
 missions:
   set: dev
