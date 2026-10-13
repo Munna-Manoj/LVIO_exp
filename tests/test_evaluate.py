@@ -83,7 +83,7 @@ def _two_system_spec():
 def test_a_variant_is_paired_with_its_reference_and_its_own_noise_floor(tmp_path, monkeypatch):
     from lvx import evaluate
     measured = evaluate.noise_sigma
-    monkeypatch.setattr(evaluate, "noise_sigma",                          # fixed floor, independent of the repo's results
+    monkeypatch.setattr(evaluate, "noise_sigma",                          # a fixed floor, not the repo's
                         lambda b: {m: 0.0 for m in ("arc-6", "eig-2", "snow-3")} if b == "genz_stock" else measured(b))
     d = tmp_path / "EXP-001-chi2-gate-sweep"
     d.mkdir()
