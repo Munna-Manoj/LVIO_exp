@@ -17,18 +17,20 @@
 | **Falsified if** | the side with point-to-point residuals is not better on either open mission in either system. |
 | **Decision rule** | Per system, against its own reference and noise floor (EXP-000, EXP-022): the point-to-point fallback helps if, on at least 2/3 of the missions, the side with it beats the side without it by more than 2σ (SE(3)-LVIO: `p2p_fallback` better than `baseline`; GenZ-LIO: `genz_no_hybrid` worse than `genz`) and no mission goes the other way beyond 2σ; it hurts if any mission goes the other way beyond 2σ. Verdict adopt (add it to SE(3)-LVIO) if it helps in both systems and SE(3)-LVIO's ms_p95 grows by less than 10 %; reject if it hurts in either; otherwise inconclusive. The TL;DR gives both systems (ADR-0012 addendum). |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `p2p_fallback` | SE(3)-LVIO: point-to-point residual for points without a plane, λ_po 0.05 |
-| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_no_hybrid` | GenZ-LIO: point-to-plane only (hybrid_metric.enable false) |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `p2p_fallback` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: point-to-point residual for points without a plane, λ_po 0.05 |
+| `genz` | GenZ-LIO | – | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_no_hybrid` | GenZ-LIO | `genz` | GenZ-LIO: point-to-plane only (hybrid_metric.enable false) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

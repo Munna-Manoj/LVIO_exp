@@ -80,6 +80,18 @@ Use one or two per page at most.
 
 ## 6. Experiment reports
 
+A reader should understand an experiment page without reading any other page first.
+
+- **One name per thing.** Use the terms in the table below and nothing else for the same idea. Don't switch between "variant" and "arm", or between "point budget", "inliers" and "downsample target".
+- **No pronoun with an unclear subject.** Write "GenZ-LIO's point budget", not "its budget". Write the comparison out instead of "the same as SE(3)-LVIO".
+- **Define every term on the page.** The spec's `terms` list renders as "Terms used on this page". Every abbreviation, config name and symbol that the page uses goes there: ATE, ms_p95, σ, S8, `genz`.
+- **Say which systems take part.** The spec's `participation` list names all three systems. For each, it says how that system takes part, or why it doesn't.
+- **Each field answers only its own question.**
+  - The question asks one thing.
+  - The hypothesis gives a belief and its mechanism.
+  - The prediction gives numbers or directions per system.
+  - The decision rule says which variant gets adopted and on what condition.
+- **Full sentences.** No telegraph style ("ATE flat 1000-4000"). Write "ATE changes by less than the noise floor between 1000 and 4000 points."
 - **Generated blocks are never edited.** Write only outside `<!-- lvx:… -->`.
 - **TL;DR:** one sentence with the verdict and the number.
 - **Observations:** at most 5 bullets, each pointing at a figure or a table cell.

@@ -17,17 +17,19 @@
 | **Falsified if** | SE(3)-LVIO degrades less in relative terms under every profile. |
 | **Decision rule** | report only: verdict inconclusive with a degradation table; feeds the choice of P2 guards. |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `ll_indoor` | swap baseline config to lightning-lm indoor |
-| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `ll_indoor` | lightning-lm | – | swap baseline config to lightning-lm indoor |
+| `genz` | GenZ-LIO | – | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

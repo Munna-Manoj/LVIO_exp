@@ -17,20 +17,22 @@
 | **Falsified if** | neither kernel changes ATE beyond noise on any mission, or both make it worse. |
 | **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `huber` | Huber IRLS weight, k = 1.345σ |
-| `cauchy` | Cauchy IRLS weight, c = 2.385σ |
-| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_huber` | GenZ-LIO Huber IRLS weight, k = 1.345σ |
-| `genz_cauchy` | GenZ-LIO Cauchy IRLS weight, c = 2.385σ |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `huber` | SE(3)-LVIO | `baseline` | Huber IRLS weight, k = 1.345σ |
+| `cauchy` | SE(3)-LVIO | `baseline` | Cauchy IRLS weight, c = 2.385σ |
+| `genz` | GenZ-LIO | – | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_huber` | GenZ-LIO | `genz` | GenZ-LIO Huber IRLS weight, k = 1.345σ |
+| `genz_cauchy` | GenZ-LIO | `genz` | GenZ-LIO Cauchy IRLS weight, c = 2.385σ |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

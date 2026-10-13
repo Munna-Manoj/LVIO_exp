@@ -17,16 +17,18 @@
 | **Falsified if** | the iVox variant is not faster beyond timing noise, or is both faster and at least as accurate (map structure would then be a free speedup). |
 | **Decision rule** | report a trade-off: adopt only if ms_p95 drops by more than 10 % AND ATE is within 2σ noise on every dev mission; reject if ATE is worse beyond 2σ on any mission; otherwise inconclusive with the measured speed/accuracy trade-off. |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `ivox` | map backend iVox (hashed voxels, 5-NN plane fit, covariance from the fit residual) instead of VoxelMap |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `ivox` | SE(3)-LVIO | `baseline` | map backend iVox (hashed voxels, 5-NN plane fit, covariance from the fit residual) instead of VoxelMap |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

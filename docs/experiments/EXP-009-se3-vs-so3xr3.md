@@ -17,18 +17,20 @@
 | **Falsified if** | SO(3)×R³ worse beyond noise on most missions (would support the paper's central claim more strongly than the theory predicts). |
 | **Decision rule** | Per system, against its own reference and noise floor (EXP-000, EXP-022): SE(3) is better if, on at least 2/3 of the missions, the SE(3) side beats the SO(3)×R³ side by more than 2σ (SE(3)-LVIO: `so3xr3` worse than `baseline`; GenZ-LIO: `genz_se3` better than `genz`) and no mission goes the other way beyond 2σ. Verdict adopt (the coupled retraction matters) if SE(3) is better in both systems; reject (it does not) if every mission is within 2σ in both systems; otherwise inconclusive. The TL;DR gives both systems (ADR-0012 addendum). |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `so3xr3` | retraction SO(3)×R³ instead of SE(3) exp |
-| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_se3` | GenZ-LIO: retraction SE(3) exp instead of its SO(3)×R³ |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `so3xr3` | SE(3)-LVIO | `baseline` | retraction SO(3)×R³ instead of SE(3) exp |
+| `genz` | GenZ-LIO | – | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_se3` | GenZ-LIO | `genz` | GenZ-LIO: retraction SE(3) exp instead of its SO(3)×R³ |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

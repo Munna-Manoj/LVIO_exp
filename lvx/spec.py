@@ -244,6 +244,12 @@ def validate(exp: Experiment, strict_todo: bool = False) -> List[str]:
             err.append("each erratum needs date, field, says, should_say and source (lvx exp erratum)")
         elif x["field"] not in FROZEN or x["says"] not in str(s.get(x["field"], "")):
             err.append(f"erratum on '{x['field']}': '{x['says']}' is not in that frozen field")
+    for x in s.get("terms") or []:                       # the page's glossary; not frozen
+        if not isinstance(x, dict) or set(x) != {"term", "meaning"}:
+            err.append("each entry of terms needs exactly term and meaning")
+    for x in s.get("participation") or []:               # which systems take part and why; not frozen
+        if not isinstance(x, dict) or set(x) != {"system", "takes_part", "how"} or x["system"] not in known:
+            err.append(f"each entry of participation needs system (one of {known}), takes_part and how")
     if not isinstance(s["repeats"], int) or s["repeats"] < 1:
         err.append("repeats must be a positive integer")
     m = s["metrics"] or {}

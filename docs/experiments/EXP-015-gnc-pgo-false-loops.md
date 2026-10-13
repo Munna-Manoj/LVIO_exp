@@ -17,17 +17,19 @@
 | **Falsified if** | GNC also degrades beyond noise with one injected loop. |
 | **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S9c as is |
-| `huber_pgo` | loop factors with Huber kernel |
-| `gnc_pgo` | loop factors solved with GncOptimizer (TLS) |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S9c`, unchanged |
+| `huber_pgo` | SE(3)-LVIO | `baseline` | loop factors with Huber kernel |
+| `gnc_pgo` | SE(3)-LVIO | `baseline` | loop factors solved with GncOptimizer (TLS) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

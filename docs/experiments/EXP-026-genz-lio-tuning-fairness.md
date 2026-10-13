@@ -17,18 +17,20 @@
 | **Falsified if** | a tuned GenZ-LIO matches SE(3)-LVIO S8 within noise on SNOW-3. |
 | **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | genz_stock as is |
-| `lambda_po_0p02` | λ_po 0.02 (stock 0.05) |
-| `lambda_po_0p2` | λ_po 0.2 (stock 0.05) |
-| `voxel_0p5` | root voxel 0.5 m (stock 1.0) |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | GenZ-LIO | – | the stock config `genz_stock`, unchanged |
+| `lambda_po_0p02` | GenZ-LIO | `baseline` | λ_po 0.02 (stock 0.05) |
+| `lambda_po_0p2` | GenZ-LIO | `baseline` | λ_po 0.2 (stock 0.05) |
+| `voxel_0p5` | GenZ-LIO | `baseline` | root voxel 0.5 m (stock 1.0) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

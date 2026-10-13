@@ -20,15 +20,17 @@
 | **Falsified if** | any run has pose_coverage below 0.99, any run fails, or ARC-6 ATE is 3 cm or more. Each means the harness or the config is wrong for GenZ-LIO (frame, extrinsic, timestamps, or core budget). |
 | **Decision rule** | pass (verdict adopt = GenZ-LIO runs correctly in the harness) if all 15 runs are ok with pose_coverage ≥ 0.99 and the ARC-6 mean ATE is below 3 cm; otherwise reject and fix the runner or config before any experiment uses GenZ-LIO. The σ per mission from this experiment is GenZ-LIO's noise floor for all later experiments (ADR-0004, ADR-0012). |
 
-<sub>Fields above are pre-registered (`spec.lock`).</sub>
+<sub>The five fields in this table were locked when the experiment was approved (pre-registered in `spec.lock`) and cannot change.</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | genz_stock as is |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | GenZ-LIO | – | the stock config `genz_stock`, unchanged |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 5 per variant × mission
@@ -40,7 +42,7 @@
 ## Results
 
 <!-- lvx:begin results -->
-Primary metric `ate_rmse_cm`: mean ± std over repeats. Δ is against `baseline` on the same mission; the effect is called only when |Δ| > 2σ of run-to-run noise (σ from this experiment).
+Each cell shows `ate_rmse_cm` as the mean ± standard deviation over the repeats. Δ is the variant's mean minus the mean of the variant it is compared with, on the same mission. An effect counts only when |Δ| is larger than 2 × the run-to-run standard deviation σ of that system's stock config (σ from this experiment; never below 0.005 cm).
 
 | Mission | Variant | ate_rmse_cm | Δ | Effect | ms p95 | runs ok / failed |
 |---|---|---|---|---|---|---|

@@ -17,18 +17,20 @@
 | **Falsified if** | a tuned lightning-lm matches SE(3)-LVIO S8 within noise. |
 | **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | lightning_indoor as is |
-| `grid_0p1` | 0.1 m scan/map/iVox grid |
-| `icp_w_1000` | plane_icp_weight 1000 |
-| `filter_1` | point_filter_num 1 |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | lightning-lm | – | the stock config `lightning_indoor`, unchanged |
+| `grid_0p1` | lightning-lm | `baseline` | 0.1 m scan/map/iVox grid |
+| `icp_w_1000` | lightning-lm | `baseline` | plane_icp_weight 1000 |
+| `filter_1` | lightning-lm | `baseline` | point_filter_num 1 |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

@@ -17,18 +17,20 @@
 | **Falsified if** | no thinning or 512 candidates is better beyond noise on most missions (the stock budget loses matches). |
 | **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. An SE(3)-LVIO arm follows only if EXP-024 adopts the point-to-point fallback. |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | genz_stock as is |
-| `ratio_1` | reduction_ratio 1 (stock 4): children keep the parent's budget |
-| `cand_32` | max_points_per_voxel 32 (stock 128) |
-| `cand_512` | max_points_per_voxel 512 (stock 128) |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | GenZ-LIO | – | the stock config `genz_stock`, unchanged |
+| `ratio_1` | GenZ-LIO | `baseline` | reduction_ratio 1 (stock 4): children keep the parent's budget |
+| `cand_32` | GenZ-LIO | `baseline` | max_points_per_voxel 32 (stock 128) |
+| `cand_512` | GenZ-LIO | `baseline` | max_points_per_voxel 512 (stock 128) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

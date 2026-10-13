@@ -17,7 +17,7 @@
 | **Falsified if** | any baseline misses its pre-repo ARC-6 number by more than 3σ, or any run has pose_coverage below 0.99. Either means the harness changed the system (wrong config, frame, time offset or core budget). |
 | **Decision rule** | pass (verdict adopt = the harness is trusted) if every baseline reproduces on ARC-6 within 3σ and every run has pose_coverage ≥ 0.99; otherwise reject and fix the harness before any other experiment runs. The σ per (baseline, mission) from this experiment is the noise floor for all later ones (ADR-0004). |
 
-<sub>Fields above are pre-registered (`spec.lock`).</sub>
+<sub>The five fields in this table were locked when the experiment was approved (pre-registered in `spec.lock`) and cannot change.</sub>
 
 > **Erratum (2026-10-12):** prediction says “S9c 0.8989”; it should say “S9c 0.8998”. Source: the pre-repo run log on the reference host gives S9c ARC-6 ate_rmse_cm 0.8998005 (recomputed with lvx.evaluate on 2026-10-08); the digits were swapped when the number was copied, and EXP-000 measured 0.8998. The frozen text is kept as approved.
 <!-- lvx:end hypothesis -->
@@ -25,14 +25,16 @@
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `s9a` | swap baseline config to S9a (adds Livox) |
-| `s9b` | swap baseline config to S9b (adds camera) |
-| `s9c` | swap baseline config to S9c (adds backend) |
-| `ll_stock` | swap baseline config to lightning-lm stock |
-| `ll_indoor` | swap baseline config to lightning-lm indoor grid |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `s9a` | SE(3)-LVIO | – | swap baseline config to S9a (adds Livox) |
+| `s9b` | SE(3)-LVIO | – | swap baseline config to S9b (adds camera) |
+| `s9c` | SE(3)-LVIO | – | swap baseline config to S9c (adds backend) |
+| `ll_stock` | lightning-lm | – | swap baseline config to lightning-lm stock |
+| `ll_indoor` | lightning-lm | – | swap baseline config to lightning-lm indoor grid |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 5 per variant × mission
@@ -44,7 +46,7 @@
 ## Results
 
 <!-- lvx:begin results -->
-Primary metric `ate_rmse_cm`: mean ± std over repeats. Δ is against `baseline` on the same mission; the effect is called only when |Δ| > 2σ of run-to-run noise (σ from this experiment).
+Each cell shows `ate_rmse_cm` as the mean ± standard deviation over the repeats. Δ is the variant's mean minus the mean of the variant it is compared with, on the same mission. An effect counts only when |Δ| is larger than 2 × the run-to-run standard deviation σ of that system's stock config (σ from this experiment; never below 0.005 cm).
 
 | Mission | Variant | ate_rmse_cm | Δ | Effect | ms p95 | runs ok / failed |
 |---|---|---|---|---|---|---|

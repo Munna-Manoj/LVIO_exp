@@ -17,18 +17,20 @@
 | **Falsified if** | the scale-aware budget is not better on either open mission in either system. |
 | **Decision rule** | Per system, against its own reference and noise floor (EXP-000, EXP-022): the scale-aware budget helps if, on at least 2/3 of the missions, the side with it beats the side without it by more than 2σ (SE(3)-LVIO: `scale_aware` better than `baseline`; GenZ-LIO: `genz_fixed_2000` worse than `genz`) and no mission goes the other way beyond 2σ; it hurts if any mission goes the other way beyond 2σ. Verdict adopt (add it to SE(3)-LVIO) if it helps in both systems and SE(3)-LVIO's ms_p95 grows by less than 10 %; reject if it hurts in either; otherwise inconclusive. The TL;DR gives both systems (ADR-0012 addendum). |
 
-<sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
+<sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
 
 ## Setup
 
 <!-- lvx:begin setup -->
-| Variant | The one change |
-|---|---|
-| `baseline` | se3lvio_S8 as is |
-| `scale_aware` | SE(3)-LVIO: inlier target scale-aware 1000→4000 (baseline fixed 2000) |
-| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_fixed_2000` | GenZ-LIO: fixed setpoint 2000 points (N_min = N_max = 2000; stock 1000→4000) |
+Each variant differs from the variant it is compared with in exactly one change. A variant marked – runs another system's stock config, and the variants of that system are compared with it.
+
+| Variant | System | Compared with | What this variant changes |
+|---|---|---|---|
+| `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
+| `scale_aware` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: inlier target scale-aware 1000→4000 (baseline fixed 2000) |
+| `genz` | GenZ-LIO | – | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_fixed_2000` | GenZ-LIO | `genz` | GenZ-LIO: fixed setpoint 2000 points (N_min = N_max = 2000; stock 1000→4000) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
