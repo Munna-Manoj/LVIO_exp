@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Does the 17-dim state (with accel bias and S2 gravity) beat a 12-dim state with them fixed after initialisation, as in lightning-lm? |
 | **Hypothesis** | Accel bias and gravity direction are weakly observable but matter when the start is not static; fixing them saves compute and removes a source of drift-by-misestimation. |
-| **Prediction** | Within noise on missions with a static start; 17-dim better on missions that start moving. |
+| **Prediction** | Within noise on missions with a static start; 17-dim better on missions that start moving. GenZ-LIO: the same as SE(3)-LVIO. |
 | **Falsified if** | 12-dim better beyond noise on most missions. |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -27,6 +27,8 @@
 |---|---|
 | `baseline` | se3lvio_S8 as is |
 | `state12` | freeze ba and gravity after initialisation (zero their process noise and gain) |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_state12` | GenZ-LIO: freeze ba and gravity after initialisation (zero their process noise and gain) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

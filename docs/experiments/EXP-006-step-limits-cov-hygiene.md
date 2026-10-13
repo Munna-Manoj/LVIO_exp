@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P2 (Filter safeguards) · **System:** `se3-lvio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P2 (Filter safeguards) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Do lightning-lm-style guards (reject an update step > 0.5 m / 5°, symmetrise and floor the covariance) change ATE? |
 | **Hypothesis** | These guards never trigger on healthy data, so they should not change accuracy; they matter only under stress (P6). |
-| **Prediction** | Bit-identical or within noise on every dev mission; fewer divergences under the P6 scan-drop profile. |
+| **Prediction** | Bit-identical or within noise on every dev mission; fewer divergences under the P6 scan-drop profile. GenZ-LIO: the same as SE(3)-LVIO. |
 | **Falsified if** | any change beyond noise on clean data (the guard triggers when it should not). |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -27,6 +27,8 @@
 |---|---|
 | `baseline` | se3lvio_S8 as is |
 | `guards` | step limit 0.5 m / 5° + covariance symmetrise and floor |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_guards` | GenZ-LIO step limit 0.5 m / 5° + covariance symmetrise and floor |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

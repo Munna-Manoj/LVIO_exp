@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P6 (Stress tests) · **System:** `both` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P6 (Stress tests) · **System:** `se3-lvio` + `lightning-lm` + `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -11,9 +11,9 @@
 <!-- lvx:begin hypothesis -->
 | | |
 |---|---|
-| **Question** | Under controlled degradation (drop Livox, drop 10-30 % of scans, 4× point thinning, ±5 ms IMU time shift), how do both systems degrade? |
+| **Question** | Under controlled degradation (drop Livox, drop 10-30 % of scans, 4× point thinning, ±5 ms IMU time shift), how do the three systems degrade? |
 | **Hypothesis** | SE(3)-LVIO is tuned for clean data and degrades faster under scan drops; lightning-lm's guards make it degrade gracefully. |
-| **Prediction** | lightning-lm degrades less in relative terms under scan drops; SE(3)-LVIO remains more accurate in absolute terms. |
+| **Prediction** | lightning-lm degrades less in relative terms under scan drops; SE(3)-LVIO remains more accurate in absolute terms. GenZ-LIO degrades less than SE(3)-LVIO under 4× thinning (its point budget adapts the voxel size to keep the points it needs); the drop-Livox profile does not apply to it (Hesai only). |
 | **Falsified if** | SE(3)-LVIO degrades less in relative terms under every profile. |
 | **Decision rule** | report only: verdict inconclusive with a degradation table; feeds the choice of P2 guards. |
 
@@ -27,6 +27,7 @@
 |---|---|
 | `baseline` | se3lvio_S8 as is |
 | `ll_indoor` | swap baseline config to lightning-lm indoor |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P3 (Map quality) · **System:** `se3-lvio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P3 (Map quality) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Does lightning-lm-style keyframe-only map insertion (1 m / 10°) change ATE and runtime for SE(3)-LVIO? |
 | **Hypothesis** | Per-scan insertion gives a denser reference but also inserts transient objects and costs time; keyframe insertion trades density for speed. |
-| **Prediction** | Slightly worse ATE (sparser planes), lower ms_p95. |
+| **Prediction** | Slightly worse ATE (sparser planes), lower ms_p95. GenZ-LIO: the same direction as SE(3)-LVIO, with a larger ms_p95 saving, since its map update also refreshes the point-to-point candidates. |
 | **Falsified if** | better ATE beyond noise (would mean per-scan insertion pollutes the map). |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -27,6 +27,8 @@
 |---|---|
 | `baseline` | se3lvio_S8 as is |
 | `kf_insert` | insert scans into the voxel map only at keyframes (1 m / 10°) |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_kf_insert` | GenZ-LIO: insert scans into the voxel map only at keyframes (1 m / 10°) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

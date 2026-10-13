@@ -4,7 +4,9 @@ title: Does GNC-TLS annealed across IEKF iterations help?
 phase: P1
 status: planned
 created: '2026-10-07'
-system: se3-lvio
+system:
+- se3-lvio
+- genz-lio
 depends_on:
 - EXP-002
 supersedes: null
@@ -13,8 +15,8 @@ question: Does graduated non-convexity with a truncated-least-squares cost, anne
   iterations, beat a fixed gate and a fixed robust kernel?
 hypothesis: GNC helps when outliers are many and the start is poor; with a good IMU prior it should match
   the gate on clean data and only help where outliers are dense.
-prediction: Within noise of the best of EXP-002 on clean missions; better only under the P6 dynamic-clutter
-  stress profile.
+prediction: 'Within noise of the best of EXP-002 on clean missions; better only under the P6 dynamic-clutter
+  stress profile. GenZ-LIO: the same as SE(3)-LVIO.'
 falsified_if: GNC-TLS is worse beyond noise on clean missions (annealing too slow for 5 iterations) AND
   not better under stress.
 baseline: se3lvio_S8
@@ -27,8 +29,24 @@ variants:
   change: GNC-TLS with max_iter 8 so the schedule can finish
   overrides:
     lio.robust_kernel: gnc_tls_8it
-code_change: robust_kernel gains gnc_tls / gnc_tls_8it (the second sets its own iteration cap inside the
-  kernel, so it stays one flag)
+- id: genz
+  change: swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms)
+  baseline: genz_stock
+- id: genz_gnc_tls
+  change: GenZ-LIO GNC-TLS weights, μ annealed ×1.4 per iteration
+  baseline: genz_stock
+  reference: genz
+  overrides:
+    lvio_exp.robust_kernel: gnc_tls
+- id: genz_gnc_tls_8it
+  change: GenZ-LIO GNC-TLS with max_iteration 8 so the schedule can finish
+  baseline: genz_stock
+  reference: genz
+  overrides:
+    lvio_exp.robust_kernel: gnc_tls_8it
+code_change: 'robust_kernel gains gnc_tls / gnc_tls_8it (the second sets its own iteration cap inside
+  the kernel, so it stays one flag); GenZ-LIO: the same flag as `lvio_exp.robust_kernel` in the fork (default
+  off = upstream), added before freezing'
 missions:
   set: dev
 repeats: 3
@@ -38,8 +56,11 @@ metrics:
   - ate_max_cm
   - ms_p95
 stress: null
-decision_rule: adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
+decision_rule: 'adopt if the mean primary metric over the missions improves by more than 2σ run-to-run
   noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than
-  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive.
+  10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system
+  separately: SE(3)-LVIO''s arms against `baseline`, GenZ-LIO''s against `genz`, each with its own noise
+  floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects
+  for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum).'
 learn_links:
 - docs/explain/outliers-in-an-iekf.md

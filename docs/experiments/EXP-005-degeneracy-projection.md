@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P2 (Filter safeguards) · **System:** `se3-lvio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P2 (Filter safeguards) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Does lightning-lm-style degeneracy handling (eigen-analysis of HᵀH, update only well-constrained directions) improve ATE? |
 | **Hypothesis** | In corridors and open areas some pose directions are weakly constrained; updating them only adds noise. The IMU prior already damps them, so gains should be small and local. |
-| **Prediction** | Within noise on indoor missions; better on missions with long corridors or open terrain. |
+| **Prediction** | Within noise on indoor missions; better on missions with long corridors or open terrain. GenZ-LIO: within noise on ARC-6; if anything better on the open EIG-2 and SNOW-3, where its point-to-point residuals constrain fewer directions than planes would. |
 | **Falsified if** | worse beyond noise on any mission (projection throws away real information). |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -27,6 +27,8 @@
 |---|---|
 | `baseline` | se3lvio_S8 as is |
 | `degen_proj` | project the update onto eigen-directions with λ > λ_min |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_degen_proj` | GenZ-LIO: project the update onto eigen-directions with λ > λ_min |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

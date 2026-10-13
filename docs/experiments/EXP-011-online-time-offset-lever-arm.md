@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Does estimating the IMU time offset online match the hand-fitted per-mission imu_dt? |
 | **Hypothesis** | The time offset is observable from rotation; online estimation removes a manual fitting step without losing accuracy. |
-| **Prediction** | Within noise of the hand-fitted imu_dt; converged offset within 1 ms of the fitted value. |
+| **Prediction** | Within noise of the hand-fitted imu_dt; converged offset within 1 ms of the fitted value. GenZ-LIO: the same converged offset (it is a property of the sensors, not of the estimator); ATE within noise of `genz`. |
 | **Falsified if** | worse beyond noise, or the estimate does not converge within 30 s. |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -27,6 +27,8 @@
 |---|---|
 | `baseline` | se3lvio_S8 as is |
 | `td_online` | estimate IMU time offset in the state, start at 0 |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_td_online` | GenZ-LIO: estimate the IMU time offset in the state, start at 0 |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

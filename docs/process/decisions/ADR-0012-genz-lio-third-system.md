@@ -52,8 +52,8 @@
   - EXP-014 and EXP-015 work on the backend, and GenZ-LIO has none.
   - EXP-020 is about SE(3)-LVIO's own map internals.
   - These stay `system: se3-lvio`.
-- **GenZ-LIO's ideas in SE(3)-LVIO.** Each idea is tested in both systems: added to SE(3)-LVIO, and switched off in GenZ-LIO.
-  - EXP-023: PID-adapted voxel size.
-  - EXP-024: point-to-point residuals beside point-to-plane.
-  - EXP-025: voxel-pruned correspondence search.
+- **GenZ-LIO's ideas in SE(3)-LVIO.** Each idea is tested in both systems: added to SE(3)-LVIO (reimplemented from the paper, since GenZ-LIO is GPL-2.0), and switched off in GenZ-LIO.
+  - EXP-023: the scale-aware point budget (a setpoint that grows with the scene's scale, tracked by a PID on the voxel size).
+  - EXP-024: point-to-point residuals for points without a plane (the hybrid-metric update).
+  - EXP-025: thinning of the point-to-point candidates. It runs in GenZ-LIO only, because SE(3)-LVIO has no such candidates unless EXP-024 adopts the fallback.
 - **GenZ-LIO tuning fairness:** EXP-026, alongside EXP-019 for lightning-lm.

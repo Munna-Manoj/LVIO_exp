@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P1 (Outliers and robustness) · **System:** `se3-lvio` · **Depends on:** EXP-001
+**Status:** 🗒️ planned · **Phase:** P1 (Outliers and robustness) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-001
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Does down-weighting residuals with Huber or Cauchy inside each IEKF iteration (IRLS) reduce ATE compared with gating alone? |
 | **Hypothesis** | Residuals near the gate (partial occlusion, smoke edges, thin structure) are not fully wrong; smooth weights keep their information without letting them pull the estimate. |
-| **Prediction** | Small gains (< 0.05 cm) on clean missions, larger on ARC-6 near smoke; Cauchy ≥ Huber. |
+| **Prediction** | Small gains (< 0.05 cm) on clean missions, larger on ARC-6 near smoke; Cauchy ≥ Huber. GenZ-LIO: within noise; its two gates (plane and point-to-point) already reject most outliers. |
 | **Falsified if** | neither kernel changes ATE beyond noise on any mission, or both make it worse. |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -28,6 +28,9 @@
 | `baseline` | se3lvio_S8 as is |
 | `huber` | Huber IRLS weight, k = 1.345σ |
 | `cauchy` | Cauchy IRLS weight, c = 2.385σ |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_huber` | GenZ-LIO Huber IRLS weight, k = 1.345σ |
+| `genz_cauchy` | GenZ-LIO Cauchy IRLS weight, c = 2.385σ |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

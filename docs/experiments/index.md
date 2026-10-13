@@ -23,10 +23,14 @@ Every experiment, its status and its verdict. Each row links its report. Generat
 | [EXP-014](EXP-014-drift-and-loop-closure.md) | Is there drift worth closing loops for? | P5 | 🗒️ planned |  |  |
 | [EXP-015](EXP-015-gnc-pgo-false-loops.md) | Does GNC protect the pose graph from false loops? | P6 | 🗒️ planned |  |  |
 | [EXP-016](EXP-016-point-budget-sweep.md) | How much accuracy does each millisecond buy? | P7 | 🗒️ planned |  |  |
-| [EXP-017](EXP-017-four-core-budget.md) | Do both systems hold 10 Hz and 20 Hz on four cores? | P7 | 🗒️ planned |  |  |
+| [EXP-017](EXP-017-four-core-budget.md) | Do all three systems hold 10 Hz and 20 Hz on four cores? | P7 | 🗒️ planned |  |  |
 | [EXP-018](EXP-018-stress-suite.md) | Which design choices matter when the data gets worse? | P6 | 🗒️ planned |  |  |
 | [EXP-019](EXP-019-lightning-tuning-fairness.md) | Is lightning-lm tuned fairly? | PX | 🗒️ planned |  |  |
 | [EXP-020](EXP-020-map-structure-speed.md) | Does the map data structure set the speed of SE(3)-LVIO? | P3 | 🗒️ planned |  |  |
 | [EXP-021](EXP-021-genz-lio-baseline-and-noise-floor.md) | How large is GenZ-LIO's run-to-run noise, and does the harness run it correctly? | P0 | ✅ concluded | 🟢 adopt | superseded by EXP-022 |
 | [EXP-022](EXP-022-genz-lio-baseline-with-imu-offset.md) | How large is GenZ-LIO's run-to-run noise, with the protocol's IMU time offset? | P0 | ✅ concluded | 🟢 adopt | noise floor: σ ≤ 0.0000 ate_rmse_cm per cell |
+| [EXP-023](EXP-023-pid-adaptive-voxel-size.md) | Should the point budget grow with the scene's scale? | P7 | 🗒️ planned |  |  |
+| [EXP-024](EXP-024-point-to-point-fallback.md) | Should points without a plane get a point-to-point residual? | P3 | 🗒️ planned |  |  |
+| [EXP-025](EXP-025-point-to-point-candidate-pruning.md) | Does thinning GenZ-LIO's point-to-point candidates cost accuracy? | P3 | 🗒️ planned |  |  |
+| [EXP-026](EXP-026-genz-lio-tuning-fairness.md) | Is GenZ-LIO tuned fairly? | PX | 🗒️ planned |  |  |
 <!-- lvx:end index -->

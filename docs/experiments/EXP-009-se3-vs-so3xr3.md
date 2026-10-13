@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Does replacing the SE(3) exponential retraction with the separate SO(3)×R³ retraction (FAST-LIO style) change ATE? |
 | **Hypothesis** | For per-scan corrections (mm, mrad) the two retractions differ by about ½ φ×ρ, which is micrometres; any effect should appear only in fast turns or with large rotation uncertainty. |
-| **Prediction** | Within noise on every dev mission; if anything, a difference on the fastest-turning segments. |
+| **Prediction** | Within noise on every dev mission; if anything, a difference on the fastest-turning segments. GenZ-LIO is SO(3)×R³ natively, so its arm goes the other way (SO(3)×R³ → SE(3)); within noise too. |
 | **Falsified if** | SO(3)×R³ worse beyond noise on most missions (would support the paper's central claim more strongly than the theory predicts). |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | Per system, against its own reference and noise floor (EXP-000, EXP-022): SE(3) is better if, on at least 2/3 of the missions, the SE(3) side beats the SO(3)×R³ side by more than 2σ (SE(3)-LVIO: `so3xr3` worse than `baseline`; GenZ-LIO: `genz_se3` better than `genz`) and no mission goes the other way beyond 2σ. Verdict adopt (the coupled retraction matters) if SE(3) is better in both systems; reject (it does not) if every mission is within 2σ in both systems; otherwise inconclusive. The TL;DR gives both systems (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -27,6 +27,8 @@
 |---|---|
 | `baseline` | se3lvio_S8 as is |
 | `so3xr3` | retraction SO(3)×R³ instead of SE(3) exp |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_se3` | GenZ-LIO: retraction SE(3) exp instead of its SO(3)×R³ |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

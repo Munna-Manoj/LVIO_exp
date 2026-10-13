@@ -3,7 +3,7 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P1 (Outliers and robustness) · **System:** `se3-lvio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P1 (Outliers and robustness) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
@@ -13,9 +13,9 @@
 |---|---|
 | **Question** | Is the hard 3σ point-to-plane gate the right width, or does a tighter/looser gate change ATE? |
 | **Hypothesis** | The IMU prior is good enough that 3σ already separates inliers; tighter gates lose good constraints, looser gates admit smoke and clutter. |
-| **Prediction** | 2.5σ-4σ within noise of 3σ; 2σ worse (fewer inliers), 5σ slightly worse on smoky ARC-6. |
+| **Prediction** | 2.5σ-4σ within noise of 3σ; 2σ worse (fewer inliers), 5σ slightly worse on smoky ARC-6. GenZ-LIO: 2.5σ-4σ within noise of 3σ too; 2σ hurts less than in SE(3)-LVIO, because a point the plane gate rejects falls through to GenZ-LIO's point-to-point residual instead of being lost. |
 | **Falsified if** | a gate other than 3σ improves ATE beyond 2σ noise on most missions. |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
 
 <sub>Fields above are draft, not frozen yet (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -30,6 +30,11 @@
 | `gate_2p5` | residual gate 2.5σ (baseline 3.0σ) |
 | `gate_4p0` | residual gate 4.0σ (baseline 3.0σ) |
 | `gate_5p0` | residual gate 5.0σ (baseline 3.0σ) |
+| `genz` | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
+| `genz_gate_2p0` | GenZ-LIO point-to-plane gate 2.0σ (stock 3.0σ) |
+| `genz_gate_2p5` | GenZ-LIO point-to-plane gate 2.5σ (stock 3.0σ) |
+| `genz_gate_4p0` | GenZ-LIO point-to-plane gate 4.0σ (stock 3.0σ) |
+| `genz_gate_5p0` | GenZ-LIO point-to-plane gate 5.0σ (stock 3.0σ) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
