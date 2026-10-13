@@ -2,7 +2,7 @@ id: EXP-022
 slug: genz-lio-baseline-with-imu-offset
 title: How large is GenZ-LIO's run-to-run noise, with the protocol's IMU time offset?
 phase: P0
-status: planned
+status: concluded
 created: '2026-10-12'
 system: genz-lio
 depends_on:
@@ -43,3 +43,14 @@ decision_rule: pass (verdict adopt = GenZ-LIO runs correctly in the harness, und
   and fix the runner or config before any experiment uses GenZ-LIO. The σ per mission from this experiment
   is GenZ-LIO's noise floor for all later experiments (ADR-0004, ADR-0012).
 learn_links: []
+history:
+- date: '2026-10-12'
+  status: approved
+- date: '2026-10-12'
+  status: running
+- date: '2026-10-12'
+  status: analysed
+- date: '2026-10-12'
+  status: concluded
+  verdict: adopt
+verdict: adopt
