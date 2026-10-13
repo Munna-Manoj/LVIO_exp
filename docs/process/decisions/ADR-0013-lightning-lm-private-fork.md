@@ -28,7 +28,8 @@
   - a plain `lightning` variant runs lightning-lm's stock config;
   - each lightning-lm variant names `lightning` as its `reference`, so it still differs from its reference in one change (law 4);
   - its noise floor comes from EXP-000, which measured `lightning_stock` and `lightning_indoor`.
-- Fork flags are written in the overrides as `lvio_exp.<flag>`. A flag is added to the fork before its experiment is frozen.
+- Fork flags are written in the overrides as `lvio_exp.<flag>`. Each flag gets a default in the fork's `config/default_robosense.yaml` (section `lvio_exp:`), and is added to the fork before its experiment is frozen.
+- **lightning-lm is judged on ARC-6 only.** Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning_indoor`: 294 cm and 41 cm). A change measured on a lost track says nothing about the change. Specs therefore judge lightning-lm's variants on ARC-6 and still report the field missions. A variant that brings EIG-2 or SNOW-3 below 10 cm is reported as a finding.
 - Other people cannot reproduce lightning-lm's ablation runs without access to the private fork. Each report says so under threats to validity.
 - `tools/check_tree.py` still rejects any lightning-lm file under `systems/lightning-lm/` that is not one of our own.
 

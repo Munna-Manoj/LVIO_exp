@@ -1,21 +1,45 @@
-# EXP-024 — TODO the question as a title, e.g. How wide should the point-to-plane gate be?
+# EXP-024 — Should points without a plane get a point-to-point residual?
 
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P3 (Map quality) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000, EXP-022
+**Status:** 🗒️ planned · **Phase:** P3 (Map quality) · **System:** `se3-lvio` + `genz-lio` + `lightning-lm` · **Depends on:** EXP-000, EXP-022
 <!-- lvx:end status -->
 
 ## Question & hypothesis
 
 <!-- lvx:begin hypothesis -->
+**Terms used on this page**
+
+| Term | Meaning |
+|---|---|
+| **ATE** | Absolute trajectory error: the root-mean-square distance between the estimated trajectory and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better. |
+| **scan time (ms_p95)** | The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile over a mission: 95 % of the scans take less than this. |
+| **noise floor** | The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation of ATE between identical runs of that system's stock config (EXP-000 for SE(3)-LVIO and lightning-lm, EXP-022 for GenZ-LIO). It is never less than 0.01 cm. |
+| **variant** | One configuration that is run. Each variant differs from the variant it is compared with in exactly one change. |
+| **dev missions** | The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports. |
+| **`baseline` (S8)** | SE(3)-LVIO's stock config `se3lvio_S8`: one LiDAR (the Hesai XT32) and the IMU, no camera, no backend. |
+| **`genz`** | GenZ-LIO's stock config `genz_stock`: upstream's Hesai settings, with only the sensor calibration and the 4-core limit set. |
+| **`lightning`** | lightning-lm's config `lightning_indoor`: upstream's settings with 0.2 m grids. It is the better of lightning-lm's two configs on ARC-6 in EXP-000 (1.41 cm against 1.64 cm). |
+| **lightning-lm on the field missions** | Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning`: 294 cm and 41 cm). A lightning-lm variant is therefore judged on ARC-6 only. Its EIG-2 and SNOW-3 numbers are still reported. |
+| **point-to-plane residual** | The distance from a scan point to its matched plane in the map. |
+| **point-to-point residual** | The distance from a scan point to its nearest point in the map. GenZ-LIO uses it only for points that match no plane, weighted by λ_po. lightning-lm uses it for every point with at least 3 map neighbours, dropping residuals above 0.5 m, with a fixed weight of 100. |
+
+**Which systems take part**
+
+| System | Takes part | How, or why not |
+|---|---|---|
+| SE(3)-LVIO | yes | Point-to-point residuals are added for points without a plane. |
+| GenZ-LIO | yes | GenZ-LIO has them; its variant switches them off. |
+| lightning-lm | yes | lightning-lm has its own version (for every point); its variant switches it off. |
+
 | | |
 |---|---|
-| **Question** | Does GenZ-LIO's hybrid-metric update (a point that fits no plane gets a point-to-point residual, weighted by λ_po) improve ATE, in both systems? |
-| **Hypothesis** | In open scenes many points fall in voxels with no plane; they carry information that point-to-plane alone throws away. In confined scenes almost every point has a plane, so the fallback rarely fires. |
-| **Prediction** | SE(3)-LVIO: within noise on ARC-6, better on EIG-2 and SNOW-3. GenZ-LIO without it: within noise on ARC-6, worse on EIG-2 and SNOW-3. |
-| **Falsified if** | the side with point-to-point residuals is not better on either open mission in either system. |
-| **Decision rule** | Per system, against its own reference and noise floor (EXP-000, EXP-022): the point-to-point fallback helps if, on at least 2/3 of the missions, the side with it beats the side without it by more than 2σ (SE(3)-LVIO: `p2p_fallback` better than `baseline`; GenZ-LIO: `genz_no_hybrid` worse than `genz`) and no mission goes the other way beyond 2σ; it hurts if any mission goes the other way beyond 2σ. Verdict adopt (add it to SE(3)-LVIO) if it helps in both systems and SE(3)-LVIO's ms_p95 grows by less than 10 %; reject if it hurts in either; otherwise inconclusive. The TL;DR gives both systems (ADR-0012 addendum). |
+| **Question** | GenZ-LIO gives a point that matches no plane a point-to-point residual instead of dropping it. Does a point-to-point residual improve ATE, in each system? |
+| **Hypothesis** | In open scenes many points fall where the map has no plane. Those points carry information that a point-to-plane update throws away. In confined scenes almost every point has a plane, so the extra residual rarely applies. |
+| **Prediction** | SE(3)-LVIO with it: ATE changes by less than the noise floor on ARC-6, and is better on EIG-2 and SNOW-3. GenZ-LIO without it: ATE changes by less than the noise floor on ARC-6, and is worse on EIG-2 and SNOW-3. lightning-lm without its point-to-point residual, on ARC-6: ATE changes by less than the noise floor. |
+| **Falsified if** | In neither SE(3)-LVIO nor GenZ-LIO is the side with point-to-point residuals better on EIG-2 or SNOW-3. |
+| **Decision rule** | Each system is run with and without point-to-point residuals (SE(3)-LVIO: `p2p_fallback` with it, `baseline` without it; GenZ-LIO: `genz` with it, `genz_no_hybrid` without it; lightning-lm: `lightning` with it, `lightning_no_icp` without it). On each mission, the side with point-to-point residuals is better if its ATE is lower by more than the noise floor, and worse if its ATE is higher by more than the noise floor. Point-to-point residuals helps a system if the side with it is better on at least two of the three dev missions, worse on none, and its ms_p95 is less than 10 % higher. Point-to-point residuals hurts a system if the side with it is worse on any mission. For lightning-lm only ARC-6 is judged: point-to-point residuals helps lightning-lm if the side with it is better on ARC-6 with less than 10 % more ms_p95, and hurts lightning-lm if it is worse on ARC-6. Verdict: adopt if point-to-point residuals helps every system that takes part, reject if it hurts every one, and inconclusive otherwise. The summary at the top of the page gives the result for each system. |
 
 <sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -28,9 +52,11 @@ Each variant differs from the variant it is compared with in exactly one change.
 | Variant | System | Compared with | What this variant changes |
 |---|---|---|---|
 | `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
-| `p2p_fallback` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: point-to-point residual for points without a plane, λ_po 0.05 |
-| `genz` | GenZ-LIO | – | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_no_hybrid` | GenZ-LIO | `genz` | GenZ-LIO: point-to-plane only (hybrid_metric.enable false) |
+| `p2p_fallback` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: point-to-point residuals for points without a plane, weight factor λ_po 0.05 |
+| `genz` | GenZ-LIO | – | GenZ-LIO's stock config. The GenZ-LIO variants are compared with this one. |
+| `genz_no_hybrid` | GenZ-LIO | `genz` | GenZ-LIO: point-to-plane residuals only |
+| `lightning` | lightning-lm | – | lightning-lm's indoor config. The lightning-lm variants are compared with this one. |
+| `lightning_no_icp` | lightning-lm | `lightning` | lightning-lm: point-to-plane residuals only |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

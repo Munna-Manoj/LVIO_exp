@@ -1,6 +1,6 @@
 # EXP-000 — How large is run-to-run noise, and do the pre-repo baselines reproduce?
 
-**TL;DR:** adopt: all six baselines reproduce their pre-repo ARC-6 ATE exactly (S8 0.8055 cm … lightning stock 1.6391 cm), every run has pose_coverage ≥ 0.9987, and 16 of 18 cells are bit-for-bit deterministic, so the noise floor is the 0.005 cm minimum in every cell except S9c on SNOW-3 (σ 0.0053 cm).
+**TL;DR:** adopt. All six stock configs reproduce their earlier ARC-6 ATE exactly, from SE(3)-LVIO S8 at 0.8055 cm to lightning-lm stock at 1.6391 cm. Every run keeps at least 99.87 % of the scans. In 16 of the 18 config–mission pairs, the five repeats are bit-for-bit identical, so the noise floor is the minimum (σ = 0.005 cm). The exception is S9c on EIG-2 and SNOW-3, where σ is 0.0013 and 0.0053 cm.
 
 <!-- lvx:begin status -->
 **Status:** ✅ concluded · verdict **🟢 adopt** · **Phase:** P0 (Foundation: baselines and noise floor) · **System:** `both` · **Depends on:** none
@@ -9,6 +9,33 @@
 ## Question & hypothesis
 
 <!-- lvx:begin hypothesis -->
+**Terms used on this page**
+
+| Term | Meaning |
+|---|---|
+| **ATE** | Absolute trajectory error: the root-mean-square distance between the estimated trajectory and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better. |
+| **scan time (ms_p95)** | The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile over a mission: 95 % of the scans take less than this. |
+| **noise floor** | The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation of ATE between identical runs of that system's stock config (EXP-000 for SE(3)-LVIO and lightning-lm, EXP-022 for GenZ-LIO). It is never less than 0.01 cm. |
+| **variant** | One configuration that is run. Each variant differs from the variant it is compared with in exactly one change. |
+| **dev missions** | The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports. |
+| **`baseline` (S8)** | SE(3)-LVIO's stock config `se3lvio_S8`: one LiDAR (the Hesai XT32) and the IMU, no camera, no backend. |
+| **`s9a` (S9a)** | SE(3)-LVIO's config `se3lvio_S9a`: two LiDARs (Hesai and Livox) and the IMU. |
+| **`s9b` (S9b)** | SE(3)-LVIO's config `se3lvio_S9b`: S9a plus the front camera. |
+| **`s9c` (S9c)** | SE(3)-LVIO's full config `se3lvio_S9c`: S9b plus the online backend (plane bundle adjustment and iSAM2). |
+| **`ll_stock`** | lightning-lm's config `lightning_stock`: upstream's settings, with only the GrandTour sensor calibration set. |
+| **`ll_indoor`** | lightning-lm's config `lightning_indoor`: `ll_stock` with 0.2 m grids for indoor scale. |
+| **earlier value** | The ARC-6 ATE of each config from runs made before this repository existed, recomputed with `lvx.evaluate` (each config's `reference_result`). |
+| **pose_coverage** | The share of the scans in the IMU's time span for which the system produced a pose. 1.0 means one pose per scan. |
+| **deterministic** | Identical runs give bit-for-bit identical trajectories (σ = 0). |
+
+**Which systems take part**
+
+| System | Takes part | How, or why not |
+|---|---|---|
+| SE(3)-LVIO | yes | Its four configs S8, S9a, S9b and S9c. |
+| lightning-lm | yes | Its stock and indoor configs. |
+| GenZ-LIO | no | GenZ-LIO was added later; its noise floor comes from EXP-022 (EXP-021 is superseded). |
+
 | | |
 |---|---|
 | **Question** | How much does ATE vary between identical runs of each baseline on the dev missions, and do the pre-repo ARC-6 numbers reproduce inside the harness? |
@@ -88,39 +115,48 @@ Map rebuilt from the baseline's repeat-1 estimate, all repeat-1 trajectories, in
 [![snow-3: map and trajectories](../assets/experiments/EXP-000/viewer/snow-3_map.png)](https://munna-manoj.github.io/LVIO_exp/viewer/?exp=EXP-000&mission=snow-3)
 <!-- lvx:end results -->
 
-- **Runs repeat exactly.** 16 of 18 cells have σ = 0.000 cm (Results table); their five `estimate.tum` files have the same md5. Only `s9c` on eig-2 (0.001 cm) and snow-3 (0.005 cm) vary, with 5 and 3 distinct estimates.
-- **ARC-6 reproduces.** `baseline` 0.805, `s9a` 0.892, `s9b` 0.898, `s9c` 0.900, `ll_stock` 1.639, `ll_indoor` 1.407 cm (Results table, arc-6 rows): equal to the pre-repo numbers at the 4 decimals runs.csv keeps (see Threats for the S9c entry in the spec).
-- **lightning-lm drifts off on the two field missions.** `ll_stock` 464.6 cm on eig-2 and 122.0 cm on snow-3; `ll_indoor` 294.2 and 41.2 cm (Results table). The top view shows it bending away from GT on eig-2 (traj_top.png) while still covering ≥ 99.87 % of the scans.
-- **SE(3)-LVIO stays at 1.3–2.5 cm on every mission,** and the variants differ from S8 by −0.80 … +0.16 cm (Δ column); that is far above the floor, but EXP-000 makes no claim about them (later experiments do).
-- **Time costs grow with sensors.** ms p95 36 → 45 → 67 → 71 on arc-6 from S8 to S9c, and the camera variants use 4.1–8.4 GB of RAM against 0.25–1.1 GB for the rest (pareto.png, `rss_mb` in summary.json).
+- **Identical runs give identical results.** In 16 of the 18 config–mission pairs, σ is 0.000 cm (Results table), and the five `estimate.tum` files have the same md5. Only `s9c` varies: on EIG-2 (σ 0.001 cm, 5 different estimates) and on SNOW-3 (σ 0.005 cm, 3 different estimates).
+- **The earlier ARC-6 numbers reproduce exactly.** `baseline` 0.805, `s9a` 0.892, `s9b` 0.898, `s9c` 0.900, `ll_stock` 1.639 and `ll_indoor` 1.407 cm (Results table, ARC-6 rows). Each equals the earlier run's ATE to the 4 decimals that runs.csv keeps. The spec's S9c number had a typo; see Threats to validity.
+- **lightning-lm loses track on the two field missions.** `ll_stock` reaches 464.6 cm on EIG-2 and 122.0 cm on SNOW-3; `ll_indoor` reaches 294.2 and 41.2 cm (Results table). The top view shows lightning-lm's trajectory bending away from the ground truth on EIG-2 (traj_top.png), although every lightning-lm run still produces a pose for at least 99.87 % of the scans.
+- **SE(3)-LVIO stays between 0.8 and 2.5 cm on every mission.** Its other configs differ from S8 by −0.80 to +0.16 cm (Δ column). Those differences are far above the noise floor, but EXP-000 makes no claim about them; later experiments do.
+- **More sensors cost more time and memory.** On ARC-6, ms_p95 grows from 36 ms (S8) to 45 (S9a), 67 (S9b) and 71 ms (S9c). The two configs with the camera use 4.1 to 8.4 GB of memory, against 0.25 to 1.1 GB for the others (pareto.png, `rss_mb` in summary.json).
 
 ## Discussion
 
-The hypothesis expected OpenMP map updates to make runs differ. They don't. The input is replayed offline, and the parallel loops of the frontend apparently combine their results in a fixed order (we have not traced how), so each run computes the same floating-point numbers and `baseline`, `s9a`, `s9b` and both lightning-lm configs are deterministic on the 4-core budget. Only `s9c` adds the backend (plane BA and an iSAM2 pose graph), and it is the only source of noise we see: identical estimates on ARC-6, a few distinct ones on the longer field missions. A likely cause is the timing of when backend results are used, but we have not traced which call is responsible; EXP-014 (drift and loop closure) works on the backend and should confirm it.
+The hypothesis expected SE(3)-LVIO's parallel map updates (OpenMP) to make identical runs differ. They do not. The input is replayed from files in the same order every time, and SE(3)-LVIO's parallel loops evidently combine their results in a fixed order; we have not traced how. Each run therefore computes the same floating-point numbers. As a result, S8, S9a, S9b and both lightning-lm configs are deterministic on 4 cores.
 
-For later experiments this means ([ADR-0004](../process/decisions/ADR-0004-noise-floor-decision-rule.md)): with σ = 0 the 0.005 cm floor applies, so any change of more than 2 × 0.005 = 0.01 cm counts as an effect on a deterministic cell. That is a strict bar on a number but a weak one on its meaning: a deterministic system can still move by 0.01 cm for a reason unrelated to the change (a different code path taken once). Later reports should therefore also say whether the change is consistent across missions, not only above the floor.
+S9c is the only config with run-to-run noise, and it is also the only config with the backend (plane bundle adjustment and an iSAM2 pose graph). On ARC-6 its runs are identical; on the two longer field missions they differ slightly. A likely cause is the moment at which the frontend picks up the backend's results, which depends on thread timing. We have not traced which call is responsible. EXP-014 works on the backend and should confirm it.
 
-lightning-lm's large errors on eig-2 and snow-3 are a property of the baseline, not of the harness: the same harness reproduces it exactly on ARC-6. Neither of its configs was tuned for these missions, and glacier and snowfield scans offer few planes to match against. Whether a fair retune closes the gap is EXP-019's question. Background on the residual model is in [docs/explain](../explain/README.md).
+What this means for later experiments ([ADR-0004](../process/decisions/ADR-0004-noise-floor-decision-rule.md)):
+- With σ = 0, the minimum σ of 0.005 cm applies. On a deterministic config, any ATE change of more than 2 × 0.005 = 0.01 cm counts as an effect.
+- That threshold is strict about the number but weak about its meaning. A deterministic system can move by 0.01 cm for a reason unrelated to the change, for example a different code path taken once.
+- Later reports should therefore also say whether an effect is consistent across missions, not only whether it is above the noise floor.
+
+lightning-lm's large errors on EIG-2 and SNOW-3 belong to lightning-lm's configs, not to the harness: the same harness reproduces lightning-lm exactly on ARC-6. Neither lightning-lm config was tuned for these missions, and glacier and snow-field scans offer few planes to match against. Whether a fair retune closes the gap is the question of EXP-019. Background on the residual model is in [docs/explain](../explain/README.md).
 
 ## Verdict
 
-**Adopt: the harness is trusted.** The frozen rule asks for every baseline within 3σ of its pre-repo ARC-6 number and every run with pose_coverage ≥ 0.99. All six ARC-6 means equal the pre-repo values recomputed with `lvx.evaluate` (gap 0.0000 cm at the 4 decimals runs.csv keeps, against a 3σ band of at least 0.015 cm with the ADR-0004 floor), and the lowest pose_coverage of the 90 runs is 0.9987 (`ll_*` on snow-3). The σ per (baseline, mission) in summary.json is now the noise floor for every later experiment.
+**Adopt: the harness is trusted.** The frozen rule asks for two things.
+1. **Every config's ARC-6 ATE within 3σ of its earlier value.** All six ARC-6 means equal the earlier values, recomputed with `lvx.evaluate`. The gap is 0.0000 cm at 4 decimals; with the minimum σ, the 3σ band is at least 0.015 cm.
+2. **Every run with pose_coverage ≥ 0.99.** The lowest pose_coverage of the 90 runs is 0.9987 (`ll_stock` and `ll_indoor` on SNOW-3).
+
+The σ of each config on each mission (summary.json) is now the noise floor for every later experiment.
 
 ## Threats to validity
 
-- **The spec's S9c number had a typo.** The prediction lists S9c as 0.8989 cm; the pre-repo run log on the reference host says 0.8998005 cm, which is what EXP-000 measured. It is recorded as an erratum under the pre-registered fields (`lvx exp erratum`); the frozen text and `spec.lock` are unchanged, and `configs/baselines/se3lvio_S9c.yaml` now says 0.8998. Read literally, 0.8989 would still be inside the 3σ band (|0.8998 − 0.8989| = 0.0009 cm < 3 × 0.005 cm), so the verdict does not depend on it.
-- **Reproduction means the same code on the same host.** The pre-repo runs and EXP-000 both ran on the reference host with the same system commits. This shows the harness does not change the system; it does not show the numbers carry over to another machine or core count (EXP-017 covers the core budget).
-- **Three dev missions only.** Determinism and the noise floor were measured on arc-6, eig-2 and snow-3. A mission with more loop closures could make the backend noisier than snow-3.
-- **lightning-lm's input was converted by us.** Its ROS 2 bags come from `offline_to_ros2bag.py`. ARC-6 reproduces, so the conversion is right there; a mission-specific problem (time offset, IMU rate) on eig-2 or snow-3 could inflate its error and would look the same in this table.
-- **pose_coverage above 1.** `s9b` and `s9c` on snow-3 report 1.0004: 2319 estimate poses for 2318 scans in the IMU span. One extra pose at the start or end is harmless to the ≥ 0.99 rule but shows the count is not exactly one pose per scan for the camera variants.
+- **The spec's S9c number has a typo.** The prediction lists S9c as 0.8989 cm. The earlier run's log on the reference host says 0.8998005 cm, which is what EXP-000 measured. The typo is recorded as an erratum under the pre-registered fields (`lvx exp erratum`). The frozen text and `spec.lock` are unchanged, and `configs/baselines/se3lvio_S9c.yaml` now says 0.8998. Read literally, 0.8989 would still be inside the 3σ band (|0.8998 − 0.8989| = 0.0009 cm, below 3 × 0.005 cm), so the verdict does not depend on the typo.
+- **Reproduction means the same code on the same host.** The earlier runs and EXP-000 both ran on the reference host with the same system commits. This shows the harness does not change the systems. It does not show that the numbers carry over to another machine or another number of cores; EXP-017 covers the core budget.
+- **Three dev missions only.** Determinism and the noise floor were measured on ARC-6, EIG-2 and SNOW-3. A mission with more loop closures could make S9c's backend noisier than on SNOW-3.
+- **lightning-lm's input was converted by us.** lightning-lm reads ROS 2 bags, which `offline_to_ros2bag.py` makes from the mission files. ARC-6 reproduces, so the conversion is right for ARC-6. A mission-specific conversion problem on EIG-2 or SNOW-3 (for example the IMU rate) would also inflate lightning-lm's error, and would look the same in this table.
+- **pose_coverage slightly above 1.** `s9b` and `s9c` on SNOW-3 report 1.0004: 2319 estimated poses for 2318 scans in the IMU's time span. One extra pose at the start or the end does not affect the ≥ 0.99 rule. It does show that the camera configs do not produce exactly one pose per scan.
 
 ## Failures
 
-None failed or dirty: 90 of 90 runs `ok` (Results table).
+None: 90 of 90 runs are `ok`, and none ran from uncommitted code (Results table).
 
-One timing caveat: `baseline` arc-6 r3 (started 11:11:47 on 2026-10-08) overlapped an unpinned `lvx viewer` test of ours on the same host, from about 11:12 to 11:13. Because these runs are deterministic, every repeat does the same work on every scan, so r3 can be compared with the other four scan by scan (each repeat against the per-scan median of the other four, from the runs' `timing.csv`):
+One timing caveat concerns `baseline` on ARC-6, repeat r3, started at 11:11:47 on 2026-10-08. From about 11:12 to 11:13, a test of ours (`lvx viewer`, not limited to particular cores) ran on the same host. Because the runs are deterministic, every repeat does the same work on every scan. r3 can therefore be compared with the other four repeats scan by scan: each repeat against the per-scan median of the other four, from the runs' `timing.csv`.
 
-| Repeat | ms_mean | ms_p95 | ms_max | excess over the others, whole run | excess, last quarter |
+| Repeat | ms_mean | ms_p95 | ms_max | Extra time per scan, whole run | Extra time per scan, last quarter |
 |---|---|---|---|---|---|
 | r1 | 27.41 | 36.48 | 54.4 | +0.70 ms | +0.25 ms |
 | r2 | 26.94 | 33.21 | 55.8 | +0.15 ms | −0.07 ms |
@@ -128,7 +164,11 @@ One timing caveat: `baseline` arc-6 r3 (started 11:11:47 on 2026-10-08) overlapp
 | r4 | 27.78 | 35.07 | 54.2 | +1.22 ms | +0.20 ms |
 | r5 | 27.39 | 36.77 | 58.7 | +0.70 ms | +0.33 ms |
 
-Over the whole run r3 is no slower than r4; the interference shows only in its last quarter (about 11:13:17 to 11:13:47), which is where its slow tail (p95, max) comes from. ATE is unaffected (same estimate md5 as the other repeats). The run is kept: runs are append-only, and a rerun to remove an inconvenient run is not allowed (CLAUDE.md law 5). Timing claims on this cell should use the median over repeats (`ms_mean` 27.41, `ms_p95` 36.48 in summary.json). Since then every other job on the host stays off cores 0–3.
+- Over the whole run, r3 is no slower than r4. The interference shows only in r3's last quarter (about 11:13:17 to 11:13:47), which is where r3's high ms_p95 and ms_max come from.
+- r3's ATE is unaffected: its `estimate.tum` has the same md5 as the other repeats'.
+- The run is kept. Runs are append-only, and rerunning to remove an inconvenient run is not allowed (CLAUDE.md law 5).
+- Timing claims about this config and mission should use the median over the repeats: ms_mean 27.41 and ms_p95 36.48 (summary.json).
+- Since this run, every other job on the host stays off cores 0 to 3.
 
 ## Reproduce
 

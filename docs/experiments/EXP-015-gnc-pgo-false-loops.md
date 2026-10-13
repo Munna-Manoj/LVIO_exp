@@ -9,13 +9,34 @@
 ## Question & hypothesis
 
 <!-- lvx:begin hypothesis -->
+**Terms used on this page**
+
+| Term | Meaning |
+|---|---|
+| **ATE** | Absolute trajectory error: the root-mean-square distance between the estimated trajectory and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better. |
+| **scan time (ms_p95)** | The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile over a mission: 95 % of the scans take less than this. |
+| **noise floor** | The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation of ATE between identical runs of that system's stock config (EXP-000 for SE(3)-LVIO and lightning-lm, EXP-022 for GenZ-LIO). It is never less than 0.01 cm. |
+| **variant** | One configuration that is run. Each variant differs from the variant it is compared with in exactly one change. |
+| **dev missions** | The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports. |
+| **`baseline` (S9c)** | SE(3)-LVIO's full config `se3lvio_S9c`: S9b plus the online backend (plane bundle adjustment and iSAM2). |
+| **false loop** | A loop closure between two places that are not the same, added on purpose by the stress profile. |
+| **GNC** | Graduated non-convexity: the solver starts by trusting every factor a little and gradually gives factors that disagree with the rest a weight of 0. |
+
+**Which systems take part**
+
+| System | Takes part | How, or why not |
+|---|---|---|
+| SE(3)-LVIO | yes | Huber and GNC kernels on its loop factors. |
+| GenZ-LIO | no | GenZ-LIO has no backend. |
+| lightning-lm | no | Not yet: this needs lightning-lm's loop closure running in our harness, which EXP-014 adds. A later experiment can add it. |
+
 | | |
 |---|---|
-| **Question** | With 1-3 injected false loop closures, does GNC (gtsam::GncOptimizer) keep ATE at the clean level where plain Huber does not? |
-| **Hypothesis** | A single false loop can bend a pose graph; GNC-TLS is designed for exactly this case (poor initial guess for the outlier factor, high leverage). |
-| **Prediction** | Huber: ATE grows with injected loops. GNC: within noise of the clean run. |
-| **Falsified if** | GNC also degrades beyond noise with one injected loop. |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. |
+| **Question** | When 1 to 3 false loop closures are injected, does GNC (gtsam::GncOptimizer) keep ATE at the clean level where a Huber kernel does not? |
+| **Hypothesis** | A single false loop can bend a pose graph. GNC-TLS is designed for exactly this case: the false factor starts far from its true value and has high leverage. |
+| **Prediction** | With Huber, ATE grows with each injected loop. With GNC, ATE changes by less than the noise floor compared with the clean run. |
+| **Falsified if** | With GNC, ATE is worse than the clean run by more than the noise floor after one injected loop. |
+| **Decision rule** | Compare each variant with the clean run (no injected loops) on each dev mission. Adopt GNC if `gnc_pgo` is within the noise floor of the clean run on every mission while `huber_pgo` is worse by more than the noise floor on at least one. Reject GNC if `gnc_pgo` is also worse by more than the noise floor on any mission. Otherwise inconclusive. |
 
 <sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -28,8 +49,8 @@ Each variant differs from the variant it is compared with in exactly one change.
 | Variant | System | Compared with | What this variant changes |
 |---|---|---|---|
 | `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S9c`, unchanged |
-| `huber_pgo` | SE(3)-LVIO | `baseline` | loop factors with Huber kernel |
-| `gnc_pgo` | SE(3)-LVIO | `baseline` | loop factors solved with GncOptimizer (TLS) |
+| `huber_pgo` | SE(3)-LVIO | `baseline` | SE(3)-LVIO S9c: loop factors with a Huber kernel |
+| `gnc_pgo` | SE(3)-LVIO | `baseline` | SE(3)-LVIO S9c: loop factors solved with GncOptimizer (TLS) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

@@ -135,7 +135,7 @@ def lightning_command(mission: str, cpus: str) -> str:
 
 def lightning_config(cfg: Dict[str, Any], upstream_dir: Path) -> Dict[str, Any]:
     """Upstream config/default_robosense.yaml + our override file + the variant's overrides (dotted keys).
-    Upstream is never copied into git (no licence, ADR-0003); only the keys we change are tracked."""
+    The upstream tree is our private fork (no licence, ADR-0013); only the keys we change are tracked here."""
     with open(upstream_dir / "config" / "default_robosense.yaml") as f:
         tree = yaml.safe_load(f)
     layers = [config.load_yaml(config.ROOT / cfg["overrides_file"])] if cfg.get("overrides_file") else []

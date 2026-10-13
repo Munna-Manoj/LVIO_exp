@@ -1,4 +1,4 @@
-# EXP-025 — TODO the question as a title, e.g. How wide should the point-to-plane gate be?
+# EXP-025 — Does thinning GenZ-LIO's point-to-point candidates cost accuracy?
 
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
@@ -9,13 +9,33 @@
 ## Question & hypothesis
 
 <!-- lvx:begin hypothesis -->
+**Terms used on this page**
+
+| Term | Meaning |
+|---|---|
+| **ATE** | Absolute trajectory error: the root-mean-square distance between the estimated trajectory and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better. |
+| **scan time (ms_p95)** | The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile over a mission: 95 % of the scans take less than this. |
+| **noise floor** | The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation of ATE between identical runs of that system's stock config (EXP-000 for SE(3)-LVIO and lightning-lm, EXP-022 for GenZ-LIO). It is never less than 0.01 cm. |
+| **variant** | One configuration that is run. Each variant differs from the variant it is compared with in exactly one change. |
+| **dev missions** | The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports. |
+| **`baseline` (genz_stock)** | GenZ-LIO's stock config: upstream's Hesai settings, with only the sensor calibration and the 4-core limit set. |
+| **candidate** | A map point kept in a voxel so that GenZ-LIO's point-to-point residual can find a scan point's nearest map point. |
+
+**Which systems take part**
+
+| System | Takes part | How, or why not |
+|---|---|---|
+| SE(3)-LVIO | no | SE(3)-LVIO has no point-to-point candidates. If EXP-024 adopts point-to-point residuals for SE(3)-LVIO, a later experiment adds this question. |
+| GenZ-LIO | yes | Its candidate count and its thinning ratio are varied. |
+| lightning-lm | no | lightning-lm finds point-to-point matches through iVox's nearest-point search, not through a candidate pool. |
+
 | | |
 |---|---|
-| **Question** | GenZ-LIO keeps 128 point-to-point candidates per root voxel and divides the budget by 4 per subdivision. Does keeping more or fewer change ATE or only time? |
-| **Hypothesis** | The nearest candidate is almost always among the ones kept, so the thinning saves time without losing matches. Keeping far fewer starts to miss the nearest match. |
-| **Prediction** | No thinning (ratio 1) and 512 candidates: within noise, higher ms_p95. 32 candidates: worse on EIG-2 and SNOW-3, where the point-to-point residual carries more of the update. |
-| **Falsified if** | no thinning or 512 candidates is better beyond noise on most missions (the stock budget loses matches). |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. An SE(3)-LVIO arm follows only if EXP-024 adopts the point-to-point fallback. |
+| **Question** | GenZ-LIO keeps up to 128 candidate points per map voxel for its point-to-point search, and divides that number by 4 each time a voxel is split. Does keeping more or fewer candidates change ATE, or only scan time? |
+| **Hypothesis** | The nearest candidate is almost always among those kept, so the thinning saves time without losing matches. Keeping far fewer starts to miss the nearest match. |
+| **Prediction** | No thinning (divide by 1) and 512 candidates: ATE changes by less than the noise floor, and ms_p95 is higher. 32 candidates: worse on EIG-2 and SNOW-3, where the point-to-point residual carries more of the update. |
+| **Falsified if** | No thinning or 512 candidates improves ATE by more than the noise floor on at least two dev missions. That would mean the stock setting loses matches. |
+| **Decision rule** | Compare each variant with `baseline` (GenZ-LIO's stock config). Adopt a variant that costs less ms_p95 than the stock setting if its ATE is not worse by more than the noise floor on any dev mission. Adopt a variant that costs more ms_p95 only if its ATE is better by more than the noise floor on at least two dev missions and worse on none. Reject (the stock setting stays) if no variant qualifies and at least one is worse by more than the noise floor; otherwise inconclusive. |
 
 <sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -28,9 +48,9 @@ Each variant differs from the variant it is compared with in exactly one change.
 | Variant | System | Compared with | What this variant changes |
 |---|---|---|---|
 | `baseline` | GenZ-LIO | – | the stock config `genz_stock`, unchanged |
-| `ratio_1` | GenZ-LIO | `baseline` | reduction_ratio 1 (stock 4): children keep the parent's budget |
-| `cand_32` | GenZ-LIO | `baseline` | max_points_per_voxel 32 (stock 128) |
-| `cand_512` | GenZ-LIO | `baseline` | max_points_per_voxel 512 (stock 128) |
+| `ratio_1` | GenZ-LIO | `baseline` | GenZ-LIO: no thinning when a voxel is split (divide by 1; stock 4) |
+| `cand_32` | GenZ-LIO | `baseline` | GenZ-LIO: 32 candidates per voxel (stock 128) |
+| `cand_512` | GenZ-LIO | `baseline` | GenZ-LIO: 512 candidates per voxel (stock 128) |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

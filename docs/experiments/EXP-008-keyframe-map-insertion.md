@@ -3,19 +3,42 @@
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P3 (Map quality) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P3 (Map quality) · **System:** `se3-lvio` + `genz-lio` + `lightning-lm` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
 
 <!-- lvx:begin hypothesis -->
+**Terms used on this page**
+
+| Term | Meaning |
+|---|---|
+| **ATE** | Absolute trajectory error: the root-mean-square distance between the estimated trajectory and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better. |
+| **scan time (ms_p95)** | The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile over a mission: 95 % of the scans take less than this. |
+| **noise floor** | The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation of ATE between identical runs of that system's stock config (EXP-000 for SE(3)-LVIO and lightning-lm, EXP-022 for GenZ-LIO). It is never less than 0.01 cm. |
+| **variant** | One configuration that is run. Each variant differs from the variant it is compared with in exactly one change. |
+| **dev missions** | The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports. |
+| **`baseline` (S8)** | SE(3)-LVIO's stock config `se3lvio_S8`: one LiDAR (the Hesai XT32) and the IMU, no camera, no backend. |
+| **`genz`** | GenZ-LIO's stock config `genz_stock`: upstream's Hesai settings, with only the sensor calibration and the 4-core limit set. |
+| **`lightning`** | lightning-lm's config `lightning_indoor`: upstream's settings with 0.2 m grids. It is the better of lightning-lm's two configs on ARC-6 in EXP-000 (1.41 cm against 1.64 cm). |
+| **lightning-lm on the field missions** | Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning`: 294 cm and 41 cm). A lightning-lm variant is therefore judged on ARC-6 only. Its EIG-2 and SNOW-3 numbers are still reported. |
+| **keyframe** | A scan taken after the robot has moved more than 1 m or turned more than 2° since the last keyframe (lightning-lm's `kf_dis_th` and `kf_angle_th`). |
+
+**Which systems take part**
+
+| System | Takes part | How, or why not |
+|---|---|---|
+| SE(3)-LVIO | yes | Keyframe-only map updates are added. |
+| GenZ-LIO | yes | Keyframe-only map updates are added. |
+| lightning-lm | yes | lightning-lm already updates its map only at keyframes; its variant adds every scan. |
+
 | | |
 |---|---|
-| **Question** | Does lightning-lm-style keyframe-only map insertion (1 m / 10°) change ATE and runtime for SE(3)-LVIO? |
-| **Hypothesis** | Per-scan insertion gives a denser reference but also inserts transient objects and costs time; keyframe insertion trades density for speed. |
-| **Prediction** | Slightly worse ATE (sparser planes), lower ms_p95. GenZ-LIO: the same direction as SE(3)-LVIO, with a larger ms_p95 saving, since its map update also refreshes the point-to-point candidates. |
-| **Falsified if** | better ATE beyond noise (would mean per-scan insertion pollutes the map). |
-| **Decision rule** | adopt if the mean primary metric over the missions improves by more than 2σ run-to-run noise on at least 2/3 of the missions, no mission gets worse beyond 2σ, and ms_p95 grows by less than 10 %; reject if it is worse beyond 2σ on any mission; otherwise inconclusive. Applied to each system separately: SE(3)-LVIO's arms against `baseline`, GenZ-LIO's against `genz`, each with its own noise floor (EXP-000, EXP-022). The verdict is adopt if the rule adopts for both systems, reject if it rejects for both, otherwise inconclusive; the TL;DR gives both (ADR-0012 addendum). |
+| **Question** | Does adding scans to the map only at keyframes, as lightning-lm does, change ATE and scan time? |
+| **Hypothesis** | Adding every scan gives a denser map, but it also adds passing objects and costs time. Adding only keyframes gives a sparser map and saves time. |
+| **Prediction** | SE(3)-LVIO and GenZ-LIO with keyframe-only updates: slightly worse ATE (sparser planes) and lower ms_p95. GenZ-LIO saves more time than SE(3)-LVIO, because its map update also refreshes the point-to-point candidates. lightning-lm with every-scan updates, on ARC-6: slightly better ATE and higher ms_p95. |
+| **Falsified if** | In SE(3)-LVIO or GenZ-LIO, keyframe-only updates improve ATE by more than the noise floor on at least two dev missions. |
+| **Decision rule** | Each system is run with and without keyframe-only map updates (SE(3)-LVIO: `kf_insert` with it, `baseline` without it; GenZ-LIO: `genz_kf_insert` with it, `genz` without it; lightning-lm: `lightning` with it, `lightning_every_scan` without it). On each mission, the side with keyframe-only map updates is better if its ATE is lower by more than the noise floor, and worse if its ATE is higher by more than the noise floor. Keyframe-only map updates helps a system if the side with it is better on at least two of the three dev missions, worse on none, and its ms_p95 is less than 10 % higher. Keyframe-only map updates hurts a system if the side with it is worse on any mission. For lightning-lm only ARC-6 is judged: keyframe-only map updates helps lightning-lm if the side with it is better on ARC-6 with less than 10 % more ms_p95, and hurts lightning-lm if it is worse on ARC-6. Verdict: adopt if keyframe-only map updates helps every system that takes part, reject if it hurts every one, and inconclusive otherwise. The summary at the top of the page gives the result for each system. |
 
 <sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -28,9 +51,11 @@ Each variant differs from the variant it is compared with in exactly one change.
 | Variant | System | Compared with | What this variant changes |
 |---|---|---|---|
 | `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
-| `kf_insert` | SE(3)-LVIO | `baseline` | insert scans into the voxel map only at keyframes (1 m / 10°) |
-| `genz` | GenZ-LIO | – | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_kf_insert` | GenZ-LIO | `genz` | GenZ-LIO: insert scans into the voxel map only at keyframes (1 m / 10°) |
+| `kf_insert` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: add scans to the map only at keyframes |
+| `genz` | GenZ-LIO | – | GenZ-LIO's stock config. The GenZ-LIO variants are compared with this one. |
+| `genz_kf_insert` | GenZ-LIO | `genz` | GenZ-LIO: add scans to the map only at keyframes |
+| `lightning` | lightning-lm | – | lightning-lm's indoor config. The lightning-lm variants are compared with this one. |
+| `lightning_every_scan` | lightning-lm | `lightning` | lightning-lm: add every scan to the map |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission

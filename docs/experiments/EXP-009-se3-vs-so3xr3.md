@@ -1,21 +1,45 @@
-# EXP-009 — Does the coupled SE(3) retraction matter?
+# EXP-009 — Does the coupled SE(3) pose update matter?
 
 **TL;DR:** TODO one sentence with the answer and its number (after the verdict).
 
 <!-- lvx:begin status -->
-**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` + `genz-lio` · **Depends on:** EXP-000
+**Status:** 🗒️ planned · **Phase:** P4 (State formulation) · **System:** `se3-lvio` + `genz-lio` + `lightning-lm` · **Depends on:** EXP-000
 <!-- lvx:end status -->
 
 ## Question & hypothesis
 
 <!-- lvx:begin hypothesis -->
+**Terms used on this page**
+
+| Term | Meaning |
+|---|---|
+| **ATE** | Absolute trajectory error: the root-mean-square distance between the estimated trajectory and the ground-truth trajectory, in centimetres, after the two are aligned. Lower is better. |
+| **scan time (ms_p95)** | The time a system needs to process one LiDAR scan, in milliseconds. `ms_p95` is the 95th percentile over a mission: 95 % of the scans take less than this. |
+| **noise floor** | The smallest ATE difference that counts as a real effect: 2 × σ, where σ is the standard deviation of ATE between identical runs of that system's stock config (EXP-000 for SE(3)-LVIO and lightning-lm, EXP-022 for GenZ-LIO). It is never less than 0.01 cm. |
+| **variant** | One configuration that is run. Each variant differs from the variant it is compared with in exactly one change. |
+| **dev missions** | The three missions used to decide experiments: ARC-6 (indoor, with smoke), EIG-2 (a glacier climb, outdoor) and SNOW-3 (a snow field, outdoor). The test missions are kept for final reports. |
+| **`baseline` (S8)** | SE(3)-LVIO's stock config `se3lvio_S8`: one LiDAR (the Hesai XT32) and the IMU, no camera, no backend. |
+| **`genz`** | GenZ-LIO's stock config `genz_stock`: upstream's Hesai settings, with only the sensor calibration and the 4-core limit set. |
+| **`lightning`** | lightning-lm's config `lightning_indoor`: upstream's settings with 0.2 m grids. It is the better of lightning-lm's two configs on ARC-6 in EXP-000 (1.41 cm against 1.64 cm). |
+| **lightning-lm on the field missions** | Both lightning-lm configs lose track on EIG-2 and SNOW-3 in EXP-000 (`lightning`: 294 cm and 41 cm). A lightning-lm variant is therefore judged on ARC-6 only. Its EIG-2 and SNOW-3 numbers are still reported. |
+| **SE(3) update** | The correction [ρ, φ] is applied as T ← T · Exp([ρ, φ]): the rotation φ also bends the translation ρ. |
+| **SO(3)×R³ update** | The rotation and translation are corrected separately: R ← R · Exp(φ) and p ← p + ρ. |
+
+**Which systems take part**
+
+| System | Takes part | How, or why not |
+|---|---|---|
+| SE(3)-LVIO | yes | SE(3)-LVIO uses SE(3); its variant switches to SO(3)×R³. |
+| GenZ-LIO | yes | GenZ-LIO uses SO(3)×R³; its variant switches to SE(3). |
+| lightning-lm | yes | lightning-lm uses SO(3)×R³; its variant switches to SE(3). |
+
 | | |
 |---|---|
-| **Question** | Does replacing the SE(3) exponential retraction with the separate SO(3)×R³ retraction (FAST-LIO style) change ATE? |
-| **Hypothesis** | For per-scan corrections (mm, mrad) the two retractions differ by about ½ φ×ρ, which is micrometres; any effect should appear only in fast turns or with large rotation uncertainty. |
-| **Prediction** | Within noise on every dev mission; if anything, a difference on the fastest-turning segments. GenZ-LIO is SO(3)×R³ natively, so its arm goes the other way (SO(3)×R³ → SE(3)); within noise too. |
-| **Falsified if** | SO(3)×R³ worse beyond noise on most missions (would support the paper's central claim more strongly than the theory predicts). |
-| **Decision rule** | Per system, against its own reference and noise floor (EXP-000, EXP-022): SE(3) is better if, on at least 2/3 of the missions, the SE(3) side beats the SO(3)×R³ side by more than 2σ (SE(3)-LVIO: `so3xr3` worse than `baseline`; GenZ-LIO: `genz_se3` better than `genz`) and no mission goes the other way beyond 2σ. Verdict adopt (the coupled retraction matters) if SE(3) is better in both systems; reject (it does not) if every mission is within 2σ in both systems; otherwise inconclusive. The TL;DR gives both systems (ADR-0012 addendum). |
+| **Question** | Does applying each pose correction as one SE(3) step, instead of a separate rotation and translation (SO(3)×R³), change ATE? |
+| **Hypothesis** | For the small corrections of one scan (millimetres, milliradians), the two updates differ by about ½ φ × ρ, which is micrometres. Any effect appears only in fast turns or when the rotation is very uncertain. |
+| **Prediction** | All three systems: ATE changes by less than the noise floor on every dev mission. |
+| **Falsified if** | In at least two systems, the SE(3) side is better by more than the noise floor on at least two dev missions. That would support the SE(3)-LVIO paper's central claim more strongly than this theory predicts. |
+| **Decision rule** | Each system is run with and without the SE(3) update (SE(3)-LVIO: `baseline` with it, `so3xr3` without it; GenZ-LIO: `genz_se3` with it, `genz` without it; lightning-lm: `lightning_se3` with it, `lightning` without it). On each mission, the side with the SE(3) update is better if its ATE is lower by more than the noise floor, and worse if its ATE is higher by more than the noise floor. The SE(3) update helps a system if the side with it is better on at least two of the three dev missions, worse on none, and its ms_p95 is less than 10 % higher. The SE(3) update hurts a system if the side with it is worse on any mission. For lightning-lm only ARC-6 is judged: the SE(3) update helps lightning-lm if the side with it is better on ARC-6 with less than 10 % more ms_p95, and hurts lightning-lm if it is worse on ARC-6. Verdict: adopt if the SE(3) update helps every system that takes part, reject if it hurts every one, and inconclusive otherwise. The summary at the top of the page gives the result for each system. The prediction (no effect) holds if every comparison is within the noise floor. |
 
 <sub>The five fields in this table are a draft; they are locked when the experiment is approved (`spec.lock`).</sub>
 <!-- lvx:end hypothesis -->
@@ -28,9 +52,11 @@ Each variant differs from the variant it is compared with in exactly one change.
 | Variant | System | Compared with | What this variant changes |
 |---|---|---|---|
 | `baseline` | SE(3)-LVIO | – | the stock config `se3lvio_S8`, unchanged |
-| `so3xr3` | SE(3)-LVIO | `baseline` | retraction SO(3)×R³ instead of SE(3) exp |
-| `genz` | GenZ-LIO | – | swap baseline config to GenZ-LIO stock (the reference of the GenZ-LIO arms) |
-| `genz_se3` | GenZ-LIO | `genz` | GenZ-LIO: retraction SE(3) exp instead of its SO(3)×R³ |
+| `so3xr3` | SE(3)-LVIO | `baseline` | SE(3)-LVIO: the separate SO(3)×R³ update |
+| `genz` | GenZ-LIO | – | GenZ-LIO's stock config. The GenZ-LIO variants are compared with this one. |
+| `genz_se3` | GenZ-LIO | `genz` | GenZ-LIO: the coupled SE(3) update |
+| `lightning` | lightning-lm | – | lightning-lm's indoor config. The lightning-lm variants are compared with this one. |
+| `lightning_se3` | lightning-lm | `lightning` | lightning-lm: the coupled SE(3) update |
 
 - **Missions:** arc-6, eig-2, snow-3 (`{"set": "dev"}`)
 - **Repeats:** 3 per variant × mission
