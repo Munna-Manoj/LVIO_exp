@@ -81,6 +81,18 @@ The offset shifts every IMU stamp by 4.8–6.5 ms against the LiDAR. That change
 - **Our runner, not upstream's CLI.** As in EXP-021: upstream's own `_ScanBuffer` pairs scans and IMU, Hesai per-point times are passed relative to the scan start, and the IMU columns are reordered. The offset is applied by shifting the integer nanosecond stamps, as the lightning-lm bag converter does. The first shifted IMU stamp of ARC-6 equals the bag's to the nanosecond.
 - **One LiDAR** (the Hesai), like S8. S9a also uses the Livox; cross-system comparisons should pair like with like.
 - **Three dev missions, one host,** as in EXP-000.
+- **σ = 0 understates how sensitive ATE is to the input (post-hoc diagnostic, not pre-registered).** After concluding, we swept the IMU offset for GenZ-LIO stock on each dev mission. This was one run per offset on host cores 8–19, scripted outside `lvx run`, with ATE computed by `lvx.evaluate.ate`. The 0 ms column reproduces EXP-021 exactly.
+
+  | Offset (ms) | +5 | 0 | −2.5 | −5 | −7.5 | −10 | −12.5 |
+  |---|---|---|---|---|---|---|---|
+  | ARC-6 (cm) | 1.373 | 1.382 | 1.480 | 1.472 | 1.448 | 1.504 | 1.552 |
+  | EIG-2 (cm) | 2.653 | 2.506 | 2.385 | 2.314 | 2.393 | 2.391 | 2.395 |
+  | SNOW-3 (cm) | 6.080 | 5.884 | 4.943 | 6.028 | 4.999 | 6.247 | 4.891 |
+
+  ATE does not form a smooth valley around the protocol offset. On SNOW-3 it jumps between 4.9 and 6.2 cm with each 2.5 ms step, and ARC-6 at −6.5 ms (1.501 cm) is worse than both of its neighbours.
+  - The differences between EXP-021 and EXP-022 (+0.12, −0.17, −0.28 cm) are the size of this jitter, so they do not show whether the offset helps GenZ-LIO.
+  - The offset was measured from the sensors (gyro against trajectory rotation), not tuned for ATE.
+  - The noise floor from identical repeats is 0.005 cm, while a few-millisecond change in the input moves ATE by up to 1.3 cm. A later GenZ-LIO effect near the floor should therefore be read with this in mind; consistency across missions matters more than its size.
 
 ## Failures
 
