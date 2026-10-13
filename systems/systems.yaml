@@ -14,9 +14,11 @@ se3-lvio:
 lightning-lm:
   title: lightning-lm (LIO frontend)
   upstream: https://github.com/gaoxiang12/lightning-lm
+  fork: https://github.com/Munna-Manoj/lightning-lm-lvio   # PRIVATE research fork, branch lvio-exp (ADR-0013)
+  branch: lvio-exp
   pinned_commit: 1325fed
-  licence: none                      # NO licence -> never vendor; fetch at build time (ADR-0003)
-  checkout: fetch                    # build_lightning.sh fetches upstream at pinned_commit into systems.lightning-lm.root
+  licence: none                      # NO licence -> never vendored or published; modified only in the private fork
+  checkout: fetch                    # build_lightning.sh clones the fork at pinned_commit into systems.lightning-lm.root
   image: lvx/lightning-lm:humble    # neutral tag; map to your local tag in lvx.local.yaml
   ours:                              # the only lightning-related files tracked here
     - systems/lightning-lm/runner/run_lio_tum.cc

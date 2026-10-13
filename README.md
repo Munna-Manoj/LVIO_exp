@@ -107,7 +107,7 @@ flowchart LR
 | Downsampling | fixed voxel | fixed voxel | voxel size set by a PID controller on the point count |
 | Sensors | 2 LiDARs + IMU + camera (photometric) | 1 LiDAR + IMU | 1 LiDAR + IMU |
 | Backend | plane BA (HBA) + iSAM2 | loop closure + pose graph (not used here) | none |
-| Included as | fork, submodule; ablations in it | fetched at build time; reference only (no licence) | fork, submodule; ablations in it ([ADR-0012](docs/process/decisions/ADR-0012-genz-lio-third-system.md)) |
+| Included as | fork, submodule; ablations in it | private fork, cloned at build time; ablations in it (no licence: never published, [ADR-0013](docs/process/decisions/ADR-0013-lightning-lm-private-fork.md)) | fork, submodule; ablations in it ([ADR-0012](docs/process/decisions/ADR-0012-genz-lio-third-system.md)) |
 
 ## Explore
 
@@ -137,8 +137,9 @@ Running experiments needs the GrandTour data and the compute host: see [Set up](
 ## Credits
 
 - **SE(3)-LVIO** (COMFORT entry, GPL-2.0) builds on VoxelMap, FAST-LIVO2 and HBA from HKU MARS.
-- **lightning-lm** by Gao Xiang et al. It has no licence, so it is fetched at build time and never
-  redistributed ([ADR-0003](docs/process/decisions/ADR-0003-system-inclusion-and-licences.md)).
+- **lightning-lm** by Gao Xiang et al. It has no licence. We modify it for research in a private fork, which
+  is cloned at build time and never published or redistributed; the reports describe each change in words
+  ([ADR-0013](docs/process/decisions/ADR-0013-lightning-lm-private-fork.md)).
 - **Course backbone:** [*SLAM in Autonomous Driving*](https://github.com/gaoxiang12/slam_in_autonomous_driving)
   by Gao Xiang et al. (code MIT; the book is linked, never copied).
 - **Data:** [GrandTour](https://grand-tour.leggedrobotics.com/) and the COMFORT localization benchmark, plus the

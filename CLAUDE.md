@@ -115,9 +115,11 @@ Rules:
   anything machine-specific (see §12). Tracked files name datasets, systems and host profiles **by name only**.
 - **Size limits:** each tracked file ≤ 2 MB. A viewer point cloud is ≤ 8 MB (stored with Git LFS),
   decimated to ≤ 1.5 M points. GIFs ≤ 6 MB.
-- **lightning-lm has no licence.** Never copy its source, configs or docs into this repo. We commit
-  only our own runner, our converter, and *override* YAMLs that list just the keys we change. The
-  build fetches upstream at the pinned commit (ADR-0003).
+- **lightning-lm has no licence.** Its code changes go only into the **private** fork
+  `Munna-Manoj/lightning-lm-lvio` (branch `lvio-exp`), which is never made public, never a submodule, and
+  never copied here. Never copy its source, configs, docs, diffs or excerpts into this repo. We commit only
+  our own runner, our converter, *override* YAMLs that list just the keys we change, results, and a
+  description in words of each change. The build clones the fork at the pinned commit (ADR-0013).
 - **SE(3)-LVIO is GPL-2.0.** Code changes go into the fork submodule (`systems/se3-lvio`, branch
   `lvio-exp`), never into a copy in this repo. Each ablation is one config flag whose default
   reproduces the baseline bit-for-bit (or within the noise floor; see §3).

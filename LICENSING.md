@@ -5,7 +5,7 @@
 | This repository: `lvx/`, `tools/`, `scripts/`, `tests/`, `docs/`, `configs/`, `web/`, `systems/lightning-lm/*` (our files) | MIT ([LICENSE](LICENSE)) |
 | `systems/se3-lvio` (git submodule, not part of this tree) | GPL-2.0, its own repository |
 | `systems/genz-lio` (git submodule, our fork of GenZ-LIO; our runner and config live in it) | GPL-2.0, its own repository (ADR-0012) |
-| lightning-lm upstream | no licence; never redistributed, fetched at build time (ADR-0003) |
+| lightning-lm upstream | **no licence** (all rights reserved by default). We modify it for research in a **private** fork that is never published or redistributed; this repository holds only our own files, our results, and descriptions in words of each change (ADR-0013) |
 | SAD code (`slam_in_autonomous_driving`) | MIT; pinned, built outside the repo, never vendored (ADR-0008) |
 | SAD book text and figures | not reproduced; chapters are linked only (ADR-0008) |
 | SAD datasets (NCLT, UrbanLoco, UTBM, WXB, 2dmapping, AVIA) | each dataset's own terms; never committed |

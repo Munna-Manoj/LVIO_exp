@@ -1,6 +1,6 @@
 # ADR-0003 — Including the systems under test
 
-- **Status:** Accepted (2026-10-07)
+- **Status:** Accepted (2026-10-07). The lightning-lm parts are superseded by [ADR-0013](ADR-0013-lightning-lm-private-fork.md) (2026-10-13).
 
 ## Context
 - SE(3)-LVIO (`url-kaist/se3-livom-comfort`) is GPL-2.0, and ablations need code changes in it.
